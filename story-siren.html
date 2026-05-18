@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Written by Tim Samoff</title>
+    
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="theme.js" defer></script>
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container header-container">
+            <div class="branding-group">
+                <img src="wbts_icon.png" alt="Written by Tim Samoff Logo" class="site-branding-icon">
+                <div class="branding-text">
+                    <a href="index.html" class="site-logo">Written by <span class="logo-amp">Tim</span> Samoff</a>
+                    <span class="site-tagline">A collection of stories, essays, poetry, and educational articles.</span>
+                </div>
+            </div>
+            <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container layout-wrapper-post">
+        <aside class="sidebar-post-nav">
+            <div class="sticky-sidebar-content">
+                <a href="index.html" class="back-link">
+                    <i class="fa-solid fa-arrow-left-long"></i> Index
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <article class="reading-body">
+                <header class="reading-header">
+                    <div class="card-meta">
+                        <span class="author">By Tim Samoff</span>
+                        <span class="meta-separator">&middot;</span>
+                        <span class="date">Published May 18, 2026</span>
+                    </div>
+                    <h1 class="story-title">The Last Echo of the Siren</h1>
+                    <div class="pill-container">
+                        <span class="pill">Fantasy</span>
+                        <span class="pill">Horror</span>
+                        <span class="pill">Zombie</span>
+                        <span class="pill">YA</span>
+                    </div>
+                </header>
+
+                <section class="story-content">
+                    <p class="dropcap-paragraph">The waves knew her name long before the sailors did. Along the jagged cliffs where salt-crusted granite met the fury of the northern tides, she sat watching the horizon dissolve into dusk. It was an endless loop of water and sky, a sequence she had memorized over three centuries of quiet isolation.</p>
+                    
+                    <p>To those who traveled by wooden hulls and canvas sails, her kind were anomalies of malice—monsters hidden behind beautiful vocal frequencies designed to pull ships toward an early grave. But the truth was far less theatrical. It was born of deep, unmitigated boredom.</p>
+                </section>
+            </article>
+        </main>
+    </div>
+
+    <footer class="site-footer">
+        <div class="container footer-container">
+            <p>&copy; <span id="current-year-story"></span> Written by Tim Samoff.</p>
+            <script>
+                document.getElementById('current-year-story').textContent = new Date().getFullYear();
+            </script>
+        </div>
+    </footer>
+
+</body>
+</html>

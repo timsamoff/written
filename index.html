@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Written by Tim Samoff</title>
+    
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="theme.js" defer></script>
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="container header-container">
+            <div class="branding-group">
+                <img src="wbts_icon.png" alt="Written by Tim Samoff Logo" class="site-branding-icon">
+                <div class="branding-text">
+                    <a href="index.html" class="site-logo">Written by <span class="logo-amp">Tim</span> Samoff</a>
+                    <span class="site-tagline">A collection of stories, essays, poetry, and educational articles.</span>
+                </div>
+            </div>
+            <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container layout-wrapper-index">
+        <main class="toc-wrapper">
+            <table class="toc-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Title</th>
+                        <th>Genres & Tags</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="toc-date">May 18, 2026</td>
+                        <td class="toc-title">
+                            <a href="story-siren.html">The Last Echo of the Siren</a>
+                        </td>
+                        <td class="toc-tags">
+                            <div class="pill-container">
+                                <span class="pill">Fantasy</span>
+                                <span class="pill">Horror</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="toc-date">May 04, 2026</td>
+                        <td class="toc-title">
+                            <a href="guide-typography.html">Design Rules of Modern Typography</a>
+                        </td>
+                        <td class="toc-tags">
+                            <div class="pill-container">
+                                <span class="pill">Guide</span>
+                                <span class="pill">Post-Apocalyptic</span>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+    <footer class="site-footer">
+        <div class="container footer-container">
+            <p>&copy; <span id="current-year-index"></span> Written by Tim Samoff.</p>
+            <script>
+                document.getElementById('current-year-index').textContent = new Date().getFullYear();
+            </script>
+        </div>
+    </footer>
+
+</body>
+</html>
