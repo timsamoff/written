@@ -482,6 +482,60 @@ hr.fleuron-break::after {
     padding: 0 var(--space-sm);     
 }
 
+hr.fleuron-end {
+    border: none;                   
+    height: 1px;                    
+    background: var(--color-border);
+    width: 10%;                     
+    margin: var(--space-xl) auto;   
+    position: relative;             
+    overflow: visible;              
+    color: var(--color-border);     
+}
+
+hr.fleuron-end::after {
+    content: "\f219 \f219 \f219";               
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;               
+        font-size: 0.65rem;             
+    letter-spacing: 0.65rem; /* Spacing */
+    color: inherit;                 
+    background-color: var(--color-bg); 
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 0 var(--space-sm);     
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   Progress Bar & Pull-Quotes
+   ========================================================================== */
+#scroll-progress {
+    position: fixed;
+    top: 0; 
+    left: 0;
+    width: 0%;
+    height: 4px;
+    background: var(--color-accent);
+    z-index: 1001;
+    transition: width 0.1s ease-out;
+}
+
+blockquote.pull-quote {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-style: italic;
+    font-size: 1.6rem;
+    line-height: 1.5;
+    color: var(--color-text);
+    text-align: center;
+    max-width: 80%;
+    margin: var(--space-lg) auto;
+    padding: 0;
+    border: none;
+}
+
 /* ==========================================================================
    Footer
    ========================================================================== */
