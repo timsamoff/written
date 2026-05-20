@@ -42,6 +42,18 @@
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
     --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
 }
+    /* Monospaced Blocks */
+:root[data-theme="light"] {
+    --reversed-code-bg: #1A1A1A;
+    --reversed-code-border: #262626;
+    --reversed-code-text: #E0E0E0;
+}
+
+:root[data-theme="dark"] {
+    --reversed-code-bg: var(--color-bg-card);
+    --reversed-code-text: var(--color-text);
+    --reversed-code-border: var(--color-border);
+}
 
 /* Vertical Rhythm */
 :root {
@@ -550,6 +562,36 @@ blockquote.pull-quote {
     margin: var(--space-lg) auto;
     padding: 0;
     border: none;
+}
+
+/* ==========================================================================
+   Monospaced Blocks
+   ========================================================================== */
+.story-content pre {
+    font-family: 'Source Code Pro', Consolas, Monaco, monospace !important;
+    font-size: 1.05rem !important;
+    line-height: 1.5 !important;
+    background-color: var(--reversed-code-bg) !important;
+    border: 1px solid var(--reversed-code-border) !important;
+    color: var(--reversed-code-text) !important;
+    border-radius: 8px !important;
+    padding: var(--space-sm) var(--space-md) !important;
+    margin: var(--space-md) 0 !important;
+    overflow-x: auto !important;
+    white-space: pre !important;
+    text-indent: 0 !important;
+    display: block !important;
+}
+
+.story-content p.literary-mono,
+.story-content div.literary-mono {
+    font-family: 'Source Code Pro', Consolas, Monaco, monospace !important;
+    font-size: 1.1rem !important;
+    line-height: 1.6 !important;
+    color: var(--color-text) !important;
+    margin: var(--space-md) 0 !important;
+    white-space: pre-wrap !important;
+    text-indent: 0 !important;
 }
 
 /* ==========================================================================
