@@ -124,7 +124,14 @@ function tokenise(raw) {
 
   function consumeBlock(closeTag) {
     const inner = [];
-    while (i < lines.length && lines[i].trim().toLowerCase() !== closeTag) {
+    while (i < lines.length) {
+      const currentLineClean = lines[i].trim().toLowerCase();
+      if (currentLineClean === closeTag || currentLineClean.endsWith(closeTag)) {
+        const idx = lines[i].toLowerCase().lastIndexOf(closeTag);
+        const remainder = lines[i].substring(0, idx);
+        if (remainder.trim()) inner.push(remainder);
+        break;
+      }
       inner.push(lines[i]);
       i++;
     }
@@ -143,15 +150,23 @@ function tokenise(raw) {
     if (tl === '[byline]')   { i++; const inner = consumeBlock('[/byline]');   tokens.push({ type: 'byline',   content: inner.join('\n').trim() }); continue; }
 
     // Section heading (mid-document h2)
-    if (tl === '[section]')    { i++; const inner = consumeBlock('[/section]');    tokens.push({ type: 'section',    content: inner.join('\n').trim() }); continue; }
-    if (tl === '[subsection]') { i++; const inner = consumeBlock('[/subsection]'); tokens.push({ type: 'subsection', content: inner.join('\n').trim() }); continue; }
+    if (tl === '[section]')       { i++; const inner = consumeBlock('[/section]');       tokens.push({ type: 'section',       content: inner.join('\n').trim() }); continue; }
+    if (tl === '[subsection]')    { i++; const inner = consumeBlock('[/subsection]');    tokens.push({ type: 'subsection',    content: inner.join('\n').trim() }); continue; }
+    if (tl === '[subsubsection]') { i++; const inner = consumeBlock('[/subsubsection]'); tokens.push({ type: 'subsubsection', content: inner.join('\n').trim() }); continue; }
 
     // Editorial containers
     if (tl === '[pullquote]') { i++; const inner = consumeBlock('[/pullquote]'); tokens.push({ type: 'pullquote', content: inner.join('\n').trim() }); continue; }
     if (tl === '[aside]')     { i++; const inner = consumeBlock('[/aside]');     tokens.push({ type: 'aside',     content: inner.join('\n').trim() }); continue; }
     if (tl === '[epigraph]')  { i++; const inner = consumeBlock('[/epigraph]');  tokens.push({ type: 'epigraph',  content: inner.join('\n').trim() }); continue; }
-    if (tl === '[mono]')      { i++; const inner = consumeBlock('[/mono]');      tokens.push({ type: 'mono',      content: inner.join('\n').trim() }); continue; }
-    if (tl === '[code]')      { i++; const inner = consumeBlock('[/code]');      tokens.push({ type: 'code',      content: inner.join('\n') });        continue; }
+if (tl.startsWith('[mono]')) {
+  const remainder = line.substring(line.toLowerCase().indexOf('[mono]') + 6);
+  i++;
+  const inner = consumeBlock('[/mono]');
+  if (remainder) inner.unshift(remainder);
+  tokens.push({ type: 'mono', content: inner.join('\n').trim() });
+  continue;
+}
+if (tl === '[code]')      { i++; const inner = consumeBlock('[/code]');      tokens.push({ type: 'code',      content: inner.join('\n') });        continue; }
 
     // Lists
     if (tl === '[bullet]' || tl === '[num]' || tl === '[alpha]') {
@@ -303,12 +318,31 @@ function renderAside(tok, fnMap) {
 }
 
 function renderManuscript(tok, wordCount) {
-  // Left column: contact info. Right column: word count.
-  // Convention: name on first line, word count right-aligned on same line,
-  // then address lines below, left only.
-  const wc = tok.wordcount === 'auto'
-    ? `about ${wordCount.toLocaleString()} words`
-    : tok.wordcount;
+  // Determine the word count display string
+  let wcDisplay;
+  const rawWc = tok.wordcount;
+
+  if (!rawWc || rawWc === 'auto') {
+    // Auto-calculated; blank if no body text yet, otherwise "about N words"
+    if (wordCount === 0) {
+      wcDisplay = '';
+    } else {
+      const formatted = wordCount.toLocaleString('en-US');
+      wcDisplay = `about ${formatted} words`;
+    }
+  } else {
+    // User supplied a value — strip any commas first to normalize
+    const stripped = rawWc.replace(/,/g, '').trim();
+    const asNum = parseInt(stripped, 10);
+    if (!isNaN(asNum)) {
+      // It's a plain number — format it and add "about"/"words"
+      const formatted = asNum.toLocaleString('en-US');
+      wcDisplay = `about ${formatted} words`;
+    } else {
+      // Non-numeric (user already wrote their own string) — use as-is
+      wcDisplay = rawWc;
+    }
+  }
 
   const leftLines = [];
   if (tok.name)    leftLines.push(`<span class="ms-name">${escHtml(tok.name)}</span>`);
@@ -325,7 +359,7 @@ function renderManuscript(tok, wordCount) {
     `  <div class="manuscript-header" role="group" aria-label="Manuscript submission header">`,
     `    <p class="ms-line ms-first-line">`,
     `      <span class="ms-contact">${firstLine}</span>`,
-    `      <span class="ms-wordcount" aria-label="Approximate word count">${escHtml(wc)}</span>`,
+    `      <span class="ms-wordcount" aria-label="Approximate word count">${escHtml(wcDisplay)}</span>`,
     `    </p>`,
     restLines ? `    ${restLines}` : '',
     `  </div>`,
@@ -359,8 +393,53 @@ function renderEpigraph(tok, fnMap) {
 }
 
 function renderMono(tok, fnMap) {
-  const rows = renderBlockLines(tok.content, fnMap, 'mono-line');
+  let isBoldGlobal = false;
+  let isItalicGlobal = false;
+
+  const rows = tok.content.split('\n').map(l => {
+    if (l.trim() === '') return `    <p class="block-spacer"></p>`;
+
+    let lineText = processInlineMono(l, fnMap);
+
+    lineText = lineText.replace(/&gt;/g, '>');
+
+    const hasOpenBold = lineText.includes('&lt;b&gt;') || lineText.includes('[b]');
+    const hasCloseBold = lineText.includes('&lt;/b&gt;') || lineText.includes('[/b]');
+    const hasOpenItalic = lineText.includes('&lt;i&gt;') || lineText.includes('[i]');
+    const hasCloseItalic = lineText.includes('&lt;/i&gt;') || lineText.includes('[/i]');
+
+    if (isBoldGlobal || hasOpenBold) {
+      lineText = lineText.replace(/\[b\]/g, '').replace(/\[\/b\]/g, '');
+    }
+    if (isItalicGlobal || hasOpenItalic) {
+      lineText = lineText.replace(/\[i\]/g, '').replace(/\[\/i\]/g, '');
+    }
+
+    if (hasOpenBold && !hasCloseBold) isBoldGlobal = true;
+    if (hasOpenItalic && !hasCloseItalic) isItalicGlobal = true;
+
+    if (isItalicGlobal || (hasOpenItalic && !hasCloseItalic)) {
+      if (!lineText.startsWith('<em>')) lineText = `<em>${lineText}</em>`;
+    }
+    if (isBoldGlobal || (hasOpenBold && !hasCloseBold)) {
+      if (!lineText.startsWith('<strong>')) lineText = `<strong>${lineText}</strong>`;
+    }
+
+    if (hasCloseBold && !hasOpenBold) isBoldGlobal = false;
+    if (hasCloseItalic && !hasOpenItalic) isItalicGlobal = false;
+
+    return `    <p class="mono-line">${lineText}</p>`;
+  }).join('\n');
+
   return `  <div class="literary-mono" role="region" aria-label="Monospace text">\n${rows}\n  </div>`;
+}
+
+function processInlineMono(str, fnMap) {
+  let rawText = escHtml(str)
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2018\u2019]/g, "'");
+
+  return applyInlineMarkup(rawText, fnMap);
 }
 
 function renderSection(tok, fnMap) {
@@ -369,6 +448,10 @@ function renderSection(tok, fnMap) {
 
 function renderSubsection(tok, fnMap) {
   return `  <h3 class="subsection-heading">${processInline(tok.content, fnMap)}</h3>`;
+}
+
+function renderSubsubsection(tok, fnMap) {
+  return `  <h4 class="subsubsection-heading">${processInline(tok.content, fnMap)}</h4>`;
 }
 
 function renderCode(tok) {
@@ -389,7 +472,10 @@ function renderCode(tok) {
 
   let rowsHtml;
   if (usePrism && grammar) {
-    const rawBlock = codeLines.join('\n');
+    let rawBlock = codeLines.join('\n')
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2018\u2019]/g, "'");
+      
     let highlighted;
     try { highlighted = Prism.highlight(rawBlock, grammar, lang); }
     catch(e) { highlighted = escHtml(rawBlock); }
@@ -398,9 +484,11 @@ function renderCode(tok) {
       `<span class="code-row"><span class="line-number" aria-hidden="true">${idx + 1}</span><code>${l || '\u200b'}</code></span>`
     ).join('\n');
   } else {
-    rowsHtml = codeLines.map((l, idx) =>
-      `<span class="code-row"><span class="line-number" aria-hidden="true">${idx + 1}</span><code>${escHtml(l) || '\u200b'}</code></span>`
-    ).join('\n');
+    rowsHtml = codeLines.map((l, idx) => {
+      // Standardize un-highlighted raw lines safely
+      let cleanLine = l.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
+      return `<span class="code-row"><span class="line-number" aria-hidden="true">${idx + 1}</span><code>${escHtml(cleanLine) || '\u200b'}</code></span>`;
+    }).join('\n');
   }
 
   const langLabel = lang ? `<span class="code-lang-label" aria-hidden="true">${lang}</span>` : '';
@@ -566,7 +654,7 @@ function convertText() {
   let paraIndex = 0;
   let nextAfterBreak = false;
   const paraMap = [];
-  const blockTypes = new Set(['pullquote','aside','epigraph','mono','code','image','bullet','num','alpha','section','subsection','citations','manuscript']);
+  const blockTypes = new Set(['pullquote','aside','epigraph','mono','code','image','bullet','num','alpha','section','subsection','subsubsection','citations','manuscript']);
   let afterBlock = false;
 
   for (const tok of bodyToks) {
@@ -609,14 +697,14 @@ function convertText() {
     }
   });
 
-  if (headerToks.length) out.push(`  <hr class="title-rule" aria-hidden="true" />`);
+  if (headerToks.length) out.push(`  <hr class="title-rule" aria-hidden="true">`);
 
   let pIdx = 0;
   for (const tok of bodyToks) {
-    if (tok.type === 'break')    { out.push(`  <hr class="fleuron-break" aria-label="Section break" />`); continue; }
+    if (tok.type === 'break')    { out.push(`  <hr class="fleuron-break" aria-label="Section break">`); continue; }
     if (tok.type === 'ending')   {
       if (tok.content) out.push(`  <p class="story-end">${processInline(tok.content, fnMap)}</p>`);
-      if (endhr === 'yes') out.push(`  <hr class="fleuron-end" aria-hidden="true" />`);
+      if (endhr === 'yes') out.push(`  <hr class="fleuron-end" aria-hidden="true">`);
       continue;
     }
     if (tok.type === 'pullquote')  { out.push(renderPullquote(tok, fnMap));  continue; }
@@ -624,8 +712,9 @@ function convertText() {
     if (tok.type === 'epigraph')   { out.push(renderEpigraph(tok, fnMap));   continue; }
     if (tok.type === 'mono')       { out.push(renderMono(tok, fnMap));       continue; }
     if (tok.type === 'code')       { out.push(renderCode(tok));              continue; }
-    if (tok.type === 'section')    { out.push(renderSection(tok, fnMap));    continue; }
-    if (tok.type === 'subsection') { out.push(renderSubsection(tok, fnMap)); continue; }
+    if (tok.type === 'section')       { out.push(renderSection(tok, fnMap));       continue; }
+    if (tok.type === 'subsection')    { out.push(renderSubsection(tok, fnMap));    continue; }
+    if (tok.type === 'subsubsection') { out.push(renderSubsubsection(tok, fnMap)); continue; }
     if (tok.type === 'citations')  { out.push(renderCitations(tok, fnMap));  continue; }
     if (['bullet','num','alpha'].includes(tok.type)) { out.push(renderList(tok, fnMap)); continue; }
     if (tok.type === 'image')      { out.push(renderImage(tok));             continue; }
@@ -716,14 +805,32 @@ function triggerDownload(content, filename) {
 }
 
 // Download helpers used by View modals
+function getDocTitle() {
+  // Look in the live preview for the rendered h1 title
+  const titleEl = livePreview.querySelector('h1.story-title');
+  return titleEl ? titleEl.textContent.trim() : null;
+}
+
+function getDownloadFilename(type) {
+  const title = getDocTitle();
+  if (title) {
+    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return `${slug}-${type}.html`;
+  }
+  return `story-${type}.html`;
+}
+
 function getStandaloneHtml() {
-  const title = document.querySelector('.story-title')?.textContent?.trim() || 'Formatted Story';
+  const title = getDocTitle() || 'Story';
+  const storyFooter = `<footer class="wf-credit" aria-label="Formatted by Written &amp; Formatted">
+  <p>Page formatted by <a href="https://samoff.com/written/app" target="_blank" rel="noopener">Written &amp; Formatted</a>. &copy; Tim Samoff.</p>
+</footer>`;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}</title>
+  <title>${escHtml(title)}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
@@ -734,6 +841,7 @@ ${BASE_CSS_TEXT}
 </head>
 <body>
 ${outputHtml.value}
+${storyFooter}
 </body>
 </html>`;
 }
@@ -885,8 +993,9 @@ const TOOLBAR_BUTTONS = [
   { label: 'Title',      title: 'Insert [title] block',      action: () => wrapSelection('[title]',      '[/title]',      true) },
   { label: 'Subtitle',   title: 'Insert [subtitle] block',   action: () => wrapSelection('[subtitle]',   '[/subtitle]',   true) },
   { label: 'Byline',     title: 'Insert [byline] block',     action: () => wrapSelection('[byline]',     '[/byline]',     true) },
-  { label: 'Section',    title: 'Insert [section] heading',    action: () => wrapSelection('[section]',    '[/section]',    true) },
-  { label: 'Subsection', title: 'Insert [subsection] heading', action: () => wrapSelection('[subsection]', '[/subsection]', true) },
+  { label: 'Section',       title: 'Insert [section] heading',       action: () => wrapSelection('[section]',       '[/section]',       true) },
+  { label: 'Subsection',   title: 'Insert [subsection] heading',    action: () => wrapSelection('[subsection]',    '[/subsection]',    true) },
+  { label: 'Sub-sub',      title: 'Insert [subsubsection] heading', action: () => wrapSelection('[subsubsection]', '[/subsubsection]', true) },
   { label: 'B',          title: 'Bold [b]',                  action: () => wrapSelection('[b]', '[/b]'),  bold: true },
   { label: 'I',          title: 'Italic [i]',                action: () => wrapSelection('[i]', '[/i]'),  italic: true },
   { label: '⇗ Link',     title: 'Insert [link]',             action: () => openLinkModal() },
@@ -1032,7 +1141,8 @@ function confirmManuscript() {
   if (city)      lines.push(`city: ${city}`);
   if (phone)     lines.push(`phone: ${phone}`);
   if (email)     lines.push(`email: ${email}`);
-  if (wordcount) lines.push(`wordcount: ${wordcount}`);
+  // Always emit wordcount: so the user can see/edit it; blank = auto-calculate
+  lines.push(`wordcount: ${wordcount}`);
   lines.push('[/manuscript]');
 
   const tag    = lines.join('\n');
@@ -1134,6 +1244,13 @@ function wireCopyButtons(container) {
 //  View Modals — Standalone, Embed, Base CSS
 // ==========================================================================
 
+function getEmbedHtml() {
+  const creditDiv = `<div class="wf-credit" aria-label="Formatted by Written &amp; Formatted">
+  <p>Page formatted by <a href="https://samoff.com/written/app" target="_blank" rel="noopener">Written &amp; Formatted</a>. &copy; Tim Samoff.</p>
+</div>`;
+  return outputHtml.value + '\n' + creditDiv;
+}
+
 function openViewModal(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
@@ -1141,7 +1258,7 @@ function openViewModal(modalId) {
   if (modalId === 'viewStandaloneModal') {
     document.getElementById('viewStandaloneContent').value = getStandaloneHtml();
   } else if (modalId === 'viewEmbedModal') {
-    document.getElementById('viewEmbedContent').value = outputHtml.value;
+    document.getElementById('viewEmbedContent').value = getEmbedHtml();
   } else if (modalId === 'viewCssModal') {
     document.getElementById('viewCssContent').value = BASE_CSS_TEXT;
   }
@@ -1159,12 +1276,12 @@ function closeViewModal(modalId) {
 
 function setupViewModals() {
   const modals = [
-    { id: 'viewStandaloneModal', copyId: 'viewStandaloneCopy',    dlId: 'viewStandaloneDl',    getContent: () => document.getElementById('viewStandaloneContent').value, filename: 'story-standalone.html', dlType: 'text/html' },
-    { id: 'viewEmbedModal',      copyId: 'viewEmbedCopy',         dlId: 'viewEmbedDl',         getContent: () => document.getElementById('viewEmbedContent').value,      filename: 'story-embed.html',      dlType: 'text/html' },
-    { id: 'viewCssModal',        copyId: 'viewCssCopy',           dlId: 'viewCssDl',           getContent: () => document.getElementById('viewCssContent').value,         filename: 'story-base.css',        dlType: 'text/css'  },
+    { id: 'viewStandaloneModal', copyId: 'viewStandaloneCopy', dlId: 'viewStandaloneDl', getContent: () => document.getElementById('viewStandaloneContent').value, getFilename: () => getDownloadFilename('standalone'), dlType: 'text/html' },
+    { id: 'viewEmbedModal',      copyId: 'viewEmbedCopy',      dlId: 'viewEmbedDl',      getContent: () => document.getElementById('viewEmbedContent').value,      getFilename: () => getDownloadFilename('embed'),      dlType: 'text/html' },
+    { id: 'viewCssModal',        copyId: 'viewCssCopy',        dlId: 'viewCssDl',        getContent: () => document.getElementById('viewCssContent').value,         getFilename: () => 'story-base.css',                 dlType: 'text/css'  },
   ];
 
-  modals.forEach(({ id, copyId, dlId, getContent, filename, dlType }) => {
+  modals.forEach(({ id, copyId, dlId, getContent, getFilename, dlType }) => {
     const modal = document.getElementById(id);
     if (!modal) return;
 
@@ -1180,7 +1297,7 @@ function setupViewModals() {
       const blob = new Blob([getContent()], { type: dlType + ';charset=utf-8;' });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
-      a.href = url; a.download = filename;
+      a.href = url; a.download = getFilename();
       document.body.appendChild(a); a.click();
       document.body.removeChild(a); URL.revokeObjectURL(url);
     });
@@ -1222,50 +1339,153 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const BASE_CSS_TEXT = `/* ==========================================================================
    Written & Formatted — Base Stylesheet
+   Generated by https://samoff.com/written/app
+
    NOTE: For [code] syntax highlighting, also include Prism.js:
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"><\/script>
    ========================================================================== */
 
+/* ==========================================================================
+   CUSTOMIZATION — edit the variables below to retheme the page.
+   All colors and fonts flow from this one block; nothing else needs changing.
+   ========================================================================== */
+
+:root {
+  /* ── Page background ───────────────────────────────────────────────────── */
+  --wf-bg:          #ffffff; /* page/body background                         */
+
+  /* ── Text colors ───────────────────────────────────────────────────────── */
+  --wf-text:        #2c3e50; /* main body text                               */
+  --wf-text-muted:  #627284; /* subtitle, byline, captions, muted labels     */
+
+  /* ── Accent / highlight color ──────────────────────────────────────────── */
+  --wf-accent:      #d35400; /* drop cap, pull-quote bar, ornaments, links   */
+
+  /* ── Borders and rules ─────────────────────────────────────────────────── */
+  --wf-border:      #efebe4; /* hr rules, aside borders, section breaks      */
+
+  /* ── Typography ────────────────────────────────────────────────────────── */
+  /* To change the body font, replace the value below AND update the Google  */
+  /* Fonts <link> in your <head> to load your chosen typeface.               */
+  --wf-font-body:   'EB Garamond', Georgia, serif;
+  --wf-font-mono:   'Source Code Pro', Consolas, monospace;
+}
+
+/* ==========================================================================
+   Base layout
+   ========================================================================== */
+
+body {
+  background-color: var(--wf-bg);
+  margin: 0;
+  padding: 0;
+}
+
 .story-content {
   max-width: 660px;
   margin: 0 auto;
   padding: 40px 20px;
-  font-family: 'EB Garamond', Georgia, serif;
+  font-family: var(--wf-font-body);
   font-size: 1.15rem;
   line-height: 1.65;
-  color: #2c3e50;
+  color: var(--wf-text);
 }
 
 .story-content.ls-1   { line-height: 1.4; }
 .story-content.ls-1-5 { line-height: 1.65; }
 .story-content.ls-2   { line-height: 2.0; }
 
-/* ── Header ── */
+/* ==========================================================================
+   Manuscript submission header
+   ========================================================================== */
+
+.story-content .manuscript-header {
+  font-family: var(--wf-font-body);
+  font-size: 0.88rem;
+  color: var(--wf-text);
+  margin-bottom: 4rem;
+  line-height: 1.7;
+}
+
+.story-content .ms-line {
+  margin: 0;
+  text-indent: 0 !important;
+  text-align: left !important;
+}
+
+/* Name left, word count right on the same baseline */
+.story-content .ms-first-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: nowrap;
+}
+
+.story-content .ms-contact { font-weight: 600; }
+
+.story-content .ms-wordcount {
+  font-size: 0.85rem;
+  color: var(--wf-text-muted);
+  white-space: nowrap;
+  padding-left: 3rem;
+}
+
+.story-content .ms-email {
+  color: var(--wf-accent);
+  text-decoration: none;
+}
+.story-content .ms-email:hover { text-decoration: underline; }
+
+/* Breathing room between manuscript block and story title */
+.story-content .manuscript-header ~ h1.story-title { margin-top: 4rem; }
+
+/* ==========================================================================
+   Title / subtitle / byline
+   ========================================================================== */
+
 .story-content h1.story-title {
   text-align: center; font-size: 2.25rem; font-weight: 600;
-  line-height: 1.2; margin: 0 0 0.25em 0;
+  line-height: 1.2; margin: 0 0 0.25em 0; color: var(--wf-text);
 }
 .story-content p.story-subtitle {
   text-align: center; font-size: 1.35rem; font-weight: 400;
-  font-style: italic; color: #627284; margin: 0 0 0.5em 0; line-height: 1.3;
+  font-style: italic; color: var(--wf-text-muted);
+  margin: 0 0 0.5em 0; line-height: 1.3; text-indent: 0 !important;
 }
 .story-content p.story-byline {
   text-align: center; font-size: 1rem; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.05em; color: #627284; margin: 0 0 1.5em 0;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--wf-text-muted); margin: 0 0 1.5em 0; text-indent: 0 !important;
 }
 .story-content hr.title-rule {
-  border: none; border-top: 1px solid #efebe4;
+  border: none; border-top: 1px solid var(--wf-border);
   margin: 0 auto 2.5rem auto; width: 80px;
 }
 
-/* ── Section heading ── */
+/* ==========================================================================
+   Section / subsection / sub-subsection headings
+   ========================================================================== */
+
 .story-content h2.section-heading {
   font-size: 1.25rem; font-weight: 600; margin: 2.5rem 0 0.75rem 0;
-  color: #2c3e50; letter-spacing: 0.01em;
+  color: var(--wf-text); letter-spacing: 0.01em;
 }
+.story-content h3.subsection-heading {
+  font-size: 1.1rem; font-weight: 600; font-style: italic;
+  margin: 2rem 0 0.5rem 0; color: var(--wf-text); letter-spacing: 0.01em;
+}
+.story-content h4.subsubsection-heading {
+  font-size: 1rem; font-weight: 600; margin: 1.5rem 0 0.4rem 0;
+  color: var(--wf-text); letter-spacing: 0.01em;
+}
+.story-content h2.section-heading + h3.subsection-heading,
+.story-content h3.subsection-heading + h4.subsubsection-heading { margin-top: 0; }
 
-/* ── Body paragraphs ── */
+/* ==========================================================================
+   Body paragraphs
+   ========================================================================== */
+
 .story-content p {
   margin: 0 0 0.5em 0; text-align: justify; text-justify: inter-word;
 }
@@ -1275,13 +1495,17 @@ const BASE_CSS_TEXT = `/* ======================================================
 .story-content p.dropcap-paragraph { text-indent: 0; }
 .story-content p.dropcap-paragraph::first-letter {
   font-size: 4.5rem; float: left; line-height: 0.75;
-  margin: 0.1em 0.1rem 0 0; color: #d35400;
+  margin: 0.1em 0.1rem 0 0;
+  color: var(--wf-accent); /* ← change drop cap color here */
 }
 
-/* ── Epigraph ── */
+/* ==========================================================================
+   Epigraph
+   ========================================================================== */
+
 .story-content blockquote.epigraph {
   margin: 2rem 2rem 2rem 3rem;
-  font-style: italic; color: #627284;
+  font-style: italic; color: var(--wf-text-muted);
   border: none; padding: 0;
 }
 .story-content .epigraph p { text-indent: 0 !important; margin-bottom: 0.4em; }
@@ -1290,31 +1514,34 @@ const BASE_CSS_TEXT = `/* ======================================================
 }
 .story-content .epigraph cite { font-style: italic; }
 
-/* ── Pull quote ── */
+/* ==========================================================================
+   Pull quote
+   ========================================================================== */
+
 .story-content aside.pullquote {
-  border-left: 4px solid #d35400;
-  padding: 0.5rem 1.5rem;
-  margin: 2rem 0;
-  font-size: 1.2rem;
-  font-style: italic;
-  color: #3a3a3a;
+  border-left: 4px solid var(--wf-accent);
+  padding: 0.5rem 1.5rem; margin: 2rem 0;
+  font-size: 1.2rem; font-style: italic; color: var(--wf-text);
 }
 .story-content .pullquote p { text-indent: 0 !important; margin-bottom: 0.4em; }
 
-/* ── Editorial aside ── */
+/* ==========================================================================
+   Editorial aside
+   ========================================================================== */
+
 .story-content aside.editorial-aside {
-  border: 1px solid #efebe4;
-  border-radius: 6px;
-  padding: 1rem 1.25rem;
-  margin: 2rem 0;
-  font-size: 0.95rem;
-  color: #4a4a4a;
+  border: 1px solid var(--wf-border);
+  border-radius: 6px; padding: 1rem 1.25rem; margin: 2rem 0;
+  font-size: 0.95rem; color: var(--wf-text);
 }
 .story-content .editorial-aside p { text-indent: 0 !important; margin-bottom: 0.4em; }
 
-/* ── Mono ── */
+/* ==========================================================================
+   Monospace prose
+   ========================================================================== */
+
 .story-content .literary-mono {
-  font-family: 'Source Code Pro', Consolas, monospace;
+  font-family: var(--wf-font-mono);
   font-size: 0.9rem; margin: 2rem 0;
 }
 .story-content .literary-mono p {
@@ -1323,9 +1550,13 @@ const BASE_CSS_TEXT = `/* ======================================================
 }
 .story-content .literary-mono p:last-child { margin-bottom: 0; }
 
-/* ── Code ── */
+/* ==========================================================================
+   Code blocks
+   ========================================================================== */
+
 .story-content .code-block-wrap {
-  background: #1e1e1e; border-radius: 8px; margin: 2rem 0; overflow: hidden; position: relative;
+  background: #1e1e1e; border-radius: 8px; margin: 2rem 0;
+  overflow: hidden; position: relative;
 }
 .story-content .code-lang-label {
   display: inline-block; font-family: monospace; font-size: 0.68rem;
@@ -1344,74 +1575,214 @@ const BASE_CSS_TEXT = `/* ======================================================
   margin-right: 12px; font-family: monospace; font-size: 0.78rem; line-height: 1.5;
 }
 .story-content .code-row code {
-  font-family: 'Source Code Pro', Consolas, monospace;
+  font-family: var(--wf-font-mono);
   font-size: 0.85rem; white-space: pre; color: #e0e0e0;
   background: transparent; padding: 0;
 }
 
-/* ── Lists ── */
+/* ==========================================================================
+   Lists
+   ========================================================================== */
+
 .story-content ul, .story-content ol {
   margin: 1.5rem 0; padding-left: 2rem; text-indent: 0;
 }
 .story-content ol.list-alpha { list-style-type: lower-alpha; }
 .story-content li { margin-bottom: 6px; }
 
-/* ── Image ── */
+/* ==========================================================================
+   Images
+   ========================================================================== */
+
 .story-content figure.editorial-figure { margin: 2.5rem 0; display: flex; flex-direction: column; gap: 8px; }
 .story-content .editorial-image { width: 100%; height: auto; border-radius: 8px; display: block; }
-.story-content .editorial-caption { font-size: 0.88rem; color: #627284; line-height: 1.4; padding: 0 4px; }
-.story-content .caption-credit { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: #d35400; margin-left: 6px; }
+.story-content .editorial-caption { font-size: 0.88rem; color: var(--wf-text-muted); line-height: 1.4; padding: 0 4px; }
+.story-content .caption-credit { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--wf-accent); margin-left: 6px; }
 
-/* ── Section break ── */
+/* ==========================================================================
+   Section break ornament
+   ========================================================================== */
+
 .story-content hr.fleuron-break {
-  border: none; height: 1px; background: #efebe4;
+  border: none; height: 1px; background: var(--wf-border);
   width: 33%; margin: 3rem auto; position: relative; overflow: visible;
 }
 .story-content hr.fleuron-break::after {
-  content: "✦"; font-size: 0.6rem; color: #d35400; background-color: #fff;
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 0 1rem;
+  content: "✦"; font-size: 0.6rem; color: var(--wf-accent);
+  background-color: var(--wf-bg); /* must match page background */
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%); padding: 0 1rem;
 }
 
-/* ── End marker ── */
-.story-content p.story-end { text-align: center; font-style: italic; color: #627284; margin: 3rem 0; text-indent: 0 !important; }
+/* ==========================================================================
+   End marker
+   ========================================================================== */
+
+.story-content p.story-end {
+  text-align: center; font-style: italic; color: var(--wf-text-muted);
+  margin: 3rem 0; text-indent: 0 !important;
+}
 .story-content hr.fleuron-end {
-  border: none; height: 1px; background: #efebe4;
+  border: none; height: 1px; background: var(--wf-border);
   width: 10%; margin: 5rem auto; position: relative; overflow: visible;
 }
 .story-content hr.fleuron-end::after {
-  content: "✦ ✦ ✦"; font-size: 0.6rem; letter-spacing: 0.5em; color: #d35400;
-  background-color: #fff; position: absolute; top: 50%; left: 50%;
+  content: "✦ ✦ ✦"; font-size: 0.6rem; letter-spacing: 0.5em;
+  color: var(--wf-accent); background-color: var(--wf-bg); /* must match page background */
+  position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%); padding: 0 1rem; white-space: nowrap;
 }
 
-/* ── Footnotes ── */
+/* ==========================================================================
+   Footnotes & citations
+   ========================================================================== */
+
 .story-content a.fn-ref {
-  text-decoration: none; color: #d35400; font-size: 0.75em;
+  text-decoration: none; color: var(--wf-accent); font-size: 0.75em;
   vertical-align: super; line-height: 0;
 }
 .story-content a.fn-ref:hover { text-decoration: underline; }
 .story-content .citations-section {
-  margin-top: 3rem; border-top: 1px solid #efebe4; padding-top: 1.5rem;
+  margin-top: 3rem; border-top: 1px solid var(--wf-border); padding-top: 1.5rem;
 }
 .story-content .citations-heading {
   font-size: 0.9rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.08em; color: #627284; margin: 0 0 1rem 0;
+  letter-spacing: 0.08em; color: var(--wf-text-muted); margin: 0 0 1rem 0;
 }
 .story-content .citations-list { padding-left: 1.5rem; margin: 0; }
 .story-content .citation-entry {
-  font-size: 0.9rem; color: #4a4a4a; margin-bottom: 0.5em; line-height: 1.5;
+  font-size: 0.9rem; color: var(--wf-text); margin-bottom: 0.5em; line-height: 1.5;
 }
 .story-content a.fn-return {
-  font-size: 0.8rem; color: #d35400; text-decoration: none; margin-left: 4px;
+  font-size: 0.8rem; color: var(--wf-accent); text-decoration: none; margin-left: 4px;
 }
 .story-content a.fn-return:hover { text-decoration: underline; }
+
+/* ==========================================================================
+   Written & Formatted credit (standalone footer / embed div)
+   ========================================================================== */
+
+footer.wf-credit, div.wf-credit {
+  max-width: 660px;
+  margin: 3rem auto 0 auto;
+  padding: 1rem 20px 0 20px;
+  border-top: 1px solid var(--wf-border);
+  font-family: var(--wf-font-body);
+  font-size: 0.78rem;
+  color: var(--wf-text-muted);
+  text-align: center;
+}
+footer.wf-credit p, div.wf-credit p {
+  margin: 0; text-indent: 0 !important;
+}
+footer.wf-credit a, div.wf-credit a {
+  color: var(--wf-accent); text-decoration: none;
+}
+footer.wf-credit a:hover, div.wf-credit a:hover { text-decoration: underline; }
 `;
 
-downloadCssBtn.addEventListener('click', () => {
+downloadCssBtn?.addEventListener('click', () => {
   const blob = new Blob([BASE_CSS_TEXT], { type: 'text/css;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url; a.download = 'story-base.css';
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
+});
+
+/* ==========================================================================
+   Sidebar Preference Persistence (localStorage)
+   ========================================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  const formattingOptions = ['dropcap', 'indent', 'linespacing', 'endhr'];
+
+  formattingOptions.forEach(optionName => {
+    const savedValue = localStorage.getItem(`wf_opt_${optionName}`);
+    
+    if (savedValue) {
+      const targetRadio = document.querySelector(`input[name="${optionName}"][value="${savedValue}"]`);
+      if (targetRadio) {
+        targetRadio.checked = true;
+        
+        targetRadio.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+
+    const radios = document.querySelectorAll(`input[name="${optionName}"]`);
+    
+    radios.forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          localStorage.setItem(`wf_opt_${optionName}`, e.target.value);
+        }
+      });
+    });
+  });
+});
+
+/* ==========================================================================
+   Synchronized Scrolling
+   ========================================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  const inputPane = document.getElementById('inputText');
+  const previewPane = document.getElementById('livePreview'); // Patched to your actual HTML ID
+
+  if (!inputPane || !previewPane) return;
+
+  let scrollTimeout;
+
+  function syncPreviewToInputLine() {
+    clearTimeout(scrollTimeout);
+    
+    scrollTimeout = setTimeout(() => {
+      const text = inputPane.value;
+      const cursorIdx = inputPane.selectionStart;
+      
+      if (!text || cursorIdx === undefined) return;
+
+      const lineIndex = text.substring(0, cursorIdx).split('\n').length - 1;
+
+      const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure');
+      let bestMatch = null;
+      let closestDistance = Infinity;
+
+      elements.forEach(el => {
+        const textContent = el.textContent || '';
+        const lines = text.split('\n');
+        const targetLineText = lines[lineIndex] ? lines[lineIndex].trim() : '';
+
+        const cleanTarget = targetLineText.replace(/\[\/?(b|i|mono|code|dropcap|pullquote)\]/g, '').trim();
+
+        if (cleanTarget.length > 2 && textContent.includes(cleanTarget)) {
+          bestMatch = el;
+        }
+      });
+
+      if (!bestMatch && text.length > 0) {
+        const ratio = cursorIdx / text.length;
+        const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * ratio;
+        
+        previewPane.scrollTo({
+          top: targetScroll,
+          behavior: 'smooth'
+        });
+        return;
+      }
+
+      if (bestMatch) {
+        bestMatch.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }, 80);
+  }
+
+  inputPane.addEventListener('click', syncPreviewToInputLine);
+  inputPane.addEventListener('keyup', (e) => {
+    if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End' || e.key === 'Backspace' || e.key === 'Enter') {
+      syncPreviewToInputLine();
+    }
+  });
 });

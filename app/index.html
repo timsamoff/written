@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Written — HTML Formatter</title>
+  <title>Written &amp; Formatted</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -17,7 +17,7 @@
     <div class="container header-container">
       <div class="branding-text">
         <span class="site-logo">Written <span class="logo-amp">&amp;</span> Formatted</span>
-        <span class="site-tagline">Plain Text → Semantic HTML</span>
+        <span class="site-tagline">Plain Text → Semantic and Accessible HTML</span>
       </div>
       <button class="theme-btn" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">☀</button>
     </div>
@@ -66,7 +66,7 @@
 
       <div class="option-group option-static">
         <span class="option-label">Always On</span>
-        <p class="option-note">Smart quotes and inline <code>[b]</code>/<code>[i]</code> are always on. Use <code>[fn]1[/fn]</code> for footnote refs — they auto-link to the <code>[citations]</code> block.</p>
+        <p class="option-note">Smart quotes are always applied — straight <code>"</code> and <code>'</code> are converted to curly equivalents automatically. Section breaks (<code>***</code>, <code>---</code>, <code>~~~</code>, etc.) are always recognized and rendered as ornamental dividers.</p>
       </div>
     </aside>
 
@@ -91,13 +91,14 @@
               <div class="syntax-item mono-example">[byline]By Author Name[/byline]</div>
               <div class="syntax-item mono-example">[section]Mid-doc Heading[/section]</div>
               <div class="syntax-item mono-example">[subsection]Sub-heading[/subsection]</div>
+              <div class="syntax-item mono-example">[subsubsection]Deeper heading[/subsubsection]</div>
             </div>
             <div class="syntax-section">
               <div class="syntax-section-label">Inline Formatting</div>
               <div class="syntax-item mono-example">[b]Bold text[/b]</div>
               <div class="syntax-item mono-example">[i]Italic text[/i]</div>
               <div class="syntax-item mono-example">[link]Link text -&gt; https://example.com[/link]</div>
-              <div class="syntax-item mono-example">[fn]1[/fn] &nbsp;← inline footnote ref</div>
+              <div class="syntax-item mono-example">[fn]1[/fn] &nbsp;← inline footnote ref<br>Links to matching entry in <code>[citations]</code> block</div>
             </div>
             <div class="syntax-section">
               <div class="syntax-section-label">Editorial Blocks</div>

@@ -596,16 +596,21 @@ blockquote.pull-quote {
     display: block !important;
 }
 
-.story-content p.literary-mono,
+/* Container block configuration */
 .story-content div.literary-mono {
+    margin: var(--space-md) 0 !important;
+    margin-left: 2rem !important;
+}
+
+.story-content .literary-mono p.mono-line {
     font-family: 'Source Code Pro', Consolas, Monaco, monospace !important;
     font-size: 1.1rem !important;
     line-height: 1.6 !important;
     color: var(--color-text) !important;
-    margin: var(--space-md) 0 !important;
-    margin-left: 2rem !important;
-    white-space: pre-wrap !important;
+    margin: 0 !important;
     text-indent: 0 !important;
+    white-space: pre-wrap !important;
+    display: block !important;
 }
 
 /* ==========================================================================
@@ -625,4 +630,161 @@ blockquote.pull-quote {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 0.85rem;
     color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   Written & Formatted — Integrated Embed Support Rules
+   ========================================================================== */
+
+/* Structure & Typography alignment rules */
+.story-content .story-subtitle {
+    font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+    font-size: 1.25rem;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin-top: calc(var(--space-xs) * -1);
+    margin-bottom: var(--space-xl);
+}
+
+.story-content .story-byline {
+    font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+/* Editorial Block Elements */
+.story-content .epigraph {
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--color-text-muted);
+    max-width: 80%;
+    margin: var(--space-xl) auto;
+    padding-left: var(--space-md);
+    border-left: 2px solid var(--color-border);
+}
+.story-content .epigraph p { text-indent: 0 !important; margin-bottom: 0.5em; }
+
+.story-content .pullquote {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    line-height: 1.4;
+    color: var(--color-accent);
+    width: 45%;
+    float: right;
+    margin: var(--space-sm) 0 var(--space-md) var(--space-lg);
+    padding: var(--space-sm) 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+}
+.story-content .pullquote p { text-indent: 0 !important; }
+
+.story-content .editorial-aside {
+    font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: var(--space-md);
+    margin: var(--space-md) 0;
+}
+.story-content .editorial-aside p { text-indent: 0 !important; }
+
+/* Footnote System References & Anchor Alignment */
+.story-content .fn-anchor {
+    display: block;
+    position: relative;
+    top: -40px; /* Offset to scroll cleanly above target view */
+    visibility: hidden;
+}
+.story-content .fn-ref {
+    font-weight: 600;
+    font-size: 0.8em;
+    color: var(--color-accent);
+    text-decoration: none;
+    padding: 0 2px;
+}
+.story-content .fn-ref:hover { text-decoration: underline; }
+
+/* Footnotes Container & Citations Block Footer */
+.story-content .citations-block {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--color-border);
+}
+.story-content .citations-title {
+    font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-md);
+}
+.story-content .citations-list { padding-left: 1.25rem; margin: 0; }
+.story-content .citation-entry {
+    font-size: 0.95rem;
+    color: var(--color-text);
+    margin-bottom: 0.5em;
+    line-height: 1.5;
+}
+.story-content .fn-return {
+    font-size: 0.8rem;
+    color: var(--color-accent);
+    text-decoration: none;
+    margin-left: 6px;
+}
+.story-content .fn-return:hover { text-decoration: underline; }
+
+.story-content p.story-end {
+  text-align: center;
+  font-style: italic;
+  color: var(--color-text-muted);
+  margin: var(--space-lg) 0;
+  text-indent: 0 !important;
+}
+
+.story-content hr.fleuron-end {
+  border: none;
+  height: 1px;
+  background: var(--color-border);
+  width: 10%;
+  margin: var(--space-xl) auto;
+  position: relative;
+  overflow: visible;
+}
+.story-content hr.fleuron-end::after {
+  content: "✦ ✦ ✦";
+  font-size: 0.6rem;
+  letter-spacing: 0.5em;
+  color: var(--color-accent);
+  background-color: var(--color-bg-card);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 var(--space-sm);
+  white-space: nowrap;
+}
+
+/* Universal Helper Adjustments */
+.story-content .block-spacer { height: 1.5rem; margin: 0; }
+
+/* Accessibility Utility */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
 }
