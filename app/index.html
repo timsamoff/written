@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Written — HTML Formatter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+  <link rel="stylesheet" href="written.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container header-container">
+      <div class="branding-text">
+        <span class="site-logo">Written <span class="logo-amp">&amp;</span> Formatted</span>
+        <span class="site-tagline">Plain Text → Semantic HTML</span>
+      </div>
+      <button class="theme-btn" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">☀</button>
+    </div>
+  </header>
+
+  <main class="container main-layout">
+
+    <!-- ── Left: Formatting Options ─────────────────────────────────────── -->
+    <aside class="controls-panel">
+      <h2 class="panel-title">Formatting Options</h2>
+
+      <fieldset class="option-group">
+        <legend class="option-label">Drop Cap</legend>
+        <div class="radio-stack">
+          <label class="radio-row"><input type="radio" name="dropcap" value="none" checked /><span class="radio-mark"></span><span>None</span></label>
+          <label class="radio-row"><input type="radio" name="dropcap" value="first" /><span class="radio-mark"></span><span>First paragraph only</span></label>
+          <label class="radio-row"><input type="radio" name="dropcap" value="sections" /><span class="radio-mark"></span><span>First of each section</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="option-group">
+        <legend class="option-label">Paragraph Indent</legend>
+        <div class="radio-stack">
+          <label class="radio-row"><input type="radio" name="indent" value="all" checked /><span class="radio-mark"></span><span>Indent all</span></label>
+          <label class="radio-row"><input type="radio" name="indent" value="none" /><span class="radio-mark"></span><span>No indentation</span></label>
+          <label class="radio-row"><input type="radio" name="indent" value="section-only" /><span class="radio-mark"></span><span>All except first of each section</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="option-group">
+        <legend class="option-label">Line Spacing</legend>
+        <div class="radio-stack">
+          <label class="radio-row"><input type="radio" name="linespacing" value="1" /><span class="radio-mark"></span><span>1× — Tight</span></label>
+          <label class="radio-row"><input type="radio" name="linespacing" value="1.5" checked /><span class="radio-mark"></span><span>1.5× — Default</span></label>
+          <label class="radio-row"><input type="radio" name="linespacing" value="2" /><span class="radio-mark"></span><span>2× — Airy</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="option-group">
+        <legend class="option-label">End Ornament</legend>
+        <div class="radio-stack">
+          <label class="radio-row"><input type="radio" name="endhr" value="yes" checked /><span class="radio-mark"></span><span>Show ornament with <code>[end]</code></span></label>
+          <label class="radio-row"><input type="radio" name="endhr" value="no" /><span class="radio-mark"></span><span>No ornament</span></label>
+        </div>
+      </fieldset>
+
+      <div class="option-group option-static">
+        <span class="option-label">Always On</span>
+        <p class="option-note">Smart quotes and inline <code>[b]</code>/<code>[i]</code> are always on. Use <code>[fn]1[/fn]</code> for footnote refs — they auto-link to the <code>[citations]</code> block.</p>
+      </div>
+    </aside>
+
+    <!-- ── Center: Input Pane ────────────────────────────────────────────── -->
+    <section class="editor-area">
+      <div class="pane editor-pane">
+
+        <div class="pane-header">
+          <span class="pane-label">Plain Text Input</span>
+          <button class="hint-toggle" id="syntaxToggle" aria-expanded="false">
+            Syntax guide <i class="fa-solid fa-chevron-down"></i>
+          </button>
+        </div>
+
+        <div class="syntax-reference" id="syntaxReference" hidden>
+          <div class="syntax-grid">
+            <div class="syntax-section">
+              <div class="syntax-section-label">Document Header</div>
+              <div class="syntax-item mono-example">[manuscript]<br>name: Your Name<br>address: 123 Main St<br>city: City, ST 00000<br>phone: 555-555-5555<br>email: you@example.com<br>[/manuscript]</div>
+              <div class="syntax-item mono-example">[title]Title Line One<br>Title Line Two[/title]</div>
+              <div class="syntax-item mono-example">[subtitle]Story Subtitle[/subtitle]</div>
+              <div class="syntax-item mono-example">[byline]By Author Name[/byline]</div>
+              <div class="syntax-item mono-example">[section]Mid-doc Heading[/section]</div>
+              <div class="syntax-item mono-example">[subsection]Sub-heading[/subsection]</div>
+            </div>
+            <div class="syntax-section">
+              <div class="syntax-section-label">Inline Formatting</div>
+              <div class="syntax-item mono-example">[b]Bold text[/b]</div>
+              <div class="syntax-item mono-example">[i]Italic text[/i]</div>
+              <div class="syntax-item mono-example">[link]Link text -&gt; https://example.com[/link]</div>
+              <div class="syntax-item mono-example">[fn]1[/fn] &nbsp;← inline footnote ref</div>
+            </div>
+            <div class="syntax-section">
+              <div class="syntax-section-label">Editorial Blocks</div>
+              <div class="syntax-item mono-example">[pullquote]Pulled excerpt text[/pullquote]</div>
+              <div class="syntax-item mono-example">[aside]Supplementary content[/aside]</div>
+              <div class="syntax-item mono-example">[epigraph]<br>Opening quote text<br>— Attribution<br>[/epigraph]</div>
+              <div class="syntax-item mono-example">[mono]Monospace literary prose[/mono]</div>
+              <div class="syntax-item mono-example">[code]<br># lang: javascript<br>const x = 1;<br>[/code]</div>
+            </div>
+            <div class="syntax-section">
+              <div class="syntax-section-label">Image &amp; Lists</div>
+              <div class="syntax-item mono-example">[image]<br>source: image.jpg<br>alt: Description<br>caption: Caption<br>credit: by Jane Doe<br>[/image]</div>
+              <div class="syntax-item mono-example">[bullet] / [num] / [alpha]<br>Item one<br>Item two<br>[/bullet] / [/num] / [/alpha]</div>
+              <div class="syntax-item mono-example">⇥ / ⇤ toolbar buttons to nest list items</div>
+            </div>
+            <div class="syntax-section">
+              <div class="syntax-section-label">Footnotes &amp; End</div>
+              <div class="syntax-item mono-example">[citations]<br>heading: Notes<br>1. First citation<br>2. Second citation<br>[/citations]</div>
+              <div class="syntax-item mono-example">[end]The End[/end]<br>[end][/end] ← ornament only</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tag insertion toolbar -->
+        <div class="editor-toolbar" id="editorToolbar" role="toolbar" aria-label="Tag insertion toolbar"></div>
+
+        <!-- Input textarea — vertically resizable -->
+        <textarea id="inputText" class="text-pane input-pane" spellcheck="true"
+          placeholder="Type or paste your story text here…"></textarea>
+
+        <!-- Action bar below textarea -->
+        <div class="editor-action-bar" id="editorActionBar">
+          <button id="viewStandaloneBtn" class="btn btn-action">
+            <i class="fa-solid fa-file-code" aria-hidden="true"></i> View Standalone
+          </button>
+          <button id="viewEmbedBtn" class="btn btn-action">
+            <i class="fa-solid fa-code" aria-hidden="true"></i> View Embed
+          </button>
+          <button id="viewCssBtn" class="btn btn-action">
+            <i class="fa-solid fa-palette" aria-hidden="true"></i> View Base CSS
+          </button>
+          <button id="clearBtn" class="btn btn-ghost">
+            <i class="fa-solid fa-xmark" aria-hidden="true"></i> Clear
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Right: Live Preview ───────────────────────────────────────────── -->
+    <section class="preview-panel">
+      <div class="preview-header">
+        <span class="pane-label">Live Preview</span>
+        <div class="preview-header-right">
+          <span class="pane-hint">Formatted output</span>
+          <button class="preview-expand-btn" id="previewExpandBtn" title="Expand preview" aria-label="Expand preview">
+            <i class="fa-solid fa-expand"></i>
+          </button>
+        </div>
+      </div>
+      <div id="livePreview" class="story-content preview-body"></div>
+    </section>
+
+  </main>
+
+  <!-- Hidden output storage — written by converter, read by View modals -->
+  <textarea id="outputHtml" hidden aria-hidden="true"></textarea>
+
+  <footer class="site-footer">
+    <div class="container footer-container">
+      <span>Written &amp; Formatted — a companion tool for <em>Written</em> by Tim Samoff</span>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       View Modals
+       ══════════════════════════════════════════════════════════════════════ -->
+
+  <!-- View Standalone -->
+  <div id="viewStandaloneModal" class="modal-overlay view-modal" hidden role="dialog" aria-modal="true" aria-labelledby="viewStandaloneTitle">
+    <div class="modal-box modal-box--wide">
+      <div class="modal-header">
+        <h3 class="modal-title" id="viewStandaloneTitle">Standalone HTML</h3>
+        <button class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body modal-body--code">
+        <p class="modal-hint">A complete self-contained HTML page with fonts and base CSS embedded. Save it and open in any browser.</p>
+        <textarea id="viewStandaloneContent" class="view-code-area" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button id="viewStandaloneDl" class="btn btn-action"><i class="fa-solid fa-download" aria-hidden="true"></i> Download</button>
+        <button id="viewStandaloneCopy" class="btn btn-primary"><i class="fa-regular fa-copy" aria-hidden="true"></i> Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Embed -->
+  <div id="viewEmbedModal" class="modal-overlay view-modal" hidden role="dialog" aria-modal="true" aria-labelledby="viewEmbedTitle">
+    <div class="modal-box modal-box--wide">
+      <div class="modal-header">
+        <h3 class="modal-title" id="viewEmbedTitle">Embed HTML</h3>
+        <button class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body modal-body--code">
+        <p class="modal-hint">The <code>&lt;article&gt;</code> block ready to paste into a CMS, template, or existing page. Requires the base CSS (and Prism if using code blocks) to be loaded by the host page.</p>
+        <textarea id="viewEmbedContent" class="view-code-area" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button id="viewEmbedDl" class="btn btn-action"><i class="fa-solid fa-download" aria-hidden="true"></i> Download</button>
+        <button id="viewEmbedCopy" class="btn btn-primary"><i class="fa-regular fa-copy" aria-hidden="true"></i> Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Base CSS -->
+  <div id="viewCssModal" class="modal-overlay view-modal" hidden role="dialog" aria-modal="true" aria-labelledby="viewCssTitle">
+    <div class="modal-box modal-box--wide">
+      <div class="modal-header">
+        <h3 class="modal-title" id="viewCssTitle">Base Stylesheet</h3>
+        <button class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body modal-body--code">
+        <p class="modal-hint">Color- and font-free structural CSS. Add your own theme on top. See comments for Prism integration.</p>
+        <textarea id="viewCssContent" class="view-code-area" readonly spellcheck="false"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button id="viewCssDl" class="btn btn-action"><i class="fa-solid fa-download" aria-hidden="true"></i> Download</button>
+        <button id="viewCssCopy" class="btn btn-primary"><i class="fa-regular fa-copy" aria-hidden="true"></i> Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       Editing Modals
+       ══════════════════════════════════════════════════════════════════════ -->
+
+  <!-- Preview Expand -->
+  <div id="previewModal" class="preview-modal-overlay" hidden role="dialog" aria-modal="true" aria-label="Expanded preview">
+    <div class="preview-modal-box">
+      <div class="preview-modal-header">
+        <span class="pane-label">Live Preview</span>
+        <button class="modal-close preview-modal-close" id="previewModalClose" aria-label="Close expanded preview">
+          <i class="fa-solid fa-compress"></i>
+        </button>
+      </div>
+      <div id="previewModalBody" class="story-content preview-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Manuscript -->
+  <div id="manuscriptModal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="manuscriptModalTitle">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="manuscriptModalTitle">Manuscript Submission Header</h3>
+        <button class="modal-close" id="manuscriptModalClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-field"><label class="modal-label" for="msName">Name <span class="modal-required">*</span></label><input class="modal-input" type="text" id="msName" placeholder="Your full name" /></div>
+        <div class="modal-field"><label class="modal-label" for="msAddress">Street Address</label><input class="modal-input" type="text" id="msAddress" placeholder="123 Main Street" /></div>
+        <div class="modal-field"><label class="modal-label" for="msCity">City, State, ZIP</label><input class="modal-input" type="text" id="msCity" placeholder="Moorpark, CA 93021" /></div>
+        <div class="modal-field"><label class="modal-label" for="msPhone">Phone</label><input class="modal-input" type="tel" id="msPhone" placeholder="805-555-0100" /></div>
+        <div class="modal-field"><label class="modal-label" for="msEmail">Email</label><input class="modal-input" type="email" id="msEmail" placeholder="you@example.com" /></div>
+        <div class="modal-field">
+          <label class="modal-label" for="msWordcount">Word Count Override</label>
+          <input class="modal-input" type="text" id="msWordcount" placeholder="auto (calculated from text)" />
+          <p class="modal-hint">Leave blank to auto-calculate and round to nearest 100.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="manuscriptModalCancel">Cancel</button>
+        <button class="btn btn-primary" id="manuscriptModalConfirm">Insert Header</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Link -->
+  <div id="linkModal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="linkModalTitle">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="linkModalTitle">Insert Link</h3>
+        <button class="modal-close" id="linkModalClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-field"><label class="modal-label" for="linkText">Link Text</label><input class="modal-input" type="text" id="linkText" placeholder="Text to display" /></div>
+        <div class="modal-field">
+          <label class="modal-label" for="linkUrl">URL</label>
+          <input class="modal-input" type="url" id="linkUrl" placeholder="https://example.com or ../relative/path.html" />
+          <p class="modal-hint">Accepts absolute URLs, relative paths, or protocol-relative links.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="linkModalCancel">Cancel</button>
+        <button class="btn btn-primary" id="linkModalConfirm">Insert Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image -->
+  <div id="imageModal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="imageModalTitle">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="imageModalTitle">Insert Image</h3>
+        <button class="modal-close" id="imageModalClose" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-field">
+          <label class="modal-label" for="imgSource">Source <span class="modal-required">*</span></label>
+          <input class="modal-input" type="text" id="imgSource" placeholder="image.jpg  or  ../img/photo.png  or  https://…" />
+          <p class="modal-hint">Relative path, absolute path, or full URL — all accepted.</p>
+        </div>
+        <div class="modal-field"><label class="modal-label" for="imgAlt">Alt Text</label><input class="modal-input" type="text" id="imgAlt" placeholder="Descriptive alt text for screen readers" /></div>
+        <div class="modal-field"><label class="modal-label" for="imgCaption">Caption</label><input class="modal-input" type="text" id="imgCaption" placeholder="Visible caption beneath image" /></div>
+        <div class="modal-field"><label class="modal-label" for="imgCredit">Credit</label><input class="modal-input" type="text" id="imgCredit" placeholder="Photo by Jane Doe" /></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="imageModalCancel">Cancel</button>
+        <button class="btn btn-primary" id="imageModalConfirm">Insert Image</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prism -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="written.js"></script>
+  <script>
+    document.getElementById('syntaxToggle').addEventListener('click', function () {
+      const ref = document.getElementById('syntaxReference');
+      const hidden = ref.hasAttribute('hidden');
+      if (hidden) { ref.removeAttribute('hidden'); this.setAttribute('aria-expanded', 'true'); }
+      else { ref.setAttribute('hidden', ''); this.setAttribute('aria-expanded', 'false'); }
+    });
+  </script>
+</body>
+</html>

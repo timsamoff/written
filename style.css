@@ -392,7 +392,7 @@ hr.fleuron-end + p {
 .story-content {
     font-family: 'EB Garamond', Georgia, serif;
     font-size: 1.35rem;
-    line-height: 1.65;
+    /* line-height: 1.65; */
 }
 
 .story-content p {
@@ -401,24 +401,41 @@ hr.fleuron-end + p {
     color: var(--color-text);
 }
 
-.story-content p.plain-paragraph {
+.story-content p.no-indent {
     text-indent: 0;
     margin-top: var(--space-md); 
 }
 
-.dropcap-paragraph {
-    text-indent: 0 !important;
+/* Tight: 1× */
+.story-content.ls-1,
+.story-content.ls-1 p {
+  line-height: 1.25;
+}
+ 
+/* Default: 1.5× */
+.story-content.ls-1-5,
+.story-content.ls-1-5 p {
+  line-height: 1.65;
+}
+ 
+/* Airy: 2× */
+.story-content.ls-2,
+.story-content.ls-2 p {
+  line-height: 2.1;
 }
 
+.dropcap-paragraph {
+  text-indent: 0 !important;
+}
 .dropcap-paragraph::first-letter {
-    font-size: 4.5rem;
-    font-weight: 600;
-    float: left;
-    line-height: 0.75;
-    margin-right: var(--space-xs);
-    margin-top: var(--space-xs);
-    color: var(--color-accent);
-    font-family: 'EB Garamond', serif;
+  font-size: 4.5rem;
+  font-weight: 600;
+  float: left;
+  line-height: 0.75;
+  margin-right: var(--space-xs);
+  margin-top: var(--space-xs);
+  color: var(--color-accent);
+  font-family: 'EB Garamond', serif;
 }
 
 /* ==========================================================================
@@ -486,55 +503,51 @@ hr.fleuron-end + p {
    Section Break (<hr>)
    ========================================================================== */
 hr.fleuron-break {
-    border: none;                   
-    height: 1px;                    
-    background: var(--color-border);
-    width: 80%;                     
-    margin: var(--space-lg) auto;   
-    position: relative;             
-    overflow: visible;              
-    color: var(--color-border);     
+  border: none;
+  height: 1px;
+  background: var(--color-border);
+  width: 80%;
+  margin: var(--space-lg) auto;
+  position: relative;
+  overflow: visible;
+  color: var(--color-border);
 }
 
 hr.fleuron-break::after {
-    content: "\f219";               
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;               
-    font-size: 0.65rem;             
-    color: inherit;                 
-    background-color: var(--color-bg); 
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 0 var(--space-sm);     
+  content: "✦";
+  font-size: 0.65rem;
+  color: var(--color-accent);
+  background-color: var(--color-bg);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 var(--space-sm);
 }
 
 hr.fleuron-end {
-    border: none;                   
-    height: 1px;                    
-    background: var(--color-border);
-    width: 10%;                     
-    margin: var(--space-xl) auto;   
-    position: relative;             
-    overflow: visible;              
-    color: var(--color-border);     
+  border: none;
+  height: 1px;
+  background: var(--color-border);
+  width: 10%;
+  margin: var(--space-xl) auto;
+  position: relative;
+  overflow: visible;
+  color: var(--color-border);
 }
 
 hr.fleuron-end::after {
-    content: "\f219 \f219 \f219";               
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;               
-        font-size: 0.65rem;             
-    letter-spacing: 0.65rem; /* Spacing */
-    color: inherit;                 
-    background-color: var(--color-bg); 
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: 0 var(--space-sm);     
-    white-space: nowrap;
+  content: "✦ ✦ ✦";
+  font-size: 0.65rem;
+  letter-spacing: 0.5em;
+  color: var(--color-accent);
+  background-color: var(--color-bg);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 var(--space-sm);
+  white-space: nowrap;
 }
 
 /* ==========================================================================
@@ -590,6 +603,7 @@ blockquote.pull-quote {
     line-height: 1.6 !important;
     color: var(--color-text) !important;
     margin: var(--space-md) 0 !important;
+    margin-left: 2rem !important;
     white-space: pre-wrap !important;
     text-indent: 0 !important;
 }
