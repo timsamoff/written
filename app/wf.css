@@ -426,6 +426,9 @@ body {
   color: var(--color-text-muted);
   border-color: var(--color-border);
 }
+:root[data-theme="light"] .btn-ghost {
+  border-color: var(--color-input-border);
+}
 .btn-ghost:hover {
   background-color: var(--color-bg-pane);
   color: var(--color-text);
@@ -580,7 +583,7 @@ body {
   width: 100%;
   padding: var(--space-sm);
   background-color: var(--color-input-bg);
-  color: var(--color-text);
+  color: var(--color-content);
   border: none;
   outline: none;
   resize: vertical;
@@ -644,7 +647,7 @@ body {
   font-family: 'EB Garamond', Georgia, serif;
   font-size: 1.15rem;
   line-height: 1.65;
-  color: var(--color-text);
+  color: var(--color-content);
 }
 
 /* ==========================================================================
@@ -658,7 +661,7 @@ body {
   max-width: 100%;
   font-family: 'EB Garamond', Georgia, serif;
   font-size: 1.1rem;
-  color: var(--color-text);
+  color: var(--color-content);
 }
 
 /* Title & author */
@@ -669,7 +672,7 @@ body {
   font-weight: 600;
   line-height: 1.15;
   margin: 0 0 0.15em;
-  color: var(--color-text);
+  color: var(--color-content);
 }
 
 .story-content p.story-subtitle {
@@ -692,13 +695,11 @@ body {
   letter-spacing: 0.05em;
   color: var(--color-text-muted);
   margin: 0 0 1.2em;
+  text-indent: 0 !important;
 }
 
 .story-content hr.title-rule {
-  border: none;
-  border-top: 1px solid var(--color-border);
-  margin: 0 auto var(--space-md) auto;
-  width: 60px;
+  display: none;
 }
 
 /* Paragraph structures */
@@ -743,7 +744,7 @@ body {
   margin: var(--space-md) 0;
   font-size: 1.15rem;
   font-style: italic;
-  color: var(--color-text);
+  color: var(--color-content);
 }
 .story-content .pullquote p {
   text-indent: 0 !important;
@@ -791,7 +792,7 @@ body {
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: 0.01em;
-  color: var(--color-text);
+  color: var(--color-content);
   margin: var(--space-xl) 0 var(--space-sm) 0;
   padding-bottom: 0.25em;
   border-bottom: 1px solid var(--color-border);
@@ -801,7 +802,7 @@ body {
   font-size: 1.05rem;
   font-weight: 700;
   font-style: italic;
-  color: var(--color-text);
+  color: var(--color-content);
   margin: var(--space-lg) 0 var(--space-xs) 0;
   letter-spacing: 0.01em;
 }
@@ -836,7 +837,7 @@ body {
   padding: var(--space-sm) var(--space-md);
   margin: var(--space-md) 0;
   font-size: 0.95rem;
-  color: var(--color-text);
+  color: var(--color-content);
 }
 .story-content .editorial-aside p {
   text-indent: 0 !important;
@@ -845,6 +846,16 @@ body {
 }
 .story-content .editorial-aside p:last-child {
   margin-bottom: 0;
+}
+
+/* General prose hyperlinks */
+.story-content a {
+  color: var(--color-accent-inline);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.story-content a:hover {
+  color: var(--color-accent);
 }
 
 /* Footnote inline refs */
@@ -898,7 +909,7 @@ body {
 }
 .story-content .citation-entry {
   font-size: 0.9rem;
-  color: var(--color-text);
+  color: var(--color-content);
   margin-bottom: 0.5em;
   line-height: 1.5;
 }
@@ -913,7 +924,7 @@ body {
 .story-content .literary-mono {
   font-family: 'Source Code Pro', monospace;
   font-size: 0.9rem;
-  color: var(--color-text);
+  color: var(--color-content);
   margin: var(--space-md) 0;
 }
 .story-content .literary-mono p {
@@ -1391,7 +1402,7 @@ body {
   width: 100%;
   padding: 0.55em 0.8em;
   background-color: var(--color-input-bg);
-  color: var(--color-text);
+  color: var(--color-content);
   border: 1px solid var(--color-input-border);
   border-radius: var(--radius-sm);
   font-family: 'EB Garamond', Georgia, serif;
@@ -1437,6 +1448,7 @@ body {
 .editor-action-bar {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-xs);
   flex-wrap: wrap;
   padding: var(--space-xs) var(--space-sm);
@@ -1496,7 +1508,7 @@ body {
   font-family: 'Source Code Pro', Consolas, monospace;
   font-size: 0.78rem;
   line-height: 1.55;
-  color: var(--color-text);
+  color: var(--color-content);
   background-color: var(--color-input-bg);
   border: 1px solid var(--color-input-border);
   border-radius: var(--radius-sm);

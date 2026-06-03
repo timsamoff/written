@@ -143,8 +143,12 @@ function tokenise(raw) {
       const currentLineClean = lines[i].trim().toLowerCase();
       if (currentLineClean === closeTag || currentLineClean.endsWith(closeTag)) {
         const idx = lines[i].toLowerCase().lastIndexOf(closeTag);
-        const remainder = lines[i].substring(0, idx);
-        if (remainder.trim()) inner.push(remainder);
+        // Text before the close tag stays inside the block
+        const before = lines[i].substring(0, idx);
+        if (before.trim()) inner.push(before);
+        // Text after the close tag becomes the next line to tokenise
+        const after = lines[i].substring(idx + closeTag.length).trim();
+        if (after) lines.splice(i + 1, 0, after);
         break;
       }
       inner.push(lines[i]);
@@ -1105,12 +1109,14 @@ function confirmImage() {
   const alt     = document.getElementById('imgAlt').value.trim();
   const caption = document.getElementById('imgCaption').value.trim();
   const credit  = document.getElementById('imgCredit').value.trim();
-  if (!source) { showToast('Please enter an image source'); return; }
-  const lines = ['[image]', `source: ${source}`];
-  if (alt)     lines.push(`alt: ${alt}`);
-  if (caption) lines.push(`caption: ${caption}`);
-  if (credit)  lines.push(`credit: ${credit}`);
-  lines.push('[/image]');
+  const lines = [
+    '[image]',
+    `source: ${source}`,
+    `alt: ${alt}`,
+    `caption: ${caption}`,
+    `credit: ${credit}`,
+    '[/image]'
+  ];
   const tag    = lines.join('\n');
   const start  = inputText.selectionStart;
   const before = inputText.value.substring(0, start);
@@ -1402,17 +1408,17 @@ const BASE_CSS_TEXT = `/* ======================================================
 
 :root {
   /* ── Page background ───────────────────────────────────────────────────── */
-  --wf-bg:          #ffffff; /* page/body background                         */
+  --wf-bg:          #f2f1ef; /* page/body background                         */
 
   /* ── Text colors ───────────────────────────────────────────────────────── */
-  --wf-text:        #2c3e50; /* main body text                               */
-  --wf-text-muted:  #627284; /* subtitle, byline, captions, muted labels     */
+  --wf-text:        #1f1d1b; /* main body text                               */
+  --wf-text-muted:  #8b6a5d; /* subtitle, byline, captions, muted labels     */
 
   /* ── Accent / highlight color ──────────────────────────────────────────── */
-  --wf-accent:      #d35400; /* drop cap, pull-quote bar, ornaments, links   */
+  --wf-accent:      #a67564; /* drop cap, pull-quote bar, ornaments, links   */
 
   /* ── Borders and rules ─────────────────────────────────────────────────── */
-  --wf-border:      #efebe4; /* hr rules, aside borders, section breaks      */
+  --wf-border:      #d9d2cc; /* hr rules, aside borders, section breaks      */
 
   /* ── Typography ────────────────────────────────────────────────────────── */
   /* To change the body font, replace the value below AND update the Google  */
