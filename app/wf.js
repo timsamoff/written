@@ -90,11 +90,26 @@ function applyInlineMarkup(str, fnMap) {
     });
   }
   // [link]text -> url[/link]
-  str = str.replace(/\[link\]([\s\S]*?)\s*->\s*([^\[]*?)\[\/link\]/gi,
-    (_, text, url) => `<a href="${url.trim()}" target="_blank" rel="noopener" aria-label="${escAttr(text.trim())} (opens in new tab)">${text.trim()}</a>`);
-  // Legacy arrow link fallback: [Link Text -> URL]
-  str = str.replace(/\[([^\]\n]+?)\s*->\s*([^\]\n]+?)\]/gi,
-    (_, text, url) => `<a href="${url.trim()}" target="_blank" rel="noopener" aria-label="${escAttr(text.trim())} (opens in new tab)">${text.trim()}</a>`);
+  // Match -> or -&gt; (the arrow may have been HTML-escaped by the time we get here)
+  str = str.replace(/\[link\]([\s\S]*?)\s*(?:->|-&gt;)\s*([^\[]*?)\[\/link\]/gi,
+    (_, text, url) => {
+      const t = text.trim();
+      const u = url.trim();
+      return `<a href="${escAttr(u)}" target="_blank" rel="noopener" aria-label="${escAttr(t)} (opens in new tab)">${t}</a>`;
+    });
+  // Legacy arrow link fallback: [Link Text -> URL]  (also handles escaped arrow)
+  str = str.replace(/\[([^\]\n]+?)\s*(?:->|-&gt;)\s*([^\]\n]+?)\]/gi,
+    (_, text, url) => {
+      const t = text.trim();
+      const u = url.trim();
+      return `<a href="${escAttr(u)}" target="_blank" rel="noopener" aria-label="${escAttr(t)} (opens in new tab)">${t}</a>`;
+    });
+  // Auto-link bare URLs (http/https/www) — skip anything already inside an <a> tag
+  str = str.replace(/(?<!href="|">)(https?:\/\/[^\s<>"')]+|www\.[^\s<>"')]+)(?![^<]*<\/a>)/gi,
+    url => {
+      const href = url.startsWith('www.') ? 'https://' + url : url;
+      return `<a href="${escAttr(href)}" target="_blank" rel="noopener">${url}</a>`;
+    });
   return str;
 }
 
