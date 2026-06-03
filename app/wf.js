@@ -141,8 +141,8 @@ function tokenise(raw) {
     const inner = [];
     while (i < lines.length) {
       const currentLineClean = lines[i].trim().toLowerCase();
-      if (currentLineClean === closeTag || currentLineClean.endsWith(closeTag)) {
-        const idx = lines[i].toLowerCase().lastIndexOf(closeTag);
+      if (currentLineClean.includes(closeTag)) {
+        const idx = lines[i].toLowerCase().indexOf(closeTag);
         // Text before the close tag stays inside the block
         const before = lines[i].substring(0, idx);
         if (before.trim()) inner.push(before);
