@@ -1313,6 +1313,22 @@ function setupViewModals() {
     openViewModal('viewEmbedModal');
   });
   document.getElementById('viewCssBtn')?.addEventListener('click', () => openViewModal('viewCssModal'));
+  document.getElementById('saveTextBtn')?.addEventListener('click', () => {
+    const text = inputText.value;
+    if (!text.trim()) { showToast('Nothing to save — type some text first'); return; }
+    const title = getDocTitle();
+    const slug  = title
+      ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+      : 'story';
+    const filename = `${slug}.txt`;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    showToast('Text saved!');
+  });
   document.getElementById('clearBtn')?.addEventListener('click', () => {
     inputText.value = '';
     outputHtml.value = '';
@@ -1665,20 +1681,20 @@ body {
 footer.wf-credit, div.wf-credit {
   max-width: 660px;
   margin: 3rem auto 0 auto;
-  padding: 1rem 20px 0 20px;
+  padding: 1rem 20px 2rem 20px;
   border-top: 1px solid var(--wf-border);
   font-family: var(--wf-font-body);
   font-size: 0.78rem;
   color: var(--wf-text-muted);
-  text-align: center;
+  text-align: left;
 }
 footer.wf-credit p, div.wf-credit p {
   margin: 0; text-indent: 0 !important;
 }
 footer.wf-credit a, div.wf-credit a {
-  color: var(--wf-accent); text-decoration: none;
+  color: var(--wf-accent) !important; text-decoration: none;
 }
-footer.wf-credit a:hover, div.wf-credit a:hover { text-decoration: underline; }
+footer.wf-credit a:hover, div.wf-credit a:hover { color: var(--wf-accent) !important; text-decoration: underline; }
 `;
 
 downloadCssBtn?.addEventListener('click', () => {

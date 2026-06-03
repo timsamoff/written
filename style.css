@@ -764,13 +764,34 @@ blockquote.pull-quote {
   font-size: 0.6rem;
   letter-spacing: 0.5em;
   color: var(--color-accent);
-  background-color: var(--color-bg-card);
+  background-color: var(--color-bg);
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   padding: 0 var(--space-sm);
   white-space: nowrap;
+}
+
+/* Embed Footer */
+footer.wf-credit, div.wf-credit {
+  max-width: 660px;
+  margin: 3rem auto 0 auto;
+  padding: 1rem 20px 2rem 20px;
+  border-top: 1px solid var(--color-border);
+  font-family: 'EB Garamond', Georgia, serif;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  text-align: left;
+}
+footer.wf-credit p, div.wf-credit p {
+  margin: 0; text-indent: 0 !important;
+}
+footer.wf-credit a, div.wf-credit a {
+  color: var(--color-accent) !important; text-decoration: none;
+}
+footer.wf-credit a:hover, div.wf-credit a:hover {
+  color: var(--color-accent) !important; text-decoration: underline;
 }
 
 /* Universal Helper Adjustments */
