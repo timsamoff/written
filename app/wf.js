@@ -1011,21 +1011,21 @@ const TOOLBAR_BUTTONS = [
   { label: 'Section',       title: 'Insert [section] heading',       action: () => wrapSelection('[section]',       '[/section]',       true) },
   { label: 'Subsection',   title: 'Insert [subsection] heading',    action: () => wrapSelection('[subsection]',    '[/subsection]',    true) },
   { label: 'Sub-sub',      title: 'Insert [subsubsection] heading', action: () => wrapSelection('[subsubsection]', '[/subsubsection]', true) },
-  { label: 'B',          title: 'Bold [b]',                  action: () => wrapSelection('[b]', '[/b]'),  bold: true },
-  { label: 'I',          title: 'Italic [i]',                action: () => wrapSelection('[i]', '[/i]'),  italic: true },
   { label: '⇗ Link',     title: 'Insert [link]',             action: () => openLinkModal() },
-  { label: 'Footnote',   title: 'Insert [fn] footnote ref',  action: () => insertFn() },
   { label: 'Pullquote',  title: 'Insert [pullquote] block',  action: () => wrapSelection('[pullquote]',  '[/pullquote]',  true) },
   { label: 'Aside',      title: 'Insert [aside] block',      action: () => wrapSelection('[aside]',      '[/aside]',      true) },
   { label: 'Epigraph',   title: 'Insert [epigraph] block',   action: () => wrapSelection('[epigraph]',   '[/epigraph]',   true) },
   { label: 'Mono',       title: 'Insert [mono] block',       action: () => wrapSelection('[mono]',       '[/mono]',       true) },
   { label: 'Code',       title: 'Insert [code] block',       action: () => wrapSelection('[code]',       '[/code]',       true) },
   { label: '⊞ Image',   title: 'Insert [image] block',      action: () => openImageModal() },
+  { label: 'B',          title: 'Bold [b]',                  action: () => wrapSelection('[b]', '[/b]'),  bold: true },
+  { label: 'I',          title: 'Italic [i]',                action: () => wrapSelection('[i]', '[/i]'),  italic: true },
   { label: '• List',     title: 'Insert [bullet] list',      action: () => insertList('bullet') },
   { label: '1. List',    title: 'Insert [num] list',         action: () => insertList('num') },
   { label: 'a. List',    title: 'Insert [alpha] list',       action: () => insertList('alpha') },
   { label: '→ Indent',   title: 'Indent selected lines (nest list items)', action: () => indentLines('in') },
   { label: '← Dedent',   title: 'Dedent selected lines',    action: () => indentLines('out') },
+  { label: 'Footnote',   title: 'Insert [fn] footnote ref',  action: () => insertFn() },
   { label: 'Citations',  title: 'Insert [citations] block',  action: () => insertCitations() },
   { label: '❦ End',      title: 'Insert [end] block',        action: () => wrapSelection('[end]',        '[/end]',        true) },
 ];
@@ -1343,6 +1343,24 @@ function setupViewModals() {
     document.body.appendChild(a); a.click();
     document.body.removeChild(a); URL.revokeObjectURL(url);
     showToast('Text saved!');
+  });
+  document.getElementById('openTextBtn')?.addEventListener('click', () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.txt,text/plain';
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        inputText.value = e.target.result;
+        scheduleConvert();
+        showToast(`Opened: ${file.name}`);
+      };
+      reader.onerror = () => showToast('Could not read file');
+      reader.readAsText(file, 'utf-8');
+    });
+    fileInput.click();
   });
   document.getElementById('clearBtn')?.addEventListener('click', () => {
     inputText.value = '';
