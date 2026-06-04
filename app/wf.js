@@ -1732,42 +1732,132 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let scrollTimeout;
 
-  function syncPreviewToInputLine() {
-    clearTimeout(scrollTimeout);
+ function syncPreviewToInputLine() {
+  clearTimeout(scrollTimeout);
+  
+  scrollTimeout = setTimeout(() => {
+    const text = inputPane.value;
+    const cursorIdx = inputPane.selectionStart;
     
-    scrollTimeout = setTimeout(() => {
-      const text = inputPane.value;
-      const cursorIdx = inputPane.selectionStart;
-      
-      if (!text || cursorIdx === undefined) return;
+    if (!text || cursorIdx === undefined) return;
 
-      const lineIndex = text.substring(0, cursorIdx).split('\n').length - 1;
-      const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure');
-      let bestMatch = null;
-
-      elements.forEach(el => {
-        const textContent = el.textContent || '';
-        const lines = text.split('\n');
-        const targetLineText = lines[lineIndex] ? lines[lineIndex].trim() : '';
-        const cleanTarget = targetLineText.replace(/\[\/?(b|i|mono|code|dropcap|pullquote)\]/g, '').trim();
-
-        if (cleanTarget.length > 2 && textContent.includes(cleanTarget)) {
-          bestMatch = el;
+    const lines = text.split('\n');
+    const lineIndex = text.substring(0, cursorIdx).split('\n').length - 1;
+    const currentLineText = lines[lineIndex] || '';
+    const trimmedLine = currentLineText.trim();
+    
+    // Check if cursor is at the very end of the document
+    const isAtEnd = cursorIdx >= text.length - 1;
+    const totalLines = lines.length;
+    const isLastLine = lineIndex >= totalLines - 1;
+    
+    // Special case: cursor is on a line that's just a markup tag or empty
+    const isMarkupLine = /^\[\/?[a-z]+\]$/i.test(trimmedLine) || 
+                         trimmedLine === '' ||
+                         /^\[\/?[a-z]+=/.test(trimmedLine);
+    
+    // Handle end of document
+    if (isAtEnd || (isLastLine && isMarkupLine)) {
+      // Scroll to the very bottom of preview
+      previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
+      return;
+    }
+    
+    // Handle beginning of document
+    if (lineIndex === 0 && isMarkupLine) {
+      // Find the first non-markup line to determine if there's any content
+      let firstContentLine = 0;
+      while (firstContentLine < lines.length) {
+        const line = lines[firstContentLine].trim();
+        const isMarkup = /^\[\/?[a-z]+\]$/i.test(line) || line === '';
+        if (!isMarkup && line.length > 0) {
+          break;
         }
-      });
+        firstContentLine++;
+      }
+      
+      if (firstContentLine < lines.length) {
+        // There's content later, scroll to top
+        previewPane.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // No content at all, scroll to top
+        previewPane.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+    
+    // Try to find matching content in preview
+    const cleanTarget = trimmedLine
+      .replace(/\[\/?[a-z]+\]/gi, '')
+      .replace(/\[\/?[a-z]+=.*?\]/gi, '')
+      .trim();
+    
+    const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure, .manuscript-header, .story-title, .story-subtitle, .story-byline, .story-end');
+    let bestMatch = null;
+    let bestMatchScore = 0;
 
-      if (!bestMatch && text.length > 0) {
-        const ratio = cursorIdx / text.length;
-        const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * ratio;
-        previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
+    elements.forEach(el => {
+      const textContent = el.textContent || '';
+      
+      // Special handling for end elements
+      const isEndElement = el.classList?.contains('story-end') || 
+                          (el.tagName === 'HR' && el.classList?.contains('fleuron-end'));
+      
+      if (isEndElement && isLastLine) {
+        bestMatch = el;
+        bestMatchScore = Infinity;
         return;
       }
-
-      if (bestMatch) {
-        bestMatch.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      
+      // Special handling for header elements (title, subtitle, byline)
+      const isHeader = el.classList?.contains('story-title') || 
+                       el.classList?.contains('story-subtitle') || 
+                       el.classList?.contains('story-byline') ||
+                       el.classList?.contains('manuscript-header');
+      
+      if (cleanTarget.length > 0 && textContent.includes(cleanTarget.substring(0, 30))) {
+        const score = Math.min(cleanTarget.length, textContent.length);
+        if (score > bestMatchScore) {
+          bestMatchScore = score;
+          bestMatch = el;
+        }
+      } else if (isHeader && lineIndex < 10 && cleanTarget.length < 10) {
+        // If near the top and can't find a match, scroll to top
+        bestMatch = null;
       }
-    }, 80);
-  }
+    });
+
+    if (!bestMatch && trimmedLine.length > 0) {
+      // Fallback: scroll based on line position ratio
+      // Cap the ratio to avoid scrolling past the end
+      const scrollRatio = Math.min(0.95, Math.max(0, lineIndex / totalLines));
+      const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * scrollRatio;
+      previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
+    } else if (bestMatch) {
+      // Calculate position to place element just under the top of the preview pane
+      const elementRect = bestMatch.getBoundingClientRect();
+      const previewRect = previewPane.getBoundingClientRect();
+      const currentScroll = previewPane.scrollTop;
+      
+      // Small offset (20px) from the top edge
+      const offsetFromTop = 20;
+      
+      // Calculate the target scroll position
+      const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
+      
+      previewPane.scrollTo({ 
+        top: Math.max(0, targetScroll), 
+        behavior: 'smooth' 
+      });
+    } else if (lineIndex === 0 || (lineIndex < 5 && isMarkupLine)) {
+      // At the very beginning of the document, scroll to top
+      previewPane.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (isLastLine || lineIndex >= totalLines - 2) {
+      // Near the end, scroll to bottom
+      previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
+    }
+  }, 80);
+}
 
   inputPane.addEventListener('click', syncPreviewToInputLine);
   inputPane.addEventListener('keyup', (e) => {
