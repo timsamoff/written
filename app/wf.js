@@ -1858,11 +1858,17 @@ const BASE_CSS_TEXT = `/* ======================================================
    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"><\/script>
    ========================================================================== */
 
+/* ==========================================================================
+   CUSTOMIZATION — edit the variables below to retheme the page.
+   All colors and fonts flow from this one block; nothing else needs changing.
+   ========================================================================== */
+
 :root {
   --wf-bg:          #f2f1ef;
   --wf-text:        #2a1f1c;
   --wf-text-muted:  #6b4e41;
   --wf-accent:      #8b5a4a;
+  --wf-accent-inline: #6b3a2a;
   --wf-border:      #d9d2cc;
   --wf-font-body:   'EB Garamond', Georgia, serif;
   --wf-font-mono:   'Source Code Pro', Consolas, monospace;
@@ -1887,6 +1893,27 @@ body {
 .story-content.ls-1   { line-height: 1.4; }
 .story-content.ls-1-5 { line-height: 1.65; }
 .story-content.ls-2   { line-height: 2.0; }
+
+/* ==========================================================================
+   Links — REQUIRED for all hyperlinks in content
+   ========================================================================== */
+
+.story-content a {
+  color: var(--wf-accent-inline);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: color 0.2s ease, text-decoration-thickness 0.2s ease;
+}
+
+.story-content a:hover {
+  color: var(--wf-accent);
+  text-decoration-thickness: 2px;
+}
+
+/* ==========================================================================
+   Manuscript Header
+   ========================================================================== */
 
 .story-content .manuscript-header {
   font-family: var(--wf-font-body);
@@ -1925,6 +1952,10 @@ body {
 .story-content .ms-email:hover { text-decoration: underline; }
 
 .story-content .manuscript-header ~ h1.story-title { margin-top: 4rem; }
+
+/* ==========================================================================
+   Typography
+   ========================================================================== */
 
 .story-content h1.story-title {
   text-align: center; font-size: 2.25rem; font-weight: 600;
