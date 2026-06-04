@@ -298,6 +298,41 @@ function tokenize(raw) {
     return null;
   }
 
+  function extractBlockTagWithLeadingText(line) {
+  // Only match if the line contains a complete block tag with text before it
+  // and the closing tag is on the same line
+  const patterns = [
+    { regex: /^(.+?)\[title\](.+?)\[\/title\]$/i, type: 'title' },
+    { regex: /^(.+?)\[subtitle\](.+?)\[\/subtitle\]$/i, type: 'subtitle' },
+    { regex: /^(.+?)\[byline\](.+?)\[\/byline\]$/i, type: 'byline' },
+    { regex: /^(.+?)\[section\](.+?)\[\/section\]$/i, type: 'section' },
+    { regex: /^(.+?)\[subsection\](.+?)\[\/subsection\]$/i, type: 'subsection' },
+    { regex: /^(.+?)\[subsubsection\](.+?)\[\/subsubsection\]$/i, type: 'subsubsection' },
+    { regex: /^(.+?)\[pullquote\](.+?)\[\/pullquote\]$/i, type: 'pullquote' },
+    { regex: /^(.+?)\[aside\](.+?)\[\/aside\]$/i, type: 'aside' },
+    { regex: /^(.+?)\[epigraph\](.+?)\[\/epigraph\]$/i, type: 'epigraph' },
+    { regex: /^(.+?)\[mono\](.+?)\[\/mono\]$/i, type: 'mono' },
+    { regex: /^(.+?)\[code\](.+?)\[\/code\]$/i, type: 'code' },
+    { regex: /^(.+?)\[bullet\](.+?)\[\/bullet\]$/i, type: 'bullet' },
+    { regex: /^(.+?)\[num\](.+?)\[\/num\]$/i, type: 'num' },
+    { regex: /^(.+?)\[alpha\](.+?)\[\/alpha\]$/i, type: 'alpha' },
+    { regex: /^(.+?)\[end\](.+?)\[\/end\]$/i, type: 'ending' },
+  ];
+  
+  for (const pattern of patterns) {
+    const match = line.match(pattern.regex);
+    if (match) {
+      const leadingText = match[1].trim();
+      const content = match[2].trim();
+      // Only return if there's actual leading text
+      if (leadingText) {
+        return { leadingText, content, type: pattern.type };
+      }
+    }
+  }
+  return null;
+}
+
   function getOpeningTagMatch(line) {
     const patterns = [
       { regex: /^\[title\]/i, close: '[/title]', type: 'title', open: '[title]' },
@@ -346,6 +381,20 @@ function tokenize(raw) {
     const t    = line.trim();
     const tl   = t.toLowerCase();
 
+    // Check for block tags with leading text (e.g., "xxx[title]Title[/title]")
+    const leadingTextMatch = extractBlockTagWithLeadingText(line);
+if (leadingTextMatch) {
+  // Add the leading text as a paragraph
+  if (leadingTextMatch.leadingText) {
+    tokens.push({ type: 'para', content: leadingTextMatch.leadingText });
+  }
+  // Add the block tag with its content
+  tokens.push({ type: leadingTextMatch.type, content: leadingTextMatch.content });
+  i++;
+  continue;
+}
+
+    // Check for multi-line inline tags like [b], [i], [link]
     const multiLineInline = checkForMultiLineInline(line, i);
     if (multiLineInline) {
       for (const token of multiLineInline) {
@@ -354,6 +403,7 @@ function tokenize(raw) {
       continue;
     }
 
+    // Check for inline block tags (both tags on same line)
     const inlineMatch = getInlineBlockMatch(line);
     if (inlineMatch) {
       for (const token of inlineMatch) {
@@ -363,6 +413,7 @@ function tokenize(raw) {
       continue;
     }
 
+    // Check for opening tag at start of line
     const openingMatch = getOpeningTagMatch(line);
     if (openingMatch && Array.isArray(openingMatch)) {
       for (const token of openingMatch) {
@@ -389,6 +440,7 @@ function tokenize(raw) {
       continue;
     }
 
+    // Original multi-line block handling
     if (tl === '[title]')    { i++; const inner = consumeBlock('[/title]');    tokens.push({ type: 'title',    content: inner.join('\n').trim() }); continue; }
     if (tl === '[subtitle]') { i++; const inner = consumeBlock('[/subtitle]'); tokens.push({ type: 'subtitle', content: inner.join('\n').trim() }); continue; }
     if (tl === '[byline]')   { i++; const inner = consumeBlock('[/byline]');   tokens.push({ type: 'byline',   content: inner.join('\n').trim() }); continue; }
@@ -1768,11 +1820,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 200);
   });
   
-  // Prevent automatic scrolling when cursor is moved
+  // Prevent any automatic scrolling when cursor is moved programmatically
   inputText.addEventListener('scroll', (e) => {
     if (window._programmaticFocus) {
       e.preventDefault();
-      // Keep scroll at top during focus
+      // Keep scroll at top during programmatic focus
       if (inputText.scrollTop !== 0) {
         inputText.scrollTop = 0;
       }
@@ -2162,114 +2214,184 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function syncPreviewToInputLine() {
-    clearTimeout(scrollTimeout);
+  clearTimeout(scrollTimeout);
+  
+  scrollTimeout = setTimeout(() => {
+    if (window._skipLinkActive) {
+      return;
+    }
+
+    const text = inputPane.value;
+    const cursorIdx = inputPane.selectionStart;
     
-    scrollTimeout = setTimeout(() => {
-      if (window._skipLinkActive) {
-        return;
-      }
+    if (!text || cursorIdx === undefined) return;
 
-      const text = inputPane.value;
-      const cursorIdx = inputPane.selectionStart;
-      
-      if (!text || cursorIdx === undefined) return;
-
-      const lines = text.split('\n');
-      const lineIndex = text.substring(0, cursorIdx).split('\n').length - 1;
-      const currentLineText = lines[lineIndex] || '';
-      const trimmedLine = currentLineText.trim();
-      
-      const isAtEnd = cursorIdx >= text.length - 1;
-      const totalLines = lines.length;
-      const isLastLine = lineIndex >= totalLines - 1;
-      
-      const isMarkupLine = /^\[\/?[a-z]+\]$/i.test(trimmedLine) || 
-                           trimmedLine === '' ||
-                           /^\[\/?[a-z]+=/.test(trimmedLine);
-      
-      if (isAtEnd || (isLastLine && isMarkupLine)) {
-        previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
-        return;
+    const lines = text.split('\n');
+    const lineIndex = text.substring(0, cursorIdx).split('\n').length - 1;
+    const currentLineText = lines[lineIndex] || '';
+    const trimmedLine = currentLineText.trim();
+    
+    const isAtEnd = cursorIdx >= text.length - 1;
+    const totalLines = lines.length;
+    const isLastLine = lineIndex >= totalLines - 1;
+    
+    const isMarkupLine = /^\[\/?[a-z]+\]$/i.test(trimmedLine) || 
+                         trimmedLine === '' ||
+                         /^\[\/?[a-z]+=/.test(trimmedLine);
+    
+    // Handle markup lines (tags only)
+    if (isMarkupLine) {
+      // Find the next non-markup line to scroll to
+      let nextContentLine = lineIndex + 1;
+      while (nextContentLine < lines.length) {
+        const nextLine = lines[nextContentLine].trim();
+        const isNextMarkup = /^\[\/?[a-z]+\]$/i.test(nextLine) || nextLine === '';
+        if (!isNextMarkup && nextLine.length > 0) {
+          break;
+        }
+        nextContentLine++;
       }
       
-      if (lineIndex === 0 && isMarkupLine) {
-        let firstContentLine = 0;
-        while (firstContentLine < lines.length) {
-          const line = lines[firstContentLine].trim();
-          const isMarkup = /^\[\/?[a-z]+\]$/i.test(line) || line === '';
-          if (!isMarkup && line.length > 0) {
-            break;
+      // Also check previous content line
+      let prevContentLine = lineIndex - 1;
+      while (prevContentLine >= 0) {
+        const prevLine = lines[prevContentLine].trim();
+        const isPrevMarkup = /^\[\/?[a-z]+\]$/i.test(prevLine) || prevLine === '';
+        if (!isPrevMarkup && prevLine.length > 0) {
+          break;
+        }
+        prevContentLine--;
+      }
+      
+      // Try to match the content before or after the tag
+      let targetLine = -1;
+      if (nextContentLine < lines.length) {
+        targetLine = nextContentLine;
+      } else if (prevContentLine >= 0) {
+        targetLine = prevContentLine;
+      }
+      
+      if (targetLine !== -1) {
+        const targetText = lines[targetLine].trim();
+        const cleanTarget = targetText
+          .replace(/\[\/?[a-z]+\]/gi, '')
+          .replace(/\[\/?[a-z]+=.*?\]/gi, '')
+          .trim();
+        
+        if (cleanTarget) {
+          const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure, .manuscript-header, .story-title, .story-subtitle, .story-byline, .story-end');
+          let bestMatch = null;
+          
+          for (const el of elements) {
+            const textContent = el.textContent || '';
+            if (textContent.includes(cleanTarget.substring(0, 30))) {
+              bestMatch = el;
+              break;
+            }
           }
-          firstContentLine++;
+          
+          if (bestMatch) {
+            const elementRect = bestMatch.getBoundingClientRect();
+            const previewRect = previewPane.getBoundingClientRect();
+            const currentScroll = previewPane.scrollTop;
+            const offsetFromTop = 20;
+            const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
+            previewPane.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
+            return;
+          }
         }
-        
-        if (firstContentLine < lines.length) {
-          previewPane.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-          previewPane.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        return;
       }
       
-      const cleanTarget = trimmedLine
-        .replace(/\[\/?[a-z]+\]/gi, '')
-        .replace(/\[\/?[a-z]+=.*?\]/gi, '')
-        .trim();
+      // If no content found, scroll to a reasonable position based on line index
+      const scrollRatio = Math.min(0.95, Math.max(0, lineIndex / totalLines));
+      const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * scrollRatio;
+      previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
+      return;
+    }
+    
+    if (isAtEnd || (isLastLine && isMarkupLine)) {
+      previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
+      return;
+    }
+    
+    if (lineIndex === 0 && isMarkupLine) {
+      let firstContentLine = 0;
+      while (firstContentLine < lines.length) {
+        const line = lines[firstContentLine].trim();
+        const isMarkup = /^\[\/?[a-z]+\]$/i.test(line) || line === '';
+        if (!isMarkup && line.length > 0) {
+          break;
+        }
+        firstContentLine++;
+      }
       
-      const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure, .manuscript-header, .story-title, .story-subtitle, .story-byline, .story-end');
-      let bestMatch = null;
-      let bestMatchScore = 0;
-
-      elements.forEach(el => {
-        const textContent = el.textContent || '';
-        
-        const isEndElement = el.classList?.contains('story-end') || 
-                            (el.tagName === 'HR' && el.classList?.contains('fleuron-end'));
-        
-        if (isEndElement && isLastLine) {
-          bestMatch = el;
-          bestMatchScore = Infinity;
-          return;
-        }
-        
-        const isHeader = el.classList?.contains('story-title') || 
-                         el.classList?.contains('story-subtitle') || 
-                         el.classList?.contains('story-byline') ||
-                         el.classList?.contains('manuscript-header');
-        
-        if (cleanTarget.length > 0 && textContent.includes(cleanTarget.substring(0, 30))) {
-          const score = Math.min(cleanTarget.length, textContent.length);
-          if (score > bestMatchScore) {
-            bestMatchScore = score;
-            bestMatch = el;
-          }
-        } else if (isHeader && lineIndex < 10 && cleanTarget.length < 10) {
-          bestMatch = null;
-        }
-      });
-
-      if (!bestMatch && trimmedLine.length > 0) {
-        const scrollRatio = Math.min(0.95, Math.max(0, lineIndex / totalLines));
-        const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * scrollRatio;
-        previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
-      } else if (bestMatch) {
-        const elementRect = bestMatch.getBoundingClientRect();
-        const previewRect = previewPane.getBoundingClientRect();
-        const currentScroll = previewPane.scrollTop;
-        const offsetFromTop = 20;
-        const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
-        
-        previewPane.scrollTo({ 
-          top: Math.max(0, targetScroll), 
-          behavior: 'smooth' 
-        });
-      } else if (lineIndex === 0 || (lineIndex < 5 && isMarkupLine)) {
+      if (firstContentLine < lines.length) {
         previewPane.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (isLastLine || lineIndex >= totalLines - 2) {
-        previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
+      } else {
+        previewPane.scrollTo({ top: 0, behavior: 'smooth' });
       }
-    }, 80);
-  }
+      return;
+    }
+    
+    const cleanTarget = trimmedLine
+      .replace(/\[\/?[a-z]+\]/gi, '')
+      .replace(/\[\/?[a-z]+=.*?\]/gi, '')
+      .trim();
+    
+    const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure, .manuscript-header, .story-title, .story-subtitle, .story-byline, .story-end');
+    let bestMatch = null;
+    let bestMatchScore = 0;
+
+    elements.forEach(el => {
+      const textContent = el.textContent || '';
+      
+      const isEndElement = el.classList?.contains('story-end') || 
+                          (el.tagName === 'HR' && el.classList?.contains('fleuron-end'));
+      
+      if (isEndElement && isLastLine) {
+        bestMatch = el;
+        bestMatchScore = Infinity;
+        return;
+      }
+      
+      const isHeader = el.classList?.contains('story-title') || 
+                       el.classList?.contains('story-subtitle') || 
+                       el.classList?.contains('story-byline') ||
+                       el.classList?.contains('manuscript-header');
+      
+      if (cleanTarget.length > 0 && textContent.includes(cleanTarget.substring(0, 30))) {
+        const score = Math.min(cleanTarget.length, textContent.length);
+        if (score > bestMatchScore) {
+          bestMatchScore = score;
+          bestMatch = el;
+        }
+      } else if (isHeader && lineIndex < 10 && cleanTarget.length < 10) {
+        bestMatch = null;
+      }
+    });
+
+    if (!bestMatch && trimmedLine.length > 0) {
+      const scrollRatio = Math.min(0.95, Math.max(0, lineIndex / totalLines));
+      const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * scrollRatio;
+      previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
+    } else if (bestMatch) {
+      const elementRect = bestMatch.getBoundingClientRect();
+      const previewRect = previewPane.getBoundingClientRect();
+      const currentScroll = previewPane.scrollTop;
+      const offsetFromTop = 20;
+      const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
+      
+      previewPane.scrollTo({ 
+        top: Math.max(0, targetScroll), 
+        behavior: 'smooth' 
+      });
+    } else if (lineIndex === 0 || (lineIndex < 5 && isMarkupLine)) {
+      previewPane.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (isLastLine || lineIndex >= totalLines - 2) {
+      previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
+    }
+  }, 80);
+}
 
   inputPane.addEventListener('click', syncPreviewToInputLine);
   inputPane.addEventListener('keyup', (e) => {
