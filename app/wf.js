@@ -152,7 +152,7 @@ function isSectionBreak(t) {
 
 // ── Universal Open/Close Tokenizer ───────────────────────────────────────────
 
-function tokenise(raw) {
+function tokenize(raw) {
   const lines  = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
   const tokens = [];
   let i = 0;
@@ -176,11 +176,54 @@ function tokenise(raw) {
     return inner;
   }
 
+  // Helper to check if a line contains an inline block tag
+  function getInlineBlockMatch(line) {
+    const patterns = [
+      { regex: /^\[title\]([\s\S]*?)\[\/title\]$/i, type: 'title' },
+      { regex: /^\[subtitle\]([\s\S]*?)\[\/subtitle\]$/i, type: 'subtitle' },
+      { regex: /^\[byline\]([\s\S]*?)\[\/byline\]$/i, type: 'byline' },
+      { regex: /^\[section\]([\s\S]*?)\[\/section\]$/i, type: 'section' },
+      { regex: /^\[subsection\]([\s\S]*?)\[\/subsection\]$/i, type: 'subsection' },
+      { regex: /^\[subsubsection\]([\s\S]*?)\[\/subsubsection\]$/i, type: 'subsubsection' },
+      { regex: /^\[pullquote\]([\s\S]*?)\[\/pullquote\]$/i, type: 'pullquote' },
+      { regex: /^\[aside\]([\s\S]*?)\[\/aside\]$/i, type: 'aside' },
+      { regex: /^\[epigraph\]([\s\S]*?)\[\/epigraph\]$/i, type: 'epigraph' },
+      { regex: /^\[mono\]([\s\S]*?)\[\/mono\]$/i, type: 'mono' },
+      { regex: /^\[code\]([\s\S]*?)\[\/code\]$/i, type: 'code' },
+      { regex: /^\[end\]([\s\S]*?)\[\/end\]$/i, type: 'ending' },
+      { regex: /^\[bullet\]([\s\S]*?)\[\/bullet\]$/i, type: 'bullet' },
+      { regex: /^\[num\]([\s\S]*?)\[\/num\]$/i, type: 'num' },
+      { regex: /^\[alpha\]([\s\S]*?)\[\/alpha\]$/i, type: 'alpha' },
+    ];
+    
+    for (const pattern of patterns) {
+      const match = line.match(pattern.regex);
+      if (match) {
+        return { type: pattern.type, content: match[1].trim() };
+      }
+    }
+    return null;
+  }
+
   while (i < lines.length) {
     const line = lines[i];
     const t    = line.trim();
     const tl   = t.toLowerCase();
 
+    // Check for inline block tags first (same line opening and closing)
+    const inlineMatch = getInlineBlockMatch(t);
+    if (inlineMatch) {
+      if (inlineMatch.type === 'bullet' || inlineMatch.type === 'num' || inlineMatch.type === 'alpha') {
+        const items = inlineMatch.content.split('\n').map(l => l.trim()).filter(Boolean);
+        tokens.push({ type: inlineMatch.type, rawLines: items, items: items });
+      } else {
+        tokens.push({ type: inlineMatch.type, content: inlineMatch.content });
+      }
+      i++;
+      continue;
+    }
+
+    // Original multi-line block handling
     if (tl === '[title]')    { i++; const inner = consumeBlock('[/title]');    tokens.push({ type: 'title',    content: inner.join('\n').trim() }); continue; }
     if (tl === '[subtitle]') { i++; const inner = consumeBlock('[/subtitle]'); tokens.push({ type: 'subtitle', content: inner.join('\n').trim() }); continue; }
     if (tl === '[byline]')   { i++; const inner = consumeBlock('[/byline]');   tokens.push({ type: 'byline',   content: inner.join('\n').trim() }); continue; }
@@ -667,7 +710,7 @@ function convertText() {
   const endhr   = getRadio('endhr');
   const spacing = getRadio('linespacing');
 
-  const tokens = tokenise(raw);
+  const tokens = tokenize(raw);
   const fnMap     = buildFnMap(tokens);
   const wordCount = countBodyWords(tokens);
 
