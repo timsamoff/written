@@ -1303,6 +1303,7 @@ body {
 .editor-toolbar {
   display: flex;
   align-items: center;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 3px;
   padding: 6px var(--space-sm);
@@ -1566,6 +1567,21 @@ body {
   resize: vertical;
   outline: none;
   tab-size: 2;
+}
+
+.modal-footer .btn,
+.modal-footer .btn-primary,
+.modal-footer .btn-action {
+  height: 32px;
+  min-height: 0;
+  padding: 0 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 /* Prism token spans — ensure they inherit correctly inside our row layout */
