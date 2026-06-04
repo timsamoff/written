@@ -906,6 +906,7 @@ function wrapSelection(openTag, closeTag, blockMode = false) {
   }
   inputText.focus();
   scheduleConvert();
+  scheduleAutosave();
 }
 
 function insertList(type) {
@@ -924,6 +925,7 @@ function insertList(type) {
   inputText.setSelectionRange(selStart, selStart + inner.length);
   inputText.focus();
   scheduleConvert();
+  scheduleAutosave();
 }
 
 function insertFn() {
@@ -939,6 +941,7 @@ function insertFn() {
   inputText.setSelectionRange(before.length + tag.length, before.length + tag.length);
   inputText.focus();
   scheduleConvert();
+  scheduleAutosave();
 }
 
 function indentLines(direction) {
@@ -960,6 +963,7 @@ function indentLines(direction) {
   inputText.setSelectionRange(lineStart, lineStart + modified.length);
   inputText.focus();
   scheduleConvert();
+  scheduleAutosave();
 }
 
 function insertCitations() {
@@ -974,6 +978,7 @@ function insertCitations() {
   inputText.setSelectionRange(cursorPos, cursorPos);
   inputText.focus();
   scheduleConvert();
+  scheduleAutosave();
 }
 
 const TOOLBAR_BUTTONS = [
@@ -1027,15 +1032,14 @@ function openLinkModal() {
   const modal    = document.getElementById('linkModal');
   document.getElementById('linkText').value = selText || '';
   document.getElementById('linkUrl').value  = '';
-  modal.removeAttribute('hidden');
-  document.getElementById('linkText').focus();
   modal._selStart = selStart;
   modal._selEnd   = selEnd;
+  openModalWithFocus(modal);
+  document.getElementById('linkText').focus();
 }
 
 function closeLinkModal() {
-  document.getElementById('linkModal').setAttribute('hidden', '');
-  inputText.focus();
+  closeModalWithFocus(document.getElementById('linkModal'));
 }
 
 function confirmLink() {
@@ -1045,26 +1049,34 @@ function confirmLink() {
   if (!url) { showToast('Please enter a URL'); return; }
   const displayText = text || url;
   const tag  = `[link]${displayText} -> ${url}[/link]`;
-  const before = inputText.value.substring(0, modal._selStart);
-  const after  = inputText.value.substring(modal._selEnd);
-  inputText.value = before + tag + after;
-  inputText.setSelectionRange(before.length + tag.length, before.length + tag.length);
+  const insertPoint = modal._selStart;
+  
+  // Use replaceRangeWithUndo for proper undo support
+  replaceRangeWithUndo(inputText, insertPoint, modal._selEnd, tag);
+  
+  // Set cursor position after the inserted tag
+  const newCursorPos = insertPoint + tag.length;
+  inputText.setSelectionRange(newCursorPos, newCursorPos);
+  
   closeLinkModal();
   scheduleConvert();
+  scheduleAutosave();
   inputText.focus();
+  setTimeout(() => syncPreviewToInputLineImmediate(), 100);
 }
 
 function openImageModal() {
   ['imgSource','imgAlt','imgCaption','imgCredit'].forEach(id => {
     document.getElementById(id).value = '';
   });
-  document.getElementById('imageModal').removeAttribute('hidden');
+  const modal = document.getElementById('imageModal');
+  modal._insertionPoint = inputText.selectionStart;
+  openModalWithFocus(modal);
   document.getElementById('imgSource').focus();
 }
 
 function closeImageModal() {
-  document.getElementById('imageModal').setAttribute('hidden', '');
-  inputText.focus();
+  closeModalWithFocus(document.getElementById('imageModal'));
 }
 
 function confirmImage() {
@@ -1072,6 +1084,13 @@ function confirmImage() {
   const alt     = document.getElementById('imgAlt').value.trim();
   const caption = document.getElementById('imgCaption').value.trim();
   const credit  = document.getElementById('imgCredit').value.trim();
+  
+  if (!source) {
+    showToast('Please enter an image source URL or path');
+    document.getElementById('imgSource').focus();
+    return;
+  }
+  
   const lines = [
     '[image]',
     `source: ${source}`,
@@ -1080,16 +1099,27 @@ function confirmImage() {
     `credit: ${credit}`,
     '[/image]'
   ];
-  const tag    = lines.join('\n');
-  const start  = inputText.selectionStart;
-  const before = inputText.value.substring(0, start);
-  const after  = inputText.value.substring(start);
-  const pre    = before.length > 0 && !before.endsWith('\n') ? '\n' : '';
-  const post   = after.length  > 0 && !after.startsWith('\n') ? '\n' : '';
-  inputText.value = before + pre + tag + post + after;
+  const tag = lines.join('\n');
+  const modal = document.getElementById('imageModal');
+  const insertPoint = modal._insertionPoint !== undefined ? modal._insertionPoint : inputText.selectionStart;
+  const before = inputText.value.substring(0, insertPoint);
+  const after = inputText.value.substring(insertPoint);
+  const pre = (before.length > 0 && !before.endsWith('\n')) ? '\n' : '';
+  const post = (after.length > 0 && !after.startsWith('\n')) ? '\n' : '';
+  const fullTag = pre + tag + post;
+  
+  // Use replaceRangeWithUndo for proper undo support
+  replaceRangeWithUndo(inputText, insertPoint, insertPoint, fullTag);
+  
+  // Set cursor position after the inserted block
+  const newCursorPos = insertPoint + fullTag.length;
+  inputText.setSelectionRange(newCursorPos, newCursorPos);
+  
   closeImageModal();
   scheduleConvert();
+  scheduleAutosave();
   inputText.focus();
+  setTimeout(() => syncPreviewToInputLineImmediate(), 100);
 }
 
 function trapFocus(element, event) {
@@ -1141,7 +1171,11 @@ function openManuscriptModal() {
     document.getElementById(id).value = '';
   });
   document.getElementById('msWordcount').placeholder = 'auto (calculated from text)';
-  openModalWithFocus(document.getElementById('manuscriptModal'));
+  
+  const modal = document.getElementById('manuscriptModal');
+  modal._insertionPoint = inputText.selectionStart;
+  
+  openModalWithFocus(modal);
   document.getElementById('msName').focus();
 }
 
@@ -1150,6 +1184,7 @@ function closeManuscriptModal() {
 }
 
 function confirmManuscript() {
+  const modal = document.getElementById('manuscriptModal');
   const name      = document.getElementById('msName').value.trim();
   const address   = document.getElementById('msAddress').value.trim();
   const city      = document.getElementById('msCity').value.trim();
@@ -1168,18 +1203,27 @@ function confirmManuscript() {
   lines.push(`wordcount: ${wordcount}`);
   lines.push('[/manuscript]');
 
-  const tag    = lines.join('\n');
-  const start  = inputText.selectionStart;
-  const before = inputText.value.substring(0, start);
-  const after  = inputText.value.substring(start);
-  const pre    = before.length > 0 && !before.endsWith('\n') ? '\n' : '';
-  const post   = after.length  > 0 && !after.startsWith('\n') ? '\n' : '';
-  inputText.value = before + pre + tag + post + after;
+  const tag = lines.join('\n');
+  const insertPoint = modal._insertionPoint !== undefined ? modal._insertionPoint : inputText.selectionStart;
+  const before = inputText.value.substring(0, insertPoint);
+  const after = inputText.value.substring(insertPoint);
+  const pre = (before.length > 0 && !before.endsWith('\n')) ? '\n' : '';
+  const post = (after.length > 0 && !after.startsWith('\n')) ? '\n' : '';
+  const fullTag = pre + tag + post;
+  
+  // Use replaceRangeWithUndo for proper undo support
+  replaceRangeWithUndo(inputText, insertPoint, insertPoint, fullTag);
+  
+  // Set cursor position after the inserted block
+  const newCursorPos = insertPoint + fullTag.length;
+  inputText.setSelectionRange(newCursorPos, newCursorPos);
+  
   closeManuscriptModal();
   scheduleConvert();
+  scheduleAutosave();
   inputText.focus();
+  setTimeout(() => syncPreviewToInputLineImmediate(), 100);
 }
-
 function setupModals() {
   // Link Modal
   const linkModal = document.getElementById('linkModal');
@@ -1195,6 +1239,13 @@ function setupModals() {
     newLinkConfirm.addEventListener('click', confirmLink);
   }
   
+  // Add Enter key handling for Link modal
+  const linkText = document.getElementById('linkText');
+  const linkUrl = document.getElementById('linkUrl');
+  const handleLinkEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); confirmLink(); } };
+  if (linkText) linkText.addEventListener('keypress', handleLinkEnter);
+  if (linkUrl) linkUrl.addEventListener('keypress', handleLinkEnter);
+  
   // Manuscript Modal
   const msModal = document.getElementById('manuscriptModal');
   const msClose = document.getElementById('manuscriptModalClose');
@@ -1209,6 +1260,14 @@ function setupModals() {
     newMsConfirm.addEventListener('click', confirmManuscript);
   }
   
+  // Add Enter key handling for Manuscript modal fields
+  const msFields = ['msName', 'msAddress', 'msCity', 'msPhone', 'msEmail', 'msWordcount'];
+  const handleMsEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); confirmManuscript(); } };
+  msFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (field) field.addEventListener('keypress', handleMsEnter);
+  });
+  
   // Image Modal
   const imgModal = document.getElementById('imageModal');
   const imgClose = document.getElementById('imageModalClose');
@@ -1222,6 +1281,14 @@ function setupModals() {
     imgConfirm.parentNode.replaceChild(newImgConfirm, imgConfirm);
     newImgConfirm.addEventListener('click', confirmImage);
   }
+  
+  // Add Enter key handling for Image modal fields
+  const imgFields = ['imgSource', 'imgAlt', 'imgCaption', 'imgCredit'];
+  const handleImgEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); confirmImage(); } };
+  imgFields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (field) field.addEventListener('keypress', handleImgEnter);
+  });
   
   // Click outside to close
   const modals = [linkModal, msModal, imgModal];
@@ -1732,10 +1799,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let scrollTimeout;
 
- function syncPreviewToInputLine() {
-  clearTimeout(scrollTimeout);
-  
-  scrollTimeout = setTimeout(() => {
+  function syncPreviewToInputLineImmediate() {
     const text = inputPane.value;
     const cursorIdx = inputPane.selectionStart;
     
@@ -1746,47 +1810,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentLineText = lines[lineIndex] || '';
     const trimmedLine = currentLineText.trim();
     
-    // Check if cursor is at the very end of the document
-    const isAtEnd = cursorIdx >= text.length - 1;
     const totalLines = lines.length;
     const isLastLine = lineIndex >= totalLines - 1;
-    
-    // Special case: cursor is on a line that's just a markup tag or empty
     const isMarkupLine = /^\[\/?[a-z]+\]$/i.test(trimmedLine) || 
                          trimmedLine === '' ||
                          /^\[\/?[a-z]+=/.test(trimmedLine);
     
-    // Handle end of document
-    if (isAtEnd || (isLastLine && isMarkupLine)) {
-      // Scroll to the very bottom of preview
-      previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
-      return;
-    }
-    
-    // Handle beginning of document
-    if (lineIndex === 0 && isMarkupLine) {
-      // Find the first non-markup line to determine if there's any content
-      let firstContentLine = 0;
-      while (firstContentLine < lines.length) {
-        const line = lines[firstContentLine].trim();
-        const isMarkup = /^\[\/?[a-z]+\]$/i.test(line) || line === '';
-        if (!isMarkup && line.length > 0) {
-          break;
-        }
-        firstContentLine++;
-      }
-      
-      if (firstContentLine < lines.length) {
-        // There's content later, scroll to top
-        previewPane.scrollTo({ top: 0, behavior: 'smooth' });
-      } else {
-        // No content at all, scroll to top
-        previewPane.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      return;
-    }
-    
-    // Try to find matching content in preview
     const cleanTarget = trimmedLine
       .replace(/\[\/?[a-z]+\]/gi, '')
       .replace(/\[\/?[a-z]+=.*?\]/gi, '')
@@ -1799,17 +1828,6 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.forEach(el => {
       const textContent = el.textContent || '';
       
-      // Special handling for end elements
-      const isEndElement = el.classList?.contains('story-end') || 
-                          (el.tagName === 'HR' && el.classList?.contains('fleuron-end'));
-      
-      if (isEndElement && isLastLine) {
-        bestMatch = el;
-        bestMatchScore = Infinity;
-        return;
-      }
-      
-      // Special handling for header elements (title, subtitle, byline)
       const isHeader = el.classList?.contains('story-title') || 
                        el.classList?.contains('story-subtitle') || 
                        el.classList?.contains('story-byline') ||
@@ -1822,27 +1840,16 @@ document.addEventListener('DOMContentLoaded', () => {
           bestMatch = el;
         }
       } else if (isHeader && lineIndex < 10 && cleanTarget.length < 10) {
-        // If near the top and can't find a match, scroll to top
-        bestMatch = null;
+        bestMatch = el;
+        bestMatchScore = 1;
       }
     });
 
-    if (!bestMatch && trimmedLine.length > 0) {
-      // Fallback: scroll based on line position ratio
-      // Cap the ratio to avoid scrolling past the end
-      const scrollRatio = Math.min(0.95, Math.max(0, lineIndex / totalLines));
-      const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * scrollRatio;
-      previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
-    } else if (bestMatch) {
-      // Calculate position to place element just under the top of the preview pane
+    if (bestMatch) {
       const elementRect = bestMatch.getBoundingClientRect();
       const previewRect = previewPane.getBoundingClientRect();
       const currentScroll = previewPane.scrollTop;
-      
-      // Small offset (20px) from the top edge
       const offsetFromTop = 20;
-      
-      // Calculate the target scroll position
       const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
       
       previewPane.scrollTo({ 
@@ -1850,14 +1857,138 @@ document.addEventListener('DOMContentLoaded', () => {
         behavior: 'smooth' 
       });
     } else if (lineIndex === 0 || (lineIndex < 5 && isMarkupLine)) {
-      // At the very beginning of the document, scroll to top
       previewPane.scrollTo({ top: 0, behavior: 'smooth' });
     } else if (isLastLine || lineIndex >= totalLines - 2) {
-      // Near the end, scroll to bottom
       previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
     }
-  }, 80);
-}
+  }
+
+  function syncPreviewToInputLine() {
+    clearTimeout(scrollTimeout);
+    
+    scrollTimeout = setTimeout(() => {
+      const text = inputPane.value;
+      const cursorIdx = inputPane.selectionStart;
+      
+      if (!text || cursorIdx === undefined) return;
+
+      const lines = text.split('\n');
+      const lineIndex = text.substring(0, cursorIdx).split('\n').length - 1;
+      const currentLineText = lines[lineIndex] || '';
+      const trimmedLine = currentLineText.trim();
+      
+      // Check if cursor is at the very end of the document
+      const isAtEnd = cursorIdx >= text.length - 1;
+      const totalLines = lines.length;
+      const isLastLine = lineIndex >= totalLines - 1;
+      
+      // Special case: cursor is on a line that's just a markup tag or empty
+      const isMarkupLine = /^\[\/?[a-z]+\]$/i.test(trimmedLine) || 
+                           trimmedLine === '' ||
+                           /^\[\/?[a-z]+=/.test(trimmedLine);
+      
+      // Handle end of document
+      if (isAtEnd || (isLastLine && isMarkupLine)) {
+        // Scroll to the very bottom of preview
+        previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
+        return;
+      }
+      
+      // Handle beginning of document
+      if (lineIndex === 0 && isMarkupLine) {
+        // Find the first non-markup line to determine if there's any content
+        let firstContentLine = 0;
+        while (firstContentLine < lines.length) {
+          const line = lines[firstContentLine].trim();
+          const isMarkup = /^\[\/?[a-z]+\]$/i.test(line) || line === '';
+          if (!isMarkup && line.length > 0) {
+            break;
+          }
+          firstContentLine++;
+        }
+        
+        if (firstContentLine < lines.length) {
+          // There's content later, scroll to top
+          previewPane.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          // No content at all, scroll to top
+          previewPane.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        return;
+      }
+      
+      // Try to find matching content in preview
+      const cleanTarget = trimmedLine
+        .replace(/\[\/?[a-z]+\]/gi, '')
+        .replace(/\[\/?[a-z]+=.*?\]/gi, '')
+        .trim();
+      
+      const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure, .manuscript-header, .story-title, .story-subtitle, .story-byline, .story-end');
+      let bestMatch = null;
+      let bestMatchScore = 0;
+
+      elements.forEach(el => {
+        const textContent = el.textContent || '';
+        
+        // Special handling for end elements
+        const isEndElement = el.classList?.contains('story-end') || 
+                            (el.tagName === 'HR' && el.classList?.contains('fleuron-end'));
+        
+        if (isEndElement && isLastLine) {
+          bestMatch = el;
+          bestMatchScore = Infinity;
+          return;
+        }
+        
+        // Special handling for header elements (title, subtitle, byline)
+        const isHeader = el.classList?.contains('story-title') || 
+                         el.classList?.contains('story-subtitle') || 
+                         el.classList?.contains('story-byline') ||
+                         el.classList?.contains('manuscript-header');
+        
+        if (cleanTarget.length > 0 && textContent.includes(cleanTarget.substring(0, 30))) {
+          const score = Math.min(cleanTarget.length, textContent.length);
+          if (score > bestMatchScore) {
+            bestMatchScore = score;
+            bestMatch = el;
+          }
+        } else if (isHeader && lineIndex < 10 && cleanTarget.length < 10) {
+          // If near the top and can't find a match, scroll to top
+          bestMatch = null;
+        }
+      });
+
+      if (!bestMatch && trimmedLine.length > 0) {
+        // Fallback: scroll based on line position ratio
+        // Cap the ratio to avoid scrolling past the end
+        const scrollRatio = Math.min(0.95, Math.max(0, lineIndex / totalLines));
+        const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * scrollRatio;
+        previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
+      } else if (bestMatch) {
+        // Calculate position to place element just under the top of the preview pane
+        const elementRect = bestMatch.getBoundingClientRect();
+        const previewRect = previewPane.getBoundingClientRect();
+        const currentScroll = previewPane.scrollTop;
+        
+        // Small offset (20px) from the top edge
+        const offsetFromTop = 20;
+        
+        // Calculate the target scroll position
+        const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
+        
+        previewPane.scrollTo({ 
+          top: Math.max(0, targetScroll), 
+          behavior: 'smooth' 
+        });
+      } else if (lineIndex === 0 || (lineIndex < 5 && isMarkupLine)) {
+        // At the very beginning of the document, scroll to top
+        previewPane.scrollTo({ top: 0, behavior: 'smooth' });
+      } else if (isLastLine || lineIndex >= totalLines - 2) {
+        // Near the end, scroll to bottom
+        previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
+      }
+    }, 80);
+  }
 
   inputPane.addEventListener('click', syncPreviewToInputLine);
   inputPane.addEventListener('keyup', (e) => {
