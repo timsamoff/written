@@ -23,7 +23,9 @@ const rootEl           = document.documentElement;
 
 function applyTheme(theme) {
   rootEl.setAttribute('data-theme', theme);
-  themeToggle.textContent = theme === 'dark' ? '☀' : '☽';
+  const isDark = theme === 'dark';
+  themeToggle.textContent = isDark ? '☀' : '☽';
+  themeToggle.setAttribute('aria-label', `Toggle theme: currently ${isDark ? 'dark' : 'light'} mode`);
   localStorage.setItem('written-formatter-theme', theme);
 }
 
@@ -638,12 +640,33 @@ function checkAltWarnings(html) {
     const warn = document.createElement('div');
     warn.id = 'altWarning';
     warn.className = 'alt-warning';
+    warn.setAttribute('role', 'alert');
     warn.innerHTML = '<i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> One or more images are missing alt text — add an <code>alt:</code> field for accessibility.';
     const anchor = document.getElementById('editorActionBar');
     if (anchor) anchor.insertAdjacentElement('beforebegin', warn);
   } else if (!hasWarn && existing) {
     existing.remove();
   }
+}
+
+// Announce preview updates to screen readers
+let lastAnnouncement = '';
+function announcePreviewUpdate(paraCount) {
+  const message = `Preview updated with ${paraCount} paragraph${paraCount !== 1 ? 's' : ''}`;
+  if (message === lastAnnouncement) return;
+  lastAnnouncement = message;
+  livePreview.setAttribute('aria-label', message);
+  
+  // Also use a polite live region for immediate announcement
+  const announcer = document.getElementById('liveAnnouncer') || (() => {
+    const div = document.createElement('div');
+    div.id = 'liveAnnouncer';
+    div.setAttribute('aria-live', 'polite');
+    div.className = 'visually-hidden';
+    document.body.appendChild(div);
+    return div;
+  })();
+  announcer.textContent = message;
 }
 
 // ── Core converter ────────────────────────────────────────────────────────────
@@ -654,6 +677,7 @@ function convertText() {
     outputHtml.value = '';
     livePreview.innerHTML = '';
     checkAltWarnings('');
+    announcePreviewUpdate(0);
     return;
   }
 
@@ -698,8 +722,13 @@ function convertText() {
   const out = [];
   const hasTitle   = headerToks.some(t => t.type === 'title');
   const labelAttr  = hasTitle ? ' aria-labelledby="story-title"' : '';
+  
+  // Add landmarks: article wrapper with header, main, footer
   out.push(`<article class="story-content${lsClass}"${labelAttr}>`);
-
+  
+  // Story header section
+  out.push(`  <header class="story-header">`);
+  
   // subtitle and byline are NOT headings — they don't belong in the document outline
   // manuscript renders before everything else (standard submission format)
   const msTok = headerToks.find(t => t.type === 'manuscript');
@@ -717,6 +746,10 @@ function convertText() {
   });
 
   if (headerToks.length) out.push(`  <hr class="title-rule" aria-hidden="true">`);
+  out.push(`  </header>`);
+  
+  // Story main body
+  out.push(`  <main class="story-body">`);
 
   let pIdx = 0;
   for (const tok of bodyToks) {
@@ -759,11 +792,17 @@ function convertText() {
     out.push(`  <p${classAttr}>${content}</p>`);
   }
 
+  out.push(`  </main>`);
   out.push(`</article>`);
 
   const html = out.join('\n');
   outputHtml.value = html;
   checkAltWarnings(html);
+  
+  // Count paragraphs for announcement
+  const paraCount = (html.match(/<p/g) || []).length;
+  announcePreviewUpdate(paraCount);
+  
   updatePreview(html, lsClass);
 }
 
@@ -775,6 +814,7 @@ function updatePreview(html, lsClass) {
     .replace(/^<article class="story-content[^"]*">\n/, '')
     .replace(/\n<\/article>$/, '');
   wireCopyButtons(livePreview);
+  wireFootnoteLinks(livePreview);
 }
 
 // ── Copy/Download helpers ─────────────────────────────────────────────────────
@@ -1129,21 +1169,66 @@ function confirmImage() {
 }
 
 // ==========================================================================
-//  Modal wiring
+//  Modal wiring with focus trapping
 // ==========================================================================
+
+function trapFocus(element, event) {
+  const focusable = element.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  const firstFocusable = focusable[0];
+  const lastFocusable = focusable[focusable.length - 1];
+  
+  if (event.key === 'Tab') {
+    if (event.shiftKey) {
+      if (document.activeElement === firstFocusable) {
+        lastFocusable.focus();
+        event.preventDefault();
+      }
+    } else {
+      if (document.activeElement === lastFocusable) {
+        firstFocusable.focus();
+        event.preventDefault();
+      }
+    }
+  }
+}
+
+function openModalWithFocus(modal) {
+  modal.removeAttribute('hidden');
+  document.body.style.overflow = 'hidden';
+  
+  // Find first focusable element
+  const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if (focusable) {
+    setTimeout(() => focusable.focus(), 10);
+  }
+  
+  // Add focus trap
+  const trapHandler = (e) => trapFocus(modal, e);
+  modal.addEventListener('keydown', trapHandler);
+  modal._trapHandler = trapHandler;
+}
+
+function closeModalWithFocus(modal) {
+  modal.setAttribute('hidden', '');
+  document.body.style.overflow = '';
+  if (modal._trapHandler) {
+    modal.removeEventListener('keydown', modal._trapHandler);
+    delete modal._trapHandler;
+  }
+  inputText.focus();
+}
 
 function openManuscriptModal() {
   ['msName','msAddress','msCity','msPhone','msEmail','msWordcount'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('msWordcount').placeholder = 'auto (calculated from text)';
-  document.getElementById('manuscriptModal').removeAttribute('hidden');
+  openModalWithFocus(document.getElementById('manuscriptModal'));
   document.getElementById('msName').focus();
 }
 
 function closeManuscriptModal() {
-  document.getElementById('manuscriptModal').setAttribute('hidden', '');
-  inputText.focus();
+  closeModalWithFocus(document.getElementById('manuscriptModal'));
 }
 
 function confirmManuscript() {
@@ -1178,22 +1263,33 @@ function confirmManuscript() {
 }
 
 function setupModals() {
-  const wire = (closeId, cancelId, confirmId, closeFn, confirmFn, modalId) => {
-    document.getElementById(closeId).addEventListener('click', closeFn);
-    if (cancelId) document.getElementById(cancelId).addEventListener('click', closeFn);
-    document.getElementById(confirmId).addEventListener('click', confirmFn);
-    document.getElementById(modalId).addEventListener('keydown', e => {
-      if (e.key === 'Enter') confirmFn();
+  const wireModal = (modalId, closeFn, confirmFn) => {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    
+    const closeBtn = modal.querySelector('.modal-close');
+    const cancelBtn = modal.querySelector('[id$="Cancel"]');
+    const confirmBtn = document.getElementById(modalId.replace('Modal', 'Confirm'));
+    
+    if (closeBtn) closeBtn.addEventListener('click', closeFn);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeFn);
+    if (confirmBtn) confirmBtn.addEventListener('click', confirmFn);
+    
+    modal.addEventListener('click', e => {
+      if (e.target === modal) closeFn();
+    });
+    
+    modal.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+        confirmFn();
+      }
       if (e.key === 'Escape') closeFn();
     });
-    document.getElementById(modalId).addEventListener('click', e => {
-      if (e.target === e.currentTarget) closeFn();
-    });
   };
-
-  wire('linkModalClose', 'linkModalCancel', 'linkModalConfirm', closeLinkModal, confirmLink, 'linkModal');
-  wire('manuscriptModalClose', 'manuscriptModalCancel', 'manuscriptModalConfirm', closeManuscriptModal, confirmManuscript, 'manuscriptModal');
-  wire('imageModalClose', 'imageModalCancel', 'imageModalConfirm', closeImageModal, confirmImage, 'imageModal');
+  
+  wireModal('linkModal', closeLinkModal, confirmLink);
+  wireModal('manuscriptModal', closeManuscriptModal, confirmManuscript);
+  wireModal('imageModal', closeImageModal, confirmImage);
 }
 
 // ==========================================================================
@@ -1209,16 +1305,14 @@ function setupPreviewModal() {
   function open() {
     modalBody.innerHTML = livePreview.innerHTML;
     modalBody.className = livePreview.className + ' preview-modal-body';
-    modal.removeAttribute('hidden');
-    document.body.style.overflow = 'hidden';
+    openModalWithFocus(modal);
     closeBtn.focus();
     wireCopyButtons(modalBody);
     wireFootnoteLinks(modalBody);
   }
 
   function close() {
-    modal.setAttribute('hidden', '');
-    document.body.style.overflow = '';
+    closeModalWithFocus(modal);
     expandBtn.focus();
   }
 
@@ -1254,8 +1348,13 @@ function wireCopyButtons(container) {
       const pre  = fresh.closest('.code-block-wrap').querySelector('pre');
       const text = Array.from(pre.querySelectorAll('.code-row')).map(r => r.querySelector('code').textContent).join('\n');
       navigator.clipboard.writeText(text).then(() => {
+        const originalHtml = fresh.innerHTML;
         fresh.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i>';
-        setTimeout(() => { fresh.innerHTML = '<i class="fa-regular fa-copy" aria-hidden="true"></i>'; }, 1800);
+        fresh.setAttribute('aria-label', 'Code copied!');
+        setTimeout(() => { 
+          fresh.innerHTML = originalHtml;
+          fresh.setAttribute('aria-label', 'Copy code');
+        }, 1800);
       }).catch(() => showToast('Copy failed'));
     });
   });
@@ -1283,16 +1382,13 @@ function openViewModal(modalId) {
   } else if (modalId === 'viewCssModal') {
     document.getElementById('viewCssContent').value = BASE_CSS_TEXT;
   }
-  modal.removeAttribute('hidden');
-  document.body.style.overflow = 'hidden';
-  modal.querySelector('.modal-close')?.focus();
+  openModalWithFocus(modal);
 }
 
 function closeViewModal(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
-  modal.setAttribute('hidden', '');
-  document.body.style.overflow = '';
+  closeModalWithFocus(modal);
 }
 
 function setupViewModals() {
@@ -1369,10 +1465,12 @@ function setupViewModals() {
     fileInput.click();
   });
   document.getElementById('clearBtn')?.addEventListener('click', () => {
+    if (inputText.value.trim() && !confirm('Clear all text? This cannot be undone.')) return;
     inputText.value = '';
     outputHtml.value = '';
     livePreview.innerHTML = '';
     checkAltWarnings('');
+    announcePreviewUpdate(0);
     inputText.focus();
   });
 }
@@ -1411,11 +1509,11 @@ const BASE_CSS_TEXT = `/* ======================================================
   --wf-bg:          #f2f1ef; /* page/body background                         */
 
   /* ── Text colors ───────────────────────────────────────────────────────── */
-  --wf-text:        #1f1d1b; /* main body text                               */
-  --wf-text-muted:  #8b6a5d; /* subtitle, byline, captions, muted labels     */
+  --wf-text:        #2a1f1c; /* main body text (improved contrast)          */
+  --wf-text-muted:  #6b4e41; /* subtitle, byline, captions, muted labels     */
 
   /* ── Accent / highlight color ──────────────────────────────────────────── */
-  --wf-accent:      #a67564; /* drop cap, pull-quote bar, ornaments, links   */
+  --wf-accent:      #8b5a4a; /* drop cap, pull-quote bar, ornaments, links   */
 
   /* ── Borders and rules ─────────────────────────────────────────────────── */
   --wf-border:      #d9d2cc; /* hr rules, aside borders, section breaks      */

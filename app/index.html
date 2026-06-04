@@ -17,54 +17,57 @@
 </head>
 <body>
 
-  <header class="site-header">
+  <!-- Skip to main content link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="site-header" role="banner">
     <div class="container header-container">
       <div class="branding-text">
-        <span class="site-logo">Written <span class="logo-amp">&amp;</span> Formatted</span>
+        <span class="site-logo" aria-label="Written and Formatted">Written <span class="logo-amp" aria-hidden="true">&amp;</span> Formatted</span>
         <span class="site-tagline">Plain Text → Semantic and Accessible HTML</span>
       </div>
-      <button class="theme-btn" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">☀</button>
+      <button class="theme-btn" id="themeToggle" aria-label="Toggle theme: currently light mode" title="Toggle theme">☀</button>
     </div>
   </header>
 
-  <main class="container main-layout">
+  <main class="container main-layout" id="main-content" role="main">
 
     <!-- ── Left: Formatting Options ─────────────────────────────────────── -->
-    <aside class="controls-panel">
+    <aside class="controls-panel" aria-label="Formatting controls">
       <h2 class="panel-title">Formatting Options</h2>
 
       <fieldset class="option-group">
         <legend class="option-label">Drop Cap</legend>
-        <div class="radio-stack">
-          <label class="radio-row"><input type="radio" name="dropcap" value="none" checked /><span class="radio-mark"></span><span>None</span></label>
-          <label class="radio-row"><input type="radio" name="dropcap" value="first" /><span class="radio-mark"></span><span>First paragraph only</span></label>
-          <label class="radio-row"><input type="radio" name="dropcap" value="sections" /><span class="radio-mark"></span><span>First of each section</span></label>
+        <div class="radio-stack" role="radiogroup" aria-label="Drop cap style">
+          <label class="radio-row"><input type="radio" name="dropcap" value="none" checked /><span class="radio-mark" aria-hidden="true"></span><span>None</span></label>
+          <label class="radio-row"><input type="radio" name="dropcap" value="first" /><span class="radio-mark" aria-hidden="true"></span><span>First paragraph only</span></label>
+          <label class="radio-row"><input type="radio" name="dropcap" value="sections" /><span class="radio-mark" aria-hidden="true"></span><span>First of each section</span></label>
         </div>
       </fieldset>
 
       <fieldset class="option-group">
         <legend class="option-label">Paragraph Indent</legend>
-        <div class="radio-stack">
-          <label class="radio-row"><input type="radio" name="indent" value="all" checked /><span class="radio-mark"></span><span>Indent all</span></label>
-          <label class="radio-row"><input type="radio" name="indent" value="none" /><span class="radio-mark"></span><span>No indentation</span></label>
-          <label class="radio-row"><input type="radio" name="indent" value="section-only" /><span class="radio-mark"></span><span>All except first of each section</span></label>
+        <div class="radio-stack" role="radiogroup" aria-label="Paragraph indentation style">
+          <label class="radio-row"><input type="radio" name="indent" value="all" checked /><span class="radio-mark" aria-hidden="true"></span><span>Indent all</span></label>
+          <label class="radio-row"><input type="radio" name="indent" value="none" /><span class="radio-mark" aria-hidden="true"></span><span>No indentation</span></label>
+          <label class="radio-row"><input type="radio" name="indent" value="section-only" /><span class="radio-mark" aria-hidden="true"></span><span>All except first of each section</span></label>
         </div>
       </fieldset>
 
       <fieldset class="option-group">
         <legend class="option-label">Line Spacing</legend>
-        <div class="radio-stack">
-          <label class="radio-row"><input type="radio" name="linespacing" value="1" /><span class="radio-mark"></span><span>1× — Tight</span></label>
-          <label class="radio-row"><input type="radio" name="linespacing" value="1.5" checked /><span class="radio-mark"></span><span>1.5× — Default</span></label>
-          <label class="radio-row"><input type="radio" name="linespacing" value="2" /><span class="radio-mark"></span><span>2× — Airy</span></label>
+        <div class="radio-stack" role="radiogroup" aria-label="Line spacing">
+          <label class="radio-row"><input type="radio" name="linespacing" value="1" /><span class="radio-mark" aria-hidden="true"></span><span>1× — Tight</span></label>
+          <label class="radio-row"><input type="radio" name="linespacing" value="1.5" checked /><span class="radio-mark" aria-hidden="true"></span><span>1.5× — Default</span></label>
+          <label class="radio-row"><input type="radio" name="linespacing" value="2" /><span class="radio-mark" aria-hidden="true"></span><span>2× — Airy</span></label>
         </div>
       </fieldset>
 
       <fieldset class="option-group">
         <legend class="option-label">End Ornament</legend>
-        <div class="radio-stack">
-          <label class="radio-row"><input type="radio" name="endhr" value="yes" checked /><span class="radio-mark"></span><span>Show ornament with <code>[end]</code></span></label>
-          <label class="radio-row"><input type="radio" name="endhr" value="no" /><span class="radio-mark"></span><span>No ornament</span></label>
+        <div class="radio-stack" role="radiogroup" aria-label="End ornament">
+          <label class="radio-row"><input type="radio" name="endhr" value="yes" checked /><span class="radio-mark" aria-hidden="true"></span><span>Show ornament with <code>[end]</code></span></label>
+          <label class="radio-row"><input type="radio" name="endhr" value="no" /><span class="radio-mark" aria-hidden="true"></span><span>No ornament</span></label>
         </div>
       </fieldset>
 
@@ -75,13 +78,13 @@
     </aside>
 
     <!-- ── Center: Input Pane ────────────────────────────────────────────── -->
-    <section class="editor-area">
+    <section class="editor-area" aria-label="Text editor">
       <div class="pane editor-pane">
 
         <div class="pane-header">
           <span class="pane-label">Plain Text Input</span>
-          <button class="hint-toggle" id="syntaxToggle" aria-expanded="false">
-            Syntax guide <i class="fa-solid fa-chevron-down"></i>
+          <button class="hint-toggle" id="syntaxToggle" aria-expanded="false" aria-controls="syntaxReference">
+            Syntax guide <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
           </button>
         </div>
 
@@ -89,7 +92,7 @@
           <div class="syntax-grid">
             <div class="syntax-section">
               <div class="syntax-section-label">Document Header</div>
-              <div class="syntax-item mono-example">[manuscript]<br>name: Your Name<br>address: 123 Main St<br>city: City, ST 00000<br>phone: 555-555-5555<br>email: you@example.com<br>[/manuscript]</div>
+              <div class="syntax-item mono-example">[manuscript]<br>name: Your Name<br>address: 123 Main St<br>city: City, ST 00000<br>phone: (212) 555-1212<br>email: you@example.com<br>[/manuscript]</div>
               <div class="syntax-item mono-example">[title]Title Line One<br>Title Line Two[/title]</div>
               <div class="syntax-item mono-example">[subtitle]Story Subtitle[/subtitle]</div>
               <div class="syntax-item mono-example">[byline]By Author Name[/byline]</div>
@@ -130,28 +133,29 @@
         <div class="editor-toolbar" id="editorToolbar" role="toolbar" aria-label="Tag insertion toolbar"></div>
 
         <!-- Input textarea — vertically resizable -->
-        <textarea id="inputText" class="text-pane input-pane" spellcheck="true"
+        <textarea id="inputText" class="text-pane input-pane" spellcheck="true" aria-label="Story text input" aria-describedby="editor-help"
           placeholder="Type or paste your story text here…"></textarea>
+        <div id="editor-help" class="visually-hidden">Use the toolbar above to insert formatting tags. Formatting appears live in the preview panel to the right.</div>
 
         <!-- Action bar below textarea -->
         <div class="editor-action-bar" id="editorActionBar">
-          <button id="saveTextBtn" class="btn btn-action">
+          <button id="saveTextBtn" class="btn btn-action" aria-label="Save text to file">
             <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save Text
           </button>
-          <button id="openTextBtn" class="btn btn-action">
+          <button id="openTextBtn" class="btn btn-action" aria-label="Open text file">
             <i class="fa-solid fa-folder-open" aria-hidden="true"></i> Open Text
           </button>
-          <button id="clearBtn" class="btn btn-ghost btn-sm">
+          <button id="clearBtn" class="btn btn-ghost btn-sm" aria-label="Clear all text">
             <i class="fa-solid fa-xmark" aria-hidden="true"></i> Clear
           </button>
           <span class="action-bar-break" aria-hidden="true"></span>
-          <button id="viewStandaloneBtn" class="btn btn-action">
+          <button id="viewStandaloneBtn" class="btn btn-action" aria-label="Generate standalone HTML document">
             <i class="fa-solid fa-file-code" aria-hidden="true"></i> View Standalone
           </button>
-          <button id="viewEmbedBtn" class="btn btn-action">
+          <button id="viewEmbedBtn" class="btn btn-action" aria-label="Generate embeddable HTML snippet">
             <i class="fa-solid fa-code" aria-hidden="true"></i> View Embed
           </button>
-          <button id="viewCssBtn" class="btn btn-action">
+          <button id="viewCssBtn" class="btn btn-action" aria-label="View base CSS stylesheet">
             <i class="fa-solid fa-palette" aria-hidden="true"></i> View Base CSS
           </button>
         </div>
@@ -160,17 +164,17 @@
     </section>
 
     <!-- ── Right: Live Preview ───────────────────────────────────────────── -->
-    <section class="preview-panel">
+    <section class="preview-panel" aria-label="Live formatted preview">
       <div class="preview-header">
         <span class="pane-label">Live Preview</span>
         <div class="preview-header-right">
           <span class="pane-hint">Formatted output</span>
-          <button class="preview-expand-btn" id="previewExpandBtn" title="Expand preview" aria-label="Expand preview">
-            <i class="fa-solid fa-expand"></i>
+          <button class="preview-expand-btn" id="previewExpandBtn" title="Expand preview" aria-label="Expand preview to full screen">
+            <i class="fa-solid fa-expand" aria-hidden="true"></i>
           </button>
         </div>
       </div>
-      <div id="livePreview" class="story-content preview-body"></div>
+      <div id="livePreview" class="story-content preview-body" role="region" aria-label="Formatted story preview" aria-live="polite"></div>
     </section>
 
   </main>
@@ -178,13 +182,13 @@
   <!-- Hidden output storage — written by converter, read by View modals -->
   <textarea id="outputHtml" hidden aria-hidden="true"></textarea>
 
-  <footer class="site-footer">
+  <footer class="site-footer" role="contentinfo">
     <div class="container footer-container">
       <span>Written &amp; Formatted — a companion tool for <em>Written</em> by Tim Samoff</span>
     </div>
   </footer>
 
-  <div id="toast" class="toast" aria-live="polite"></div>
+  <div id="toast" class="toast" aria-live="polite" role="status"></div>
 
   <!-- ══════════════════════════════════════════════════════════════════════
        View Modals
@@ -195,7 +199,7 @@
     <div class="modal-box modal-box--wide">
       <div class="modal-header">
         <h3 class="modal-title" id="viewStandaloneTitle">Standalone HTML</h3>
-        <button class="modal-close" aria-label="Close">&times;</button>
+        <button class="modal-close" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body modal-body--code">
         <p class="modal-hint">A complete self-contained HTML page with fonts and base CSS embedded. Save it and open in any browser.</p>
@@ -213,7 +217,7 @@
     <div class="modal-box modal-box--wide">
       <div class="modal-header">
         <h3 class="modal-title" id="viewEmbedTitle">Embed HTML</h3>
-        <button class="modal-close" aria-label="Close">&times;</button>
+        <button class="modal-close" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body modal-body--code">
         <p class="modal-hint">The <code>&lt;article&gt;</code> block ready to paste into a CMS, template, or existing page. Requires the base CSS (and Prism if using code blocks) to be loaded by the host page.</p>
@@ -231,7 +235,7 @@
     <div class="modal-box modal-box--wide">
       <div class="modal-header">
         <h3 class="modal-title" id="viewCssTitle">Base Stylesheet</h3>
-        <button class="modal-close" aria-label="Close">&times;</button>
+        <button class="modal-close" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body modal-body--code">
         <p class="modal-hint">Color- and font-free structural CSS. Add your own theme on top. See comments for Prism integration.</p>
@@ -254,10 +258,10 @@
       <div class="preview-modal-header">
         <span class="pane-label">Live Preview</span>
         <button class="modal-close preview-modal-close" id="previewModalClose" aria-label="Close expanded preview">
-          <i class="fa-solid fa-compress"></i>
+          <i class="fa-solid fa-compress" aria-hidden="true"></i>
         </button>
       </div>
-      <div id="previewModalBody" class="story-content preview-modal-body"></div>
+      <div id="previewModalBody" class="story-content preview-modal-body" role="region" aria-label="Expanded formatted preview"></div>
     </div>
   </div>
 
@@ -266,12 +270,12 @@
     <div class="modal-box">
       <div class="modal-header">
         <h3 class="modal-title" id="manuscriptModalTitle">Manuscript Submission Header</h3>
-        <button class="modal-close" id="manuscriptModalClose" aria-label="Close">&times;</button>
+        <button class="modal-close" id="manuscriptModalClose" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="modal-field"><label class="modal-label" for="msName">Name <span class="modal-required">*</span></label><input class="modal-input" type="text" id="msName" placeholder="Your full name" /></div>
+        <div class="modal-field"><label class="modal-label" for="msName">Name <span class="modal-required">*</span></label><input class="modal-input" type="text" id="msName" placeholder="Your full name" aria-required="true" /></div>
         <div class="modal-field"><label class="modal-label" for="msAddress">Street Address</label><input class="modal-input" type="text" id="msAddress" placeholder="123 Main Street" /></div>
-        <div class="modal-field"><label class="modal-label" for="msCity">City, State, ZIP</label><input class="modal-input" type="text" id="msCity" placeholder="Anytown, ST 23076" /></div>
+        <div class="modal-field"><label class="modal-label" for="msCity">City, State, ZIP</label><input class="modal-input" type="text" id="msCity" placeholder="City, ST 00000" /></div>
         <div class="modal-field"><label class="modal-label" for="msPhone">Phone</label><input class="modal-input" type="tel" id="msPhone" placeholder="(212) 555-1212" /></div>
         <div class="modal-field"><label class="modal-label" for="msEmail">Email</label><input class="modal-input" type="email" id="msEmail" placeholder="you@example.com" /></div>
         <div class="modal-field">
@@ -292,13 +296,13 @@
     <div class="modal-box">
       <div class="modal-header">
         <h3 class="modal-title" id="linkModalTitle">Insert Link</h3>
-        <button class="modal-close" id="linkModalClose" aria-label="Close">&times;</button>
+        <button class="modal-close" id="linkModalClose" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body">
         <div class="modal-field"><label class="modal-label" for="linkText">Link Text</label><input class="modal-input" type="text" id="linkText" placeholder="Text to display" /></div>
         <div class="modal-field">
-          <label class="modal-label" for="linkUrl">URL</label>
-          <input class="modal-input" type="url" id="linkUrl" placeholder="https://example.com or ../relative/path.html" />
+          <label class="modal-label" for="linkUrl">URL <span class="modal-required">*</span></label>
+          <input class="modal-input" type="url" id="linkUrl" placeholder="https://example.com or ../relative/path.html" aria-required="true" />
           <p class="modal-hint">Accepts absolute URLs, relative paths, or protocol-relative links.</p>
         </div>
       </div>
@@ -314,17 +318,18 @@
     <div class="modal-box">
       <div class="modal-header">
         <h3 class="modal-title" id="imageModalTitle">Insert Image</h3>
-        <button class="modal-close" id="imageModalClose" aria-label="Close">&times;</button>
+        <button class="modal-close" id="imageModalClose" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body">
         <div class="modal-field">
           <label class="modal-label" for="imgSource">Source <span class="modal-required">*</span></label>
-          <input class="modal-input" type="text" id="imgSource" placeholder="image.jpg  or  ../img/photo.png  or  https://…" />
+          <input class="modal-input" type="text" id="imgSource" placeholder="image.jpg  or  ../img/photo.png  or  https://…" aria-required="true" />
           <p class="modal-hint">Relative path, absolute path, or full URL — all accepted.</p>
         </div>
-        <div class="modal-field"><label class="modal-label" for="imgAlt">Alt Text</label><input class="modal-input" type="text" id="imgAlt" placeholder="Descriptive alt text for screen readers" /></div>
+        <div class="modal-field"><label class="modal-label" for="imgAlt">Alt Text</label><input class="modal-input" type="text" id="imgAlt" placeholder="Descriptive alt text for screen readers" aria-describedby="alt-hint"/></div>
         <div class="modal-field"><label class="modal-label" for="imgCaption">Caption</label><input class="modal-input" type="text" id="imgCaption" placeholder="Visible caption beneath image" /></div>
         <div class="modal-field"><label class="modal-label" for="imgCredit">Credit</label><input class="modal-input" type="text" id="imgCredit" placeholder="Photo by Jane Doe (hyperlinks supported)" /></div>
+        <p id="alt-hint" class="modal-hint">Adding alt text helps screen reader users understand the image content.</p>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" id="imageModalCancel">Cancel</button>

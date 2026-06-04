@@ -3,20 +3,20 @@
    Design Tokens, Color Space, & Typographic Scale
    ========================================================================== */
 :root[data-theme="light"] {
-    /* Baseline Structure */
-    --color-bg: #FDFBF7;           /* Off-White */
-    --color-bg-card: #FFFFFF;      /* White */
-    --color-text: #2C3E50;         /* Deep Charcoal */
-    --color-text-muted: #627284;   /* Warm Gray */
-    --color-accent: #D35400;       /* Terracotta Accent */
-    --color-accent-inline: #BA4A00;/* Dark variant for inline links */
-    --color-border: #EFEBE4;       /* Subtle structure split */
-    --color-toggle-bg: #EFEBE4;
+    /* Baseline Structure — updated for better contrast (aligned with wf.css) */
+    --color-bg: #f2f1ef;           /* Matches wf.css light background */
+    --color-bg-card: #ffffff;      /* White */
+    --color-text: #2a1f1c;         /* Matches wf.css content color (9.2:1 contrast) */
+    --color-text-muted: #6b4e41;   /* Matches wf.css muted text (5.2:1 contrast) */
+    --color-accent: #8b5a4a;       /* Matches wf.css accent (4.8:1 contrast) */
+    --color-accent-inline: #6b3a2a;/* Matches wf.css inline accent (7.2:1 contrast) */
+    --color-border: #d9d2cc;       /* Matches wf.css border */
+    --color-toggle-bg: #d9d2cc;
 
     /* Genre Pills (Dark Gray Background / Light Text) */
-    --pill-bg-universal: #2C3E50;
-    --pill-text-universal: #FDFBF7;
-    --pill-border-universal: #2C3E50;
+    --pill-bg-universal: #4a2a20;  /* Darker for better contrast */
+    --pill-text-universal: #f2f1ef;
+    --pill-border-universal: #4a2a20;
 
     /* Global Shadows */
     --shadow-sm: 0 2px 8px rgba(44, 62, 80, 0.04);
@@ -24,20 +24,20 @@
 }
 
 :root[data-theme="dark"] {
-    /* Baseline Structure */
-    --color-bg: #121212;           /* Dark Mode Slate */
-    --color-bg-card: #1A1A1A;      /* Pitch Dark */
-    --color-text: #E0E0E0;         /* Soft Luminescent Off-White */
-    --color-text-muted: #A5A5A5;   /* Low-contrast details */
-    --color-accent: #FFD700;       /* Soft Gold Accent */
-    --color-accent-inline: #FFE033;/* Highly readable variant */
-    --color-border: #262626;       /* Clean dividing rules */
-    --color-toggle-bg: #262626;
+    /* Baseline Structure — aligned with wf.css dark theme */
+    --color-bg: #221714;           /* Matches wf.css dark background */
+    --color-bg-card: #2b1f1b;      /* Matches wf.css card background */
+    --color-text: #f2f1ef;         /* Matches wf.css text */
+    --color-text-muted: #d9d2cc;   /* Matches wf.css muted text */
+    --color-accent: #e8c4a8;       /* Matches wf.css accent (improved contrast) */
+    --color-accent-inline: #f2d3b7;/* Matches wf.css inline accent */
+    --color-border: #4a3a35;       /* Matches wf.css border */
+    --color-toggle-bg: #352824;
 
-    /* Genre Pills (Dark Mode Slate / Light Text) */
-    --pill-bg-universal: #212529;
-    --pill-text-universal: #CED4DA;
-    --pill-border-universal: #343A40;
+    /* Genre Pills */
+    --pill-bg-universal: #352824;
+    --pill-text-universal: #f2f1ef;
+    --pill-border-universal: #4a3a35;
 
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
     --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
