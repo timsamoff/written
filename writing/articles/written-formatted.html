@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Written by Tim Samoff</title>
+    
+    <link rel="icon" href="../../favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../../style.css">
+    <script src="../../theme.js" defer></script>
+</head>
+<body>
+    <div id="scroll-progress"></div>
+
+    <header class="site-header">
+        <div class="container header-container">
+            <div class="branding-group">
+                <img src="../../wbts_icon.png" alt="Written by Tim Samoff Logo" class="site-branding-icon">
+                <div class="branding-text">
+                    <a href="../../index.html" class="site-logo">Written by <span class="logo-amp">Tim</span> Samoff</a>
+                    <span class="site-tagline">A collection of stories, essays, poetry, articles, and how-tos.</span>
+                </div>
+            </div>
+            <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="container layout-wrapper-post">
+        <aside class="sidebar-post-nav">
+            <div class="sticky-sidebar-content">
+                <a href="../../index.html" class="back-link">
+                    <i class="fa-solid fa-arrow-left-long"></i> Index
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <article class="reading-body">
+                <header class="reading-header">
+                    <div class="card-meta">
+                        <span class="author">By Tim Samoff</span>
+                        <span class="meta-separator">&middot;</span>
+                        <span class="date">Published June 4, 2026</span>
+                    </div>
+                    <h1 class="story-title">Written &amp; Formatted</h1>
+                    <p class="story-subtitle">How a Portfolio Website Led to a Publishing Tool</p>
+                    <div class="pill-container">
+                        <span class="pill">Essay</span>
+                        <span class="pill">Technology</span>
+                        <span class="pill">Writing</span>
+                    </div>
+                </header>
+
+                <article class="story-content ls-1">
+                    <p class="no-indent">Every so often, a side project reveals a different project hiding within. You know, those projects you start and then find out you don't have the right tool…?</p>
+                    <p class="no-indent">I ran into that while building <a href="https://samoff.com/written" target="_blank" rel="noopener">Written</a>, a portfolio site for my essays, fiction, articles, and other written work. Designing the site was straightforward. The unexpected part was preparing content for it.</p>
+                    <p class="no-indent">After beginning the formatting process for one of my short fiction stories, The Threxil Pattern (read it <a href="https://samoff.com/written/writing/shorts/threxil.html" target="_blank" rel="noopener">here</a>!), I noticed I was performing the same tasks every time. I was wrapping paragraphs in HTML, inserting structural elements, trying to format some of the included monospaced elements, creating section breaks, and so on. None of it was difficult, but this story is 28 pages long! While it's not difficult to tackle a couple of short pieces like this, several dozen, each requiring the same kind of work, would be horrible.</p>
+                    <p class="no-indent">That's when I decided to solve the problem instead of doing the manual formatting work myself.</p>
+
+                    <h2 class="section-heading">Why not just use what already exists</h2>
+                    <p class="no-indent">I've used most of the obvious options at some point. WordPress, static-site generators, wikis, Markdown, etc. I have looked into Pandoc as well, but that wasn't really made for this either. Don't get me wrong. They're all capable tools. But they are bloated for my simple needs and aren't really geared for, well, this kind of writing.</p>
+                    <p class="no-indent">Most content management systems assume you're publishing inside their ecosystem. They define how content is stored, structured, and delivered. This is great for blog-style writing – and there are some good literary-styled themes out there – but they don't suit experimental or independent publishing at all. They also don't allow for different styles of writing, like short fiction, poetry, or academic papers, all under the same theme.</p>
+                    <p class="no-indent">Markdown-based tools get closer to what I need, but they still require us to think about markup rather than plain prose. That's a reasonable tradeoff for many people, but I wanted to make something that worked for me and was possibly easy enough for non-techy authors to use.</p>
+                    <p class="no-indent">The publishing conventions I care about – things like drop caps, epigraphs, pull quotes, citations, figures, manuscript-style headers, etc. – aren't the easiest things to create using most of these systems without plugins, workarounds, or diving into the HTML and CSS. I wanted a tool that treated literary and academic formatting as first-class concerns, not afterthoughts.</p>
+
+                    <h2 class="section-heading">Earlier experiments</h2>
+                    <p class="no-indent">The ideas behind Written &amp; Formatted aren't new to me. My background spans web design, UX, interactive media, software development, and higher education. Across those disciplines, for some reason, I keep returning to the idea that we can make the computer work for us to automate simple tasks. Yeah, this is nothing new, especially with the advent of AI, but go with me here…</p>
+                    <p class="no-indent">In 2017, while developing a game called <a href="https://timsamoff.itch.io/hmlabs" target="_blank" rel="noopener">HMLabs</a>, I built an interactive console that translated player input into structured game responses. It was an experiment in taking ordinary text and making it do something extraordinary.</p>
+                    <p class="no-indent">Come to think about it, I even engaged in this sort of experimentation with my Apple II as a kid! I remember programming a splash screen in Basic that took asterisks and pip symbols and animated them so that they appeared to twirl around to eventually spell the title of my "software" (that I never actually completed).</p>
+                    <p class="no-indent">Continuing in this vein, in 2018, I built a <a href="https://codepen.io/timsamoff/pen/QQrPPy" target="_blank" rel="noopener">browser-based prototype</a> exploring real-time plain text-to-HTML conversion, which accumulated over 250,000 views on CodePen.</p>
+                    <p class="no-indent">Neither project had anything to do with literary publishing, but both were asking the same underlying questions that I think Written &amp; Formatted has answered.</p>
+
+                    <figure class="editorial-figure">
+                        <img src="wf/wf_ui.png" alt="Written &amp; Formatted UI" class="editorial-image" />
+                        <figcaption class="editorial-caption">Written &amp; Formatted allows authors to write in plain text while viewing a fully rendered publication preview in real time.</figcaption>
+                    </figure>
+
+                    <h2 class="section-heading">What the tool actually does</h2>
+                    <p class="no-indent">Written &amp; Formatted converts plain text into semantic, publication-ready HTML using a lightweight syntax that stays readable before it's processed. Most formatting is expressed through simple bracketed tags – <strong>[title]</strong>, <strong>[pullquote]</strong>, <strong>[epigraph]</strong>, <strong>[code]</strong> – rather than raw HTML or interface controls. A live preview updates automatically as you write, so source and rendered output are always visible side by side.</p>
+
+                    <figure class="editorial-figure">
+                        <img src="wf/wf_editor.png" alt="Written &amp; Formatted Editor" class="editorial-image" />
+                        <figcaption class="editorial-caption">The authoring syntax remains readable as plain text while supporting more complex structures during rendering.</figcaption>
+                    </figure>
+
+                    <p class="no-indent">The output is intentionally generic. Written &amp; Formatted generates clean, semantic HTML and keeps visual styling in a separate downloadable stylesheet, which makes the output easier to customize and reuse across different contexts. From a single source document, you can export a complete self-contained webpage, an embeddable HTML package ready to drop into an existing site, or raw markup that can be copied back into the tool. The base CSS is also downloadable and themeable independently.</p>
+                    <p class="no-indent">There are also a few automatic features, such as smart quote conversion, automatic section breaks, and more.</p>
+
+                    <h3 class="subsection-heading">Current core features include:</h3>
+                    <ul>
+                        <li>Real-time plain text-to-HTML conversion with live preview</li>
+                        <li>Tagging toolbar and collapsible syntax reference</li>
+                        <li>Semantic document structures: titles, bylines, section headings, auto-linked footnotes, and citations with return links</li>
+                        <li>Literary formatting: drop caps, epigraphs, pull quotes, section break ornaments, end markers</li>
+                        <li>Syntax-highlighted code blocks</li>
+                        <li>Monospaced text</li>
+                        <li>Nested headings and lists</li>
+                        <li>Editorial image handling with alt-text prompting</li>
+                        <li>A proper manuscript tag that adheres to short story submission guidelines</li>
+                        <li>Export as a standalone webpage, embeddable HTML/CSS package, or raw semantic markup</li>
+                        <li>Downloadable base stylesheet</li>
+                        <li>Plain-text save of the source document</li>
+                    </ul>
+
+                    <figure class="editorial-figure">
+                        <img src="wf/wf_html.png" alt="Written &amp; Formatted HTML Output" class="editorial-image" />
+                        <figcaption class="editorial-caption">Generated output demonstrating semantic document structure, literary formatting, citations, figures, and code presentation.</figcaption>
+                    </figure>
+
+                    <h2 class="section-heading">Separating structure from appearance</h2>
+                    <p class="no-indent">One decision made early on, was to keep structure and presentation separate. I wrote the application to think about what a given element <em>is</em> rather than how it should look. For instance, footnotes and pull quotes might appear on a single page, but they represent fundamentally different kinds of information. The markup in Written &amp; Formatted treats them accordingly.</p>
+                    <p class="no-indent">Of course, this is nothing new either. The separation of content and presentation has been a core tenet in web development for decades. What interested me was applying it to literary and academic publishing in a way that remained approachable for writers who don't want to think about HTML at all.</p>
+
+                    <h2 class="section-heading">Where it stands</h2>
+                    <p class="no-indent">I like to build tools like most people pick up hobbies. Written &amp; Formatted is one of several applications I've made, and it shares a shelf with others that solve specific problems I always run into.</p>
+                    <p class="no-indent">Written &amp; Formatted has become essential in a way I didn't anticipate. What used to take hours of repetitive hand-formatting now takes a few minutes. Even though the application was made to support my writing portfolio, I kind of think of them as a single thing: the site and the system that powers it.</p>
+                    <p class="no-indent">But the problems it solves aren't specific to me. And if it's useful to other writers, researchers, or independent publishers, I'm glad to share it.</p>
+
+                    <figure class="editorial-figure">
+                        <img src="wf/wf_standalone.png" alt="Written &amp; Formatted Standalone Output" class="editorial-image" />
+                        <figcaption class="editorial-caption">The same source document can generate a complete webpage, embeddable content for an existing site, or reusable HTML and CSS for other publishing workflows.</figcaption>
+                    </figure>
+
+                    <p class="no-indent">I'm going to consider the project as "under construction" for the time being. So if you want to suggest any features or revisions, let me know. Currently, Written &amp; Formatted doesn't inherently support screenplay formats, but maybe it will someday.</p>
+                    <p class="no-indent">More than anything, I'd love to know if you use it and if it's helpful.</p>
+
+                    <hr class="fleuron-end" aria-hidden="true">
+                </article>
+
+                <div class="wf-credit" aria-label="Formatted by Written &amp; Formatted">
+                    <p>Page formatted by <a href="https://samoff.com/written/app" target="_blank" rel="noopener">Written &amp; Formatted</a>. &copy; Tim Samoff.</p>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <footer class="site-footer">
+        <div class="container footer-container">
+            <p>&copy; <span id="current-year-guide"></span> Written by Tim Samoff.</p>
+            <script>
+                document.getElementById('current-year-guide').textContent = new Date().getFullYear();
+            </script>
+        </div>
+    </footer>
+
+</body>
+</html>

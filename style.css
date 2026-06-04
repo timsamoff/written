@@ -42,7 +42,8 @@
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
     --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
 }
-    /* Monospaced Blocks */
+
+/* Monospaced Blocks */
 :root[data-theme="light"] {
     --reversed-code-bg: #1A1A1A;
     --reversed-code-border: #262626;
@@ -424,9 +425,72 @@ hr.fleuron-end + p {
   line-height: 2.1;
 }
 
+/* ==========================================================================
+   Professional / Article Content Styles
+   ========================================================================== */
+
+/* Links within story content */
+.story-content a {
+    color: var(--color-accent-inline);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    transition: color 0.2s ease, text-decoration-thickness 0.2s ease;
+}
+
+.story-content a:hover {
+    color: var(--color-accent);
+    text-decoration-thickness: 2px;
+}
+
+/* Headings within story content */
+.story-content h2.section-heading,
+.story-content h3.subsection-heading {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-weight: 500;
+    margin-top: var(--space-lg);
+    margin-bottom: var(--space-sm);
+    text-indent: 0;
+}
+
+.story-content h2.section-heading {
+    font-size: 1.8rem;
+    letter-spacing: -0.01em;
+}
+
+.story-content h3.subsection-heading {
+    font-size: 1.5rem;
+    font-style: italic;
+}
+
+/* Lists within story content */
+.story-content ul {
+    margin: var(--space-md) 0 var(--space-md) var(--space-lg);
+    text-indent: 0;
+}
+
+.story-content li {
+    margin-bottom: var(--space-xs);
+    text-indent: 0;
+}
+
+/* Ensure consistent paragraph spacing for professional content */
+.story-content p.no-indent + h2.section-heading,
+.story-content p.no-indent + h3.subsection-heading {
+    margin-top: var(--space-xl);
+}
+
+/* First paragraph after heading spacing */
+.story-content h2.section-heading + p.no-indent,
+.story-content h3.subsection-heading + p.no-indent {
+    margin-top: var(--space-sm);
+}
+
+/* Dropcap paragraph - Literary use only */
 .dropcap-paragraph {
   text-indent: 0 !important;
 }
+
 .dropcap-paragraph::first-letter {
   font-size: 4.5rem;
   font-weight: 600;
