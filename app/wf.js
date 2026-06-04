@@ -1,5 +1,7 @@
 /* ==========================================================================
-   Written — HTML Formatter  |  written.js
+   Written & Formatted
+   wf.js
+   by Tim Samoff
    ========================================================================== */
 
 'use strict';
@@ -18,6 +20,31 @@ const livePreview      = document.getElementById('livePreview');
 const themeToggle      = document.getElementById('themeToggle');
 const toast            = document.getElementById('toast');
 const rootEl           = document.documentElement;
+
+// ── localStorage Autosave ─────────────────────────────────────────────────────
+
+const AUTOSAVE_KEY = 'written-formatter-autosave';
+
+let lastAutosaveContent = '';
+
+function autosaveToLocalStorage() {
+  const text = inputText.value;
+  if (text.trim() && text !== lastAutosaveContent) {
+    localStorage.setItem(AUTOSAVE_KEY, text);
+    lastAutosaveContent = text;
+    showToast('Auto-saved');
+  }
+}
+
+function loadFromLocalStorage() {
+  const saved = localStorage.getItem(AUTOSAVE_KEY);
+  if (saved && saved.trim()) {
+    inputText.value = saved;
+    lastAutosaveContent = saved;
+    scheduleConvert();
+    showToast('Restored previously saved text');
+  }
+}
 
 // ── Theme ─────────────────────────────────────────────────────────────────────
 
@@ -77,36 +104,27 @@ function smartenQuotes(str) {
 // ── Inline markup ─────────────────────────────────────────────────────────────
 
 function applyInlineMarkup(str, fnMap) {
-  // [b]…[/b] → <strong>
   str = str.replace(/\[b\]([\s\S]*?)\[\/b\]/gi, '<strong>$1</strong>');
-  // [i]…[/i] → <em>
   str = str.replace(/\[i\]([\s\S]*?)\[\/i\]/gi, '<em>$1</em>');
-  // [fn]ref[/fn] → footnote superscript link (fnMap is ref → id)
   if (fnMap) {
     str = str.replace(/\[fn\]([\s\S]*?)\[\/fn\]/gi, (_, ref) => {
       const id = fnMap[ref.trim()];
       if (!id) return `<sup>${escHtml(ref.trim())}</sup>`;
-      // Anchor span sits one line above the sup via negative offset so the
-      // return link scrolls to just above the footnote reference, not on top of it.
       return `<span id="fnref-${id}" class="fn-anchor" aria-hidden="true"></span><sup><a href="#fn-${id}" aria-label="Footnote ${id}" class="fn-ref">${id}</a></sup>`;
     });
   }
-  // [link]text -> url[/link]
-  // Match -> or -&gt; (the arrow may have been HTML-escaped by the time we get here)
   str = str.replace(/\[link\]([\s\S]*?)\s*(?:->|-&gt;)\s*([^\[]*?)\[\/link\]/gi,
     (_, text, url) => {
       const t = text.trim();
       const u = url.trim();
       return `<a href="${escAttr(u)}" target="_blank" rel="noopener" aria-label="${escAttr(t)} (opens in new tab)">${t}</a>`;
     });
-  // Legacy arrow link fallback: [Link Text -> URL]  (also handles escaped arrow)
   str = str.replace(/\[([^\]\n]+?)\s*(?:->|-&gt;)\s*([^\]\n]+?)\]/gi,
     (_, text, url) => {
       const t = text.trim();
       const u = url.trim();
       return `<a href="${escAttr(u)}" target="_blank" rel="noopener" aria-label="${escAttr(t)} (opens in new tab)">${t}</a>`;
     });
-  // Auto-link bare URLs (http/https/www) — skip anything already inside an <a> tag
   str = str.replace(/(?<!href="|">)(https?:\/\/[^\s<>"')]+|www\.[^\s<>"')]+)(?![^<]*<\/a>)/gi,
     url => {
       const href = url.startsWith('www.') ? 'https://' + url : url;
@@ -145,10 +163,8 @@ function tokenise(raw) {
       const currentLineClean = lines[i].trim().toLowerCase();
       if (currentLineClean.includes(closeTag)) {
         const idx = lines[i].toLowerCase().indexOf(closeTag);
-        // Text before the close tag stays inside the block
         const before = lines[i].substring(0, idx);
         if (before.trim()) inner.push(before);
-        // Text after the close tag becomes the next line to tokenise
         const after = lines[i].substring(idx + closeTag.length).trim();
         if (after) lines.splice(i + 1, 0, after);
         break;
@@ -156,7 +172,7 @@ function tokenise(raw) {
       inner.push(lines[i]);
       i++;
     }
-    i++; // consume close tag
+    i++;
     return inner;
   }
 
@@ -165,41 +181,31 @@ function tokenise(raw) {
     const t    = line.trim();
     const tl   = t.toLowerCase();
 
-    // Header blocks
     if (tl === '[title]')    { i++; const inner = consumeBlock('[/title]');    tokens.push({ type: 'title',    content: inner.join('\n').trim() }); continue; }
     if (tl === '[subtitle]') { i++; const inner = consumeBlock('[/subtitle]'); tokens.push({ type: 'subtitle', content: inner.join('\n').trim() }); continue; }
     if (tl === '[byline]')   { i++; const inner = consumeBlock('[/byline]');   tokens.push({ type: 'byline',   content: inner.join('\n').trim() }); continue; }
-
-    // Section heading (mid-document h2)
     if (tl === '[section]')       { i++; const inner = consumeBlock('[/section]');       tokens.push({ type: 'section',       content: inner.join('\n').trim() }); continue; }
     if (tl === '[subsection]')    { i++; const inner = consumeBlock('[/subsection]');    tokens.push({ type: 'subsection',    content: inner.join('\n').trim() }); continue; }
     if (tl === '[subsubsection]') { i++; const inner = consumeBlock('[/subsubsection]'); tokens.push({ type: 'subsubsection', content: inner.join('\n').trim() }); continue; }
-
-    // Editorial containers
     if (tl === '[pullquote]') { i++; const inner = consumeBlock('[/pullquote]'); tokens.push({ type: 'pullquote', content: inner.join('\n').trim() }); continue; }
     if (tl === '[aside]')     { i++; const inner = consumeBlock('[/aside]');     tokens.push({ type: 'aside',     content: inner.join('\n').trim() }); continue; }
     if (tl === '[epigraph]')  { i++; const inner = consumeBlock('[/epigraph]');  tokens.push({ type: 'epigraph',  content: inner.join('\n').trim() }); continue; }
-if (tl.startsWith('[mono]')) {
-  const remainder = line.substring(line.toLowerCase().indexOf('[mono]') + 6);
-  i++;
-  const inner = consumeBlock('[/mono]');
-  if (remainder) inner.unshift(remainder);
-  tokens.push({ type: 'mono', content: inner.join('\n').trim() });
-  continue;
-}
-if (tl === '[code]')      { i++; const inner = consumeBlock('[/code]');      tokens.push({ type: 'code',      content: inner.join('\n') });        continue; }
-
-    // Lists
+    if (tl.startsWith('[mono]')) {
+      const remainder = line.substring(line.toLowerCase().indexOf('[mono]') + 6);
+      i++;
+      const inner = consumeBlock('[/mono]');
+      if (remainder) inner.unshift(remainder);
+      tokens.push({ type: 'mono', content: inner.join('\n').trim() });
+      continue;
+    }
+    if (tl === '[code]')      { i++; const inner = consumeBlock('[/code]');      tokens.push({ type: 'code',      content: inner.join('\n') });        continue; }
     if (tl === '[bullet]' || tl === '[num]' || tl === '[alpha]') {
       const type = tl.replace('[', '').replace(']', '');
       i++;
       const inner = consumeBlock(`[/${type}]`);
-      // rawLines preserves indentation for nested list detection
       tokens.push({ type, rawLines: inner.filter(l => l.trim() !== '' || /^[ \t]/.test(l)), items: inner.map(l => l.trim()).filter(Boolean) });
       continue;
     }
-
-    // Image block
     if (tl === '[image]') {
       i++;
       const inner = consumeBlock('[/image]');
@@ -215,8 +221,6 @@ if (tl === '[code]')      { i++; const inner = consumeBlock('[/code]');      tok
       tokens.push({ type: 'image', ...props });
       continue;
     }
-
-    // Manuscript header block
     if (tl === '[manuscript]') {
       i++;
       const inner = consumeBlock('[/manuscript]');
@@ -232,8 +236,6 @@ if (tl === '[code]')      { i++; const inner = consumeBlock('[/code]');      tok
       tokens.push({ type: 'manuscript', ...props });
       continue;
     }
-
-    // Citations block — optional title: key, then free-form entries
     if (tl === '[citations]') {
       i++;
       const inner = consumeBlock('[/citations]');
@@ -247,55 +249,39 @@ if (tl === '[code]')      { i++; const inner = consumeBlock('[/code]');      tok
       tokens.push({ type: 'citations', lines: contentLines, title: citTitle });
       continue;
     }
-
-    // [end] block
     if (tl === '[end]') {
       i++;
       const inner = consumeBlock('[/end]');
       tokens.push({ type: 'ending', content: inner.join('\n').trim() });
       continue;
     }
-
-    // Section dividers
     if (isSectionBreak(t)) { tokens.push({ type: 'break', content: t }); i++; continue; }
-
-    // Blank lines
     if (t === '') {
       let blanks = 0;
       while (i < lines.length && lines[i].trim() === '') { blanks++; i++; }
       if (blanks >= 2) tokens.push({ type: 'break', content: '' });
       continue;
     }
-
-    // Plain paragraph (may contain [fn] inline)
     tokens.push({ type: 'para', content: t });
     i++;
   }
-
   return tokens;
 }
 
-// ── Footnote map builder ──────────────────────────────────────────────────────
-// Scans tokens for [fn]ref[/fn] occurrences and assigns sequential integers.
-// Returns a map of ref string → footnote number (as string).
-
 function countBodyWords(tokens) {
-  // Count words in all prose tokens (para, pullquote, aside, epigraph, mono)
   const proseTypes = new Set(['para','pullquote','aside','epigraph','mono']);
   let words = 0;
   for (const tok of tokens) {
     if (proseTypes.has(tok.type) && tok.content) {
-      // Strip any tag markup before counting
       const plain = tok.content.replace(/\[[^\]]*\]/g, '').trim();
       if (plain) words += plain.split(/\s+/).length;
     }
   }
-  // Round to nearest 100 (manuscript convention)
   return Math.round(words / 100) * 100;
 }
 
 function buildFnMap(tokens) {
-  const map = {};    // ref → number
+  const map = {};
   let counter = 1;
   const inlineFn = /\[fn\]([\s\S]*?)\[\/fn\]/gi;
 
@@ -318,8 +304,6 @@ function buildFnMap(tokens) {
   return map;
 }
 
-// ── Block renderers ───────────────────────────────────────────────────────────
-
 function renderBlockLines(content, fnMap, extraClass) {
   return content.split('\n').map(l => {
     if (l.trim() === '') return `    <p class="block-spacer"></p>`;
@@ -339,12 +323,10 @@ function renderAside(tok, fnMap) {
 }
 
 function renderManuscript(tok, wordCount) {
-  // Determine the word count display string
   let wcDisplay;
   const rawWc = tok.wordcount;
 
   if (!rawWc || rawWc === 'auto') {
-    // Auto-calculated; blank if no body text yet, otherwise "about N words"
     if (wordCount === 0) {
       wcDisplay = '';
     } else {
@@ -352,15 +334,12 @@ function renderManuscript(tok, wordCount) {
       wcDisplay = `about ${formatted} words`;
     }
   } else {
-    // User supplied a value — strip any commas first to normalize
     const stripped = rawWc.replace(/,/g, '').trim();
     const asNum = parseInt(stripped, 10);
     if (!isNaN(asNum)) {
-      // It's a plain number — format it and add "about"/"words"
       const formatted = asNum.toLocaleString('en-US');
       wcDisplay = `about ${formatted} words`;
     } else {
-      // Non-numeric (user already wrote their own string) — use as-is
       wcDisplay = rawWc;
     }
   }
@@ -372,7 +351,6 @@ function renderManuscript(tok, wordCount) {
   if (tok.phone)   leftLines.push(escHtml(tok.phone));
   if (tok.email)   leftLines.push(`<a href="mailto:${escAttr(tok.email)}" class="ms-email">${escHtml(tok.email)}</a>`);
 
-  // First line gets the word count floating right
   const firstLine = leftLines.shift() || '';
   const restLines = leftLines.map(l => `<p class="ms-line">${l}</p>`).join('\n    ');
 
@@ -388,13 +366,10 @@ function renderManuscript(tok, wordCount) {
 }
 
 function renderEpigraph(tok, fnMap) {
-  // Last non-blank line is treated as attribution if preceded by a blank line
-  // or starts with — / - / ~ (em-dash convention)
   const lines = tok.content.split('\n');
   let attrLine = null;
   let quoteLines = lines;
 
-  // Check if last content line looks like an attribution
   const lastContent = [...lines].reverse().find(l => l.trim() !== '');
   if (lastContent && /^[\u2014\-~]/.test(lastContent.trim())) {
     const lastIdx = lines.lastIndexOf(lastContent);
@@ -421,7 +396,6 @@ function renderMono(tok, fnMap) {
     if (l.trim() === '') return `    <p class="block-spacer"></p>`;
 
     let lineText = processInlineMono(l, fnMap);
-
     lineText = lineText.replace(/&gt;/g, '>');
 
     const hasOpenBold = lineText.includes('&lt;b&gt;') || lineText.includes('[b]');
@@ -459,7 +433,6 @@ function processInlineMono(str, fnMap) {
   let rawText = escHtml(str)
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/[\u2018\u2019]/g, "'");
-
   return applyInlineMarkup(rawText, fnMap);
 }
 
@@ -506,7 +479,6 @@ function renderCode(tok) {
     ).join('\n');
   } else {
     rowsHtml = codeLines.map((l, idx) => {
-      // Standardize un-highlighted raw lines safely
       let cleanLine = l.replace(/[\u201C\u201D]/g, '"').replace(/[\u2018\u2019]/g, "'");
       return `<span class="code-row"><span class="line-number" aria-hidden="true">${idx + 1}</span><code>${escHtml(cleanLine) || '\u200b'}</code></span>`;
     }).join('\n');
@@ -522,15 +494,12 @@ function renderList(tok, fnMap) {
   const rootClass = tok.type === 'alpha'  ? ' class="list-alpha"' : '';
   const rawLines  = tok.rawLines || tok.items;
 
-  // Measure indent depth — tabs count as 2 spaces
   function depth(line) {
     const m = line.match(/^([ \t]*)/);
     if (!m) return 0;
     return m[1].replace(/\t/g, '  ').length;
   }
 
-  // Recursively build nested list HTML from a flat array of raw lines.
-  // Only processes lines whose depth >= baseDepth; stops when depth drops below it.
   function buildList(lines, baseDepth, pad) {
     const items = [];
     let i = 0;
@@ -538,9 +507,8 @@ function renderList(tok, fnMap) {
       const line = lines[i];
       if (!line.trim()) { i++; continue; }
       const d = depth(line);
-      if (d < baseDepth) break; // belongs to a parent level
+      if (d < baseDepth) break;
 
-      // Collect all following lines that are strictly deeper (children)
       const children = [];
       let j = i + 1;
       while (j < lines.length) {
@@ -582,7 +550,6 @@ function renderImage(tok) {
     html += `    <figcaption class="editorial-caption">`;
     if (tok.caption) html += processInline(tok.caption);
     if (tok.credit) {
-      // Replace any URLs embedded in the credit string with hyperlinks
       const creditHtml = escHtml(tok.credit).replace(
         /https?:\/\/[^\s<>"')]+|www\.[^\s<>"')]+/gi,
         url => {
@@ -599,11 +566,9 @@ function renderImage(tok) {
 }
 
 function renderCitations(tok, fnMap) {
-  // Build reverse map: number → ref text
   const reverseMap = {};
   for (const [ref, num] of Object.entries(fnMap)) reverseMap[num] = ref;
 
-  // Parse citation lines: "1. Citation text" or "1 Citation text" or just text in order
   const entries = [];
   let autoIdx = 1;
 
@@ -631,8 +596,6 @@ function renderCitations(tok, fnMap) {
   return `  <section class="citations-section" aria-label="${escAttr(heading)}">\n    <p class="citations-heading" role="heading" aria-level="2">${escHtml(heading)}</p>\n    <ol class="citations-list">\n${items}\n    </ol>\n  </section>`;
 }
 
-// ── Image alt-text warning in output pane ────────────────────────────────────
-
 function checkAltWarnings(html) {
   const hasWarn = html.includes('data-a11y-warn="missing-alt"');
   const existing = document.getElementById('altWarning');
@@ -649,7 +612,6 @@ function checkAltWarnings(html) {
   }
 }
 
-// Announce preview updates to screen readers
 let lastAnnouncement = '';
 function announcePreviewUpdate(paraCount) {
   const message = `Preview updated with ${paraCount} paragraph${paraCount !== 1 ? 's' : ''}`;
@@ -657,7 +619,6 @@ function announcePreviewUpdate(paraCount) {
   lastAnnouncement = message;
   livePreview.setAttribute('aria-label', message);
   
-  // Also use a polite live region for immediate announcement
   const announcer = document.getElementById('liveAnnouncer') || (() => {
     const div = document.createElement('div');
     div.id = 'liveAnnouncer';
@@ -668,8 +629,6 @@ function announcePreviewUpdate(paraCount) {
   })();
   announcer.textContent = message;
 }
-
-// ── Core converter ────────────────────────────────────────────────────────────
 
 function convertText() {
   const raw = inputText.value;
@@ -723,14 +682,9 @@ function convertText() {
   const hasTitle   = headerToks.some(t => t.type === 'title');
   const labelAttr  = hasTitle ? ' aria-labelledby="story-title"' : '';
   
-  // Add landmarks: article wrapper with header, main, footer
   out.push(`<article class="story-content${lsClass}"${labelAttr}>`);
-  
-  // Story header section
   out.push(`  <header class="story-header">`);
   
-  // subtitle and byline are NOT headings — they don't belong in the document outline
-  // manuscript renders before everything else (standard submission format)
   const msTok = headerToks.find(t => t.type === 'manuscript');
   if (msTok) out.push(renderManuscript(msTok, wordCount));
 
@@ -747,8 +701,6 @@ function convertText() {
 
   if (headerToks.length) out.push(`  <hr class="title-rule" aria-hidden="true">`);
   out.push(`  </header>`);
-  
-  // Story main body
   out.push(`  <main class="story-body">`);
 
   let pIdx = 0;
@@ -799,14 +751,11 @@ function convertText() {
   outputHtml.value = html;
   checkAltWarnings(html);
   
-  // Count paragraphs for announcement
   const paraCount = (html.match(/<p/g) || []).length;
   announcePreviewUpdate(paraCount);
   
   updatePreview(html, lsClass);
 }
-
-// ── Live Preview Sync ─────────────────────────────────────────────────────────
 
 function updatePreview(html, lsClass) {
   livePreview.className = 'story-content preview-body' + lsClass;
@@ -817,30 +766,32 @@ function updatePreview(html, lsClass) {
   wireFootnoteLinks(livePreview);
 }
 
-// ── Copy/Download helpers ─────────────────────────────────────────────────────
-
 function getCleanHtml() {
   return outputHtml.value
     .replace(/^<article class="story-content[^"]*">\n/, '')
     .replace(/\n<\/article>$/, '');
 }
 
-// ── Input Debounce ────────────────────────────────────────────────────────────
-
 let debounceTimer;
+let autosaveTimer;
+
 function scheduleConvert() {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(convertText, 300);
 }
 
-inputText.addEventListener('input', scheduleConvert);
+function scheduleAutosave() {
+  clearTimeout(autosaveTimer);
+  autosaveTimer = setTimeout(autosaveToLocalStorage, 1000);
+}
+
+// Input events with autosave
+inputText.addEventListener('input', () => {
+  scheduleConvert();
+  scheduleAutosave();
+});
+
 document.querySelectorAll('input[type="radio"]').forEach(r => r.addEventListener('change', convertText));
-
-// ── Clear ─────────────────────────────────────────────────────────────────────
-
-// clearBtn wired in setupViewModals()
-
-// ── Clipboard / Download ──────────────────────────────────────────────────────
 
 async function copyToClipboard(text, label) {
   try {
@@ -852,8 +803,6 @@ async function copyToClipboard(text, label) {
   }
 }
 
-// Copy/download now handled by View modals — see setupViewModals()
-
 function triggerDownload(content, filename) {
   const blob = new Blob([content], { type: 'text/html;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
@@ -863,9 +812,7 @@ function triggerDownload(content, filename) {
   document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
-// Download helpers used by View modals
 function getDocTitle() {
-  // Look in the live preview for the rendered h1 title
   const titleEl = livePreview.querySelector('h1.story-title');
   return titleEl ? titleEl.textContent.trim() : null;
 }
@@ -905,27 +852,16 @@ ${storyFooter}
 </html>`;
 }
 
-// ── Toast ─────────────────────────────────────────────────────────────────────
-
 function showToast(msg) {
   toast.textContent = msg;
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 2000);
 }
 
-// ==========================================================================
-//  Toolbar
-// ==========================================================================
-
-// insertTextWithUndo — uses execCommand so browser undo (Ctrl+Z) works.
-// Falls back to direct .value assignment if execCommand is unavailable.
 function insertTextWithUndo(textarea, text) {
   textarea.focus();
-  // execCommand is deprecated but remains the only way to integrate with
-  // the browser's native undo stack in a plain textarea.
   const ok = document.execCommand('insertText', false, text);
   if (!ok) {
-    // Fallback: direct assignment (no undo support)
     const s = textarea.selectionStart;
     const e = textarea.selectionEnd;
     const v = textarea.value;
@@ -934,7 +870,6 @@ function insertTextWithUndo(textarea, text) {
   }
 }
 
-// replaceSelectionWithUndo — replaces start..end with text, with undo support.
 function replaceRangeWithUndo(textarea, start, end, text) {
   textarea.focus();
   textarea.setSelectionRange(start, end);
@@ -958,10 +893,8 @@ function wrapSelection(openTag, closeTag, blockMode = false) {
     const post   = (after.length  > 0 && !after.startsWith('\n')) ? '\n' : '';
     const inner  = sel || 'Content here';
     const replacement = `${pre}${openTag}\n${inner}\n${closeTag}${post}`;
-    // Expand selection to include the pre/post newlines so execCommand replaces correctly
     inputText.setSelectionRange(start - pre.length < 0 ? 0 : start, end);
     replaceRangeWithUndo(inputText, Math.max(0, start - (pre ? 0 : 0)), end, replacement);
-    // Re-select the inner content for immediate editing
     const newSelStart = start + pre.length + openTag.length + 1;
     inputText.setSelectionRange(newSelStart, newSelStart + inner.length);
   } else {
@@ -997,7 +930,6 @@ function insertFn() {
   const start   = inputText.selectionStart;
   const end     = inputText.selectionEnd;
   const sel     = inputText.value.substring(start, end).trim();
-  // Count existing [fn] tags to suggest next number
   const existing = (inputText.value.match(/\[fn\]/gi) || []).length + 1;
   const ref     = sel || String(existing);
   const tag     = `[fn]${ref}[/fn]`;
@@ -1014,7 +946,6 @@ function indentLines(direction) {
   const end    = inputText.selectionEnd;
   const val    = inputText.value;
 
-  // Expand selection to full lines
   const lineStart = val.lastIndexOf('\n', start - 1) + 1;
   const lineEnd   = val.indexOf('\n', end);
   const blockEnd  = lineEnd === -1 ? val.length : lineEnd;
@@ -1022,7 +953,6 @@ function indentLines(direction) {
 
   const modified = block.split('\n').map(line => {
     if (direction === 'in') return '  ' + line;
-    // dedent: remove up to 2 leading spaces (one indent level)
     return line.replace(/^  /, '');
   }).join('\n');
 
@@ -1040,7 +970,6 @@ function insertCitations() {
   const post   = (after.length  > 0 && !after.startsWith('\n')) ? '\n' : '';
   const block  = `${pre}[citations]\nheading: Notes\n1. \n[/citations]${post}`;
   replaceRangeWithUndo(inputText, start, start, block);
-  // Place cursor after "1. " ready to type
   const cursorPos = before.length + pre.length + '[citations]\nheading: Notes\n1. '.length;
   inputText.setSelectionRange(cursorPos, cursorPos);
   inputText.focus();
@@ -1090,10 +1019,7 @@ function buildToolbar() {
   });
 }
 
-// ==========================================================================
-//  Link Modal
-// ==========================================================================
-
+// Modal functions
 function openLinkModal() {
   const selStart = inputText.selectionStart;
   const selEnd   = inputText.selectionEnd;
@@ -1125,11 +1051,8 @@ function confirmLink() {
   inputText.setSelectionRange(before.length + tag.length, before.length + tag.length);
   closeLinkModal();
   scheduleConvert();
+  inputText.focus();
 }
-
-// ==========================================================================
-//  Image Modal
-// ==========================================================================
 
 function openImageModal() {
   ['imgSource','imgAlt','imgCaption','imgCredit'].forEach(id => {
@@ -1166,11 +1089,8 @@ function confirmImage() {
   inputText.value = before + pre + tag + post + after;
   closeImageModal();
   scheduleConvert();
+  inputText.focus();
 }
-
-// ==========================================================================
-//  Modal wiring with focus trapping
-// ==========================================================================
 
 function trapFocus(element, event) {
   const focusable = element.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
@@ -1196,13 +1116,11 @@ function openModalWithFocus(modal) {
   modal.removeAttribute('hidden');
   document.body.style.overflow = 'hidden';
   
-  // Find first focusable element
   const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
   if (focusable) {
     setTimeout(() => focusable.focus(), 10);
   }
   
-  // Add focus trap
   const trapHandler = (e) => trapFocus(modal, e);
   modal.addEventListener('keydown', trapHandler);
   modal._trapHandler = trapHandler;
@@ -1247,7 +1165,6 @@ function confirmManuscript() {
   if (city)      lines.push(`city: ${city}`);
   if (phone)     lines.push(`phone: ${phone}`);
   if (email)     lines.push(`email: ${email}`);
-  // Always emit wordcount: so the user can see/edit it; blank = auto-calculate
   lines.push(`wordcount: ${wordcount}`);
   lines.push('[/manuscript]');
 
@@ -1260,41 +1177,75 @@ function confirmManuscript() {
   inputText.value = before + pre + tag + post + after;
   closeManuscriptModal();
   scheduleConvert();
+  inputText.focus();
 }
 
 function setupModals() {
-  const wireModal = (modalId, closeFn, confirmFn) => {
-    const modal = document.getElementById(modalId);
-    if (!modal) return;
-    
-    const closeBtn = modal.querySelector('.modal-close');
-    const cancelBtn = modal.querySelector('[id$="Cancel"]');
-    const confirmBtn = document.getElementById(modalId.replace('Modal', 'Confirm'));
-    
-    if (closeBtn) closeBtn.addEventListener('click', closeFn);
-    if (cancelBtn) cancelBtn.addEventListener('click', closeFn);
-    if (confirmBtn) confirmBtn.addEventListener('click', confirmFn);
-    
-    modal.addEventListener('click', e => {
-      if (e.target === modal) closeFn();
-    });
-    
-    modal.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-        confirmFn();
-      }
-      if (e.key === 'Escape') closeFn();
-    });
-  };
+  // Link Modal
+  const linkModal = document.getElementById('linkModal');
+  const linkClose = document.getElementById('linkModalClose');
+  const linkCancel = document.getElementById('linkModalCancel');
+  const linkConfirm = document.getElementById('linkModalConfirm');
   
-  wireModal('linkModal', closeLinkModal, confirmLink);
-  wireModal('manuscriptModal', closeManuscriptModal, confirmManuscript);
-  wireModal('imageModal', closeImageModal, confirmImage);
+  if (linkClose) linkClose.addEventListener('click', closeLinkModal);
+  if (linkCancel) linkCancel.addEventListener('click', closeLinkModal);
+  if (linkConfirm) {
+    const newLinkConfirm = linkConfirm.cloneNode(true);
+    linkConfirm.parentNode.replaceChild(newLinkConfirm, linkConfirm);
+    newLinkConfirm.addEventListener('click', confirmLink);
+  }
+  
+  // Manuscript Modal
+  const msModal = document.getElementById('manuscriptModal');
+  const msClose = document.getElementById('manuscriptModalClose');
+  const msCancel = document.getElementById('manuscriptModalCancel');
+  const msConfirm = document.getElementById('manuscriptModalConfirm');
+  
+  if (msClose) msClose.addEventListener('click', closeManuscriptModal);
+  if (msCancel) msCancel.addEventListener('click', closeManuscriptModal);
+  if (msConfirm) {
+    const newMsConfirm = msConfirm.cloneNode(true);
+    msConfirm.parentNode.replaceChild(newMsConfirm, msConfirm);
+    newMsConfirm.addEventListener('click', confirmManuscript);
+  }
+  
+  // Image Modal
+  const imgModal = document.getElementById('imageModal');
+  const imgClose = document.getElementById('imageModalClose');
+  const imgCancel = document.getElementById('imageModalCancel');
+  const imgConfirm = document.getElementById('imageModalConfirm');
+  
+  if (imgClose) imgClose.addEventListener('click', closeImageModal);
+  if (imgCancel) imgCancel.addEventListener('click', closeImageModal);
+  if (imgConfirm) {
+    const newImgConfirm = imgConfirm.cloneNode(true);
+    imgConfirm.parentNode.replaceChild(newImgConfirm, imgConfirm);
+    newImgConfirm.addEventListener('click', confirmImage);
+  }
+  
+  // Click outside to close
+  const modals = [linkModal, msModal, imgModal];
+  modals.forEach(modal => {
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          if (modal.id === 'linkModal') closeLinkModal();
+          if (modal.id === 'manuscriptModal') closeManuscriptModal();
+          if (modal.id === 'imageModal') closeImageModal();
+        }
+      });
+    }
+  });
+  
+  // Escape key handling
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (linkModal && !linkModal.hasAttribute('hidden')) closeLinkModal();
+      if (msModal && !msModal.hasAttribute('hidden')) closeManuscriptModal();
+      if (imgModal && !imgModal.hasAttribute('hidden')) closeImageModal();
+    }
+  });
 }
-
-// ==========================================================================
-//  Preview Expand Modal
-// ==========================================================================
 
 function setupPreviewModal() {
   const expandBtn = document.getElementById('previewExpandBtn');
@@ -1324,8 +1275,6 @@ function setupPreviewModal() {
   });
 }
 
-// Intercept footnote anchor/return clicks inside a scrollable container
-// so they scroll within the container instead of the background page.
 function wireFootnoteLinks(container) {
   container.querySelectorAll('a.fn-ref, a.fn-return').forEach(link => {
     link.addEventListener('click', e => {
@@ -1360,10 +1309,6 @@ function wireCopyButtons(container) {
   });
 }
 
-// ==========================================================================
-//  View Modals — Standalone, Embed, Base CSS
-// ==========================================================================
-
 function getEmbedHtml() {
   const creditDiv = `<div class="wf-credit" aria-label="Formatted by Written &amp; Formatted">
   <p>Page formatted by <a href="https://samoff.com/written/app" target="_blank" rel="noopener">Written &amp; Formatted</a>. &copy; Tim Samoff.</p>
@@ -1374,7 +1319,6 @@ function getEmbedHtml() {
 function openViewModal(modalId) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
-  // Populate content
   if (modalId === 'viewStandaloneModal') {
     document.getElementById('viewStandaloneContent').value = getStandaloneHtml();
   } else if (modalId === 'viewEmbedModal') {
@@ -1420,7 +1364,6 @@ function setupViewModals() {
     });
   });
 
-  // Action bar buttons
   document.getElementById('viewStandaloneBtn')?.addEventListener('click', () => {
     if (!outputHtml.value.trim()) { showToast('Nothing to view — type some text first'); return; }
     openViewModal('viewStandaloneModal');
@@ -1467,6 +1410,7 @@ function setupViewModals() {
   document.getElementById('clearBtn')?.addEventListener('click', () => {
     if (inputText.value.trim() && !confirm('Clear all text? This cannot be undone.')) return;
     inputText.value = '';
+    localStorage.removeItem(AUTOSAVE_KEY);
     outputHtml.value = '';
     livePreview.innerHTML = '';
     checkAltWarnings('');
@@ -1475,20 +1419,13 @@ function setupViewModals() {
   });
 }
 
-// ==========================================================================
-//  Init
-// ==========================================================================
-
 document.addEventListener('DOMContentLoaded', () => {
   buildToolbar();
   setupModals();
   setupPreviewModal();
   setupViewModals();
+  loadFromLocalStorage();
 });
-
-// ==========================================================================
-//  Downloadable Base CSS
-// ==========================================================================
 
 const BASE_CSS_TEXT = `/* ==========================================================================
    Written & Formatted — Base Stylesheet
@@ -1505,29 +1442,14 @@ const BASE_CSS_TEXT = `/* ======================================================
    ========================================================================== */
 
 :root {
-  /* ── Page background ───────────────────────────────────────────────────── */
-  --wf-bg:          #f2f1ef; /* page/body background                         */
-
-  /* ── Text colors ───────────────────────────────────────────────────────── */
-  --wf-text:        #2a1f1c; /* main body text (improved contrast)          */
-  --wf-text-muted:  #6b4e41; /* subtitle, byline, captions, muted labels     */
-
-  /* ── Accent / highlight color ──────────────────────────────────────────── */
-  --wf-accent:      #8b5a4a; /* drop cap, pull-quote bar, ornaments, links   */
-
-  /* ── Borders and rules ─────────────────────────────────────────────────── */
-  --wf-border:      #d9d2cc; /* hr rules, aside borders, section breaks      */
-
-  /* ── Typography ────────────────────────────────────────────────────────── */
-  /* To change the body font, replace the value below AND update the Google  */
-  /* Fonts <link> in your <head> to load your chosen typeface.               */
+  --wf-bg:          #f2f1ef;
+  --wf-text:        #2a1f1c;
+  --wf-text-muted:  #6b4e41;
+  --wf-accent:      #8b5a4a;
+  --wf-border:      #d9d2cc;
   --wf-font-body:   'EB Garamond', Georgia, serif;
   --wf-font-mono:   'Source Code Pro', Consolas, monospace;
 }
-
-/* ==========================================================================
-   Base layout
-   ========================================================================== */
 
 body {
   background-color: var(--wf-bg);
@@ -1549,10 +1471,6 @@ body {
 .story-content.ls-1-5 { line-height: 1.65; }
 .story-content.ls-2   { line-height: 2.0; }
 
-/* ==========================================================================
-   Manuscript submission header
-   ========================================================================== */
-
 .story-content .manuscript-header {
   font-family: var(--wf-font-body);
   font-size: 0.88rem;
@@ -1567,7 +1485,6 @@ body {
   text-align: left !important;
 }
 
-/* Name left, word count right on the same baseline */
 .story-content .ms-first-line {
   display: flex;
   justify-content: space-between;
@@ -1590,12 +1507,7 @@ body {
 }
 .story-content .ms-email:hover { text-decoration: underline; }
 
-/* Breathing room between manuscript block and story title */
 .story-content .manuscript-header ~ h1.story-title { margin-top: 4rem; }
-
-/* ==========================================================================
-   Title / subtitle / byline
-   ========================================================================== */
 
 .story-content h1.story-title {
   text-align: center; font-size: 2.25rem; font-weight: 600;
@@ -1616,10 +1528,6 @@ body {
   margin: 0 auto 2.5rem auto; width: 80px;
 }
 
-/* ==========================================================================
-   Section / subsection / sub-subsection headings
-   ========================================================================== */
-
 .story-content h2.section-heading {
   font-size: 1.25rem; font-weight: 600; margin: 2.5rem 0 0.75rem 0;
   color: var(--wf-text); letter-spacing: 0.01em;
@@ -1632,12 +1540,6 @@ body {
   font-size: 1rem; font-weight: 600; margin: 1.5rem 0 0.4rem 0;
   color: var(--wf-text); letter-spacing: 0.01em;
 }
-.story-content h2.section-heading + h3.subsection-heading,
-.story-content h3.subsection-heading + h4.subsubsection-heading { margin-top: 0; }
-
-/* ==========================================================================
-   Body paragraphs
-   ========================================================================== */
 
 .story-content p {
   margin: 0 0 0.5em 0; text-align: justify; text-justify: inter-word;
@@ -1649,12 +1551,8 @@ body {
 .story-content p.dropcap-paragraph::first-letter {
   font-size: 4.5rem; float: left; line-height: 0.75;
   margin: 0.1em 0.1rem 0 0;
-  color: var(--wf-accent); /* ← change drop cap color here */
+  color: var(--wf-accent);
 }
-
-/* ==========================================================================
-   Epigraph
-   ========================================================================== */
 
 .story-content blockquote.epigraph {
   margin: 2rem 2rem 2rem 3rem;
@@ -1665,11 +1563,6 @@ body {
 .story-content .epigraph footer.epigraph-attribution {
   font-size: 0.9rem; font-style: normal; margin-top: 0.5em;
 }
-.story-content .epigraph cite { font-style: italic; }
-
-/* ==========================================================================
-   Pull quote
-   ========================================================================== */
 
 .story-content aside.pullquote {
   border-left: 4px solid var(--wf-accent);
@@ -1678,20 +1571,12 @@ body {
 }
 .story-content .pullquote p { text-indent: 0 !important; margin-bottom: 0.4em; }
 
-/* ==========================================================================
-   Editorial aside
-   ========================================================================== */
-
 .story-content aside.editorial-aside {
   border: 1px solid var(--wf-border);
   border-radius: 6px; padding: 1rem 1.25rem; margin: 2rem 0;
   font-size: 0.95rem; color: var(--wf-text);
 }
 .story-content .editorial-aside p { text-indent: 0 !important; margin-bottom: 0.4em; }
-
-/* ==========================================================================
-   Monospace prose
-   ========================================================================== */
 
 .story-content .literary-mono {
   font-family: var(--wf-font-mono);
@@ -1701,11 +1586,6 @@ body {
   text-indent: 0 !important; padding-left: 1.4rem;
   margin-bottom: 0.65em; line-height: 1.6;
 }
-.story-content .literary-mono p:last-child { margin-bottom: 0; }
-
-/* ==========================================================================
-   Code blocks
-   ========================================================================== */
 
 .story-content .code-block-wrap {
   background: #1e1e1e; border-radius: 8px; margin: 2rem 0;
@@ -1733,28 +1613,16 @@ body {
   background: transparent; padding: 0;
 }
 
-/* ==========================================================================
-   Lists
-   ========================================================================== */
-
 .story-content ul, .story-content ol {
   margin: 1.5rem 0; padding-left: 2rem; text-indent: 0;
 }
 .story-content ol.list-alpha { list-style-type: lower-alpha; }
 .story-content li { margin-bottom: 6px; }
 
-/* ==========================================================================
-   Images
-   ========================================================================== */
-
 .story-content figure.editorial-figure { margin: 2.5rem 0; display: flex; flex-direction: column; gap: 8px; }
 .story-content .editorial-image { width: 100%; height: auto; border-radius: 8px; display: block; }
 .story-content .editorial-caption { font-size: 0.88rem; color: var(--wf-text-muted); line-height: 1.4; padding: 0 4px; }
 .story-content .caption-credit { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--wf-accent); margin-left: 6px; }
-
-/* ==========================================================================
-   Section break ornament
-   ========================================================================== */
 
 .story-content hr.fleuron-break {
   border: none; height: 1px; background: var(--wf-border);
@@ -1762,14 +1630,10 @@ body {
 }
 .story-content hr.fleuron-break::after {
   content: "✦"; font-size: 0.6rem; color: var(--wf-accent);
-  background-color: var(--wf-bg); /* must match page background */
+  background-color: var(--wf-bg);
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%); padding: 0 1rem;
 }
-
-/* ==========================================================================
-   End marker
-   ========================================================================== */
 
 .story-content p.story-end {
   text-align: center; font-style: italic; color: var(--wf-text-muted);
@@ -1781,14 +1645,10 @@ body {
 }
 .story-content hr.fleuron-end::after {
   content: "✦ ✦ ✦"; font-size: 0.6rem; letter-spacing: 0.5em;
-  color: var(--wf-accent); background-color: var(--wf-bg); /* must match page background */
+  color: var(--wf-accent); background-color: var(--wf-bg);
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%); padding: 0 1rem; white-space: nowrap;
 }
-
-/* ==========================================================================
-   Footnotes & citations
-   ========================================================================== */
 
 .story-content a.fn-ref {
   text-decoration: none; color: var(--wf-accent); font-size: 0.75em;
@@ -1810,10 +1670,6 @@ body {
   font-size: 0.8rem; color: var(--wf-accent); text-decoration: none; margin-left: 4px;
 }
 .story-content a.fn-return:hover { text-decoration: underline; }
-
-/* ==========================================================================
-   Written & Formatted credit (standalone footer / embed div)
-   ========================================================================== */
 
 footer.wf-credit, div.wf-credit {
   max-width: 660px;
@@ -1843,9 +1699,6 @@ downloadCssBtn?.addEventListener('click', () => {
   document.body.removeChild(a); URL.revokeObjectURL(url);
 });
 
-/* ==========================================================================
-   Sidebar Preference Persistence (localStorage)
-   ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   const formattingOptions = ['dropcap', 'indent', 'linespacing', 'endhr'];
 
@@ -1856,13 +1709,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetRadio = document.querySelector(`input[name="${optionName}"][value="${savedValue}"]`);
       if (targetRadio) {
         targetRadio.checked = true;
-        
         targetRadio.dispatchEvent(new Event('change', { bubbles: true }));
       }
     }
 
     const radios = document.querySelectorAll(`input[name="${optionName}"]`);
-    
     radios.forEach(radio => {
       radio.addEventListener('change', (e) => {
         if (e.target.checked) {
@@ -1873,12 +1724,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-/* ==========================================================================
-   Synchronized Scrolling
-   ========================================================================== */
 document.addEventListener('DOMContentLoaded', () => {
   const inputPane = document.getElementById('inputText');
-  const previewPane = document.getElementById('livePreview'); // Patched to your actual HTML ID
+  const previewPane = document.getElementById('livePreview');
 
   if (!inputPane || !previewPane) return;
 
@@ -1894,16 +1742,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!text || cursorIdx === undefined) return;
 
       const lineIndex = text.substring(0, cursorIdx).split('\n').length - 1;
-
       const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure');
       let bestMatch = null;
-      let closestDistance = Infinity;
 
       elements.forEach(el => {
         const textContent = el.textContent || '';
         const lines = text.split('\n');
         const targetLineText = lines[lineIndex] ? lines[lineIndex].trim() : '';
-
         const cleanTarget = targetLineText.replace(/\[\/?(b|i|mono|code|dropcap|pullquote)\]/g, '').trim();
 
         if (cleanTarget.length > 2 && textContent.includes(cleanTarget)) {
@@ -1914,20 +1759,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!bestMatch && text.length > 0) {
         const ratio = cursorIdx / text.length;
         const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * ratio;
-        
-        previewPane.scrollTo({
-          top: targetScroll,
-          behavior: 'smooth'
-        });
+        previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
         return;
       }
 
       if (bestMatch) {
-        bestMatch.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'nearest'
-        });
+        bestMatch.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
       }
     }, 80);
   }

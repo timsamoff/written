@@ -184,15 +184,16 @@
 
   <footer class="site-footer" role="contentinfo">
     <div class="container footer-container">
-      <span>Written &amp; Formatted — a companion tool for <em>Written</em> by Tim Samoff</span>
+      <span>Written &amp; Formatted &copy; <span id="current-year-index"></span> Tim Samoff.</span>
+            <script>
+                document.getElementById('current-year-index').textContent = new Date().getFullYear();
+            </script>
     </div>
   </footer>
 
   <div id="toast" class="toast" aria-live="polite" role="status"></div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       View Modals
-       ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ── View Modals ───────────────────────────────────────────── -->
 
   <!-- View Standalone -->
   <div id="viewStandaloneModal" class="modal-overlay view-modal" hidden role="dialog" aria-modal="true" aria-labelledby="viewStandaloneTitle">
@@ -248,9 +249,7 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════════════════
-       Editing Modals
-       ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ── Editing Modals ───────────────────────────────────────────── -->
 
   <!-- Preview Expand -->
   <div id="previewModal" class="preview-modal-overlay" hidden role="dialog" aria-modal="true" aria-label="Expanded preview">
