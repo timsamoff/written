@@ -486,7 +486,7 @@ function renderCode(tok) {
 
   const langLabel = lang ? `<span class="code-lang-label" aria-hidden="true">${lang}</span>` : '';
   const langAttr  = lang ? ` aria-label="Code block: ${lang}"` : ' aria-label="Code block"';
-  return `  <div class="code-block-wrap"${langAttr}>\n  ${langLabel}<button class="code-copy-btn" aria-label="Copy code" title="Copy code"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>\n  <pre class="line-numbered-code">${rowsHtml}</pre>\n  </div>`;
+  return `  <div class="code-block-wrap"${langAttr}>\n  ${langLabel}<button type="button" class="code-copy-btn" aria-label="Copy code" title="Copy code"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>\n  <pre class="line-numbered-code">${rowsHtml}</pre>\n  </div>`;
 }
 
 function renderList(tok, fnMap) {
@@ -613,21 +613,43 @@ function checkAltWarnings(html) {
 }
 
 let lastAnnouncement = '';
+let lastAnnouncementTime = 0;
+let statusTimer = null;
+
 function announcePreviewUpdate(paraCount) {
-  const message = `Preview updated with ${paraCount} paragraph${paraCount !== 1 ? 's' : ''}`;
-  if (message === lastAnnouncement) return;
-  lastAnnouncement = message;
-  livePreview.setAttribute('aria-label', message);
+  const statusEl = document.getElementById('previewStatus');
   
-  const announcer = document.getElementById('liveAnnouncer') || (() => {
-    const div = document.createElement('div');
-    div.id = 'liveAnnouncer';
-    div.setAttribute('aria-live', 'polite');
-    div.className = 'visually-hidden';
-    document.body.appendChild(div);
-    return div;
-  })();
-  announcer.textContent = message;
+  if (statusEl) {
+    // Show spinning icon
+    statusEl.innerHTML = '<i class="fa-solid fa-rotate-right" aria-hidden="true"></i>';
+    statusEl.classList.add('visible', 'spinning');
+    
+    if (statusTimer) clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => {
+      statusEl.classList.remove('visible', 'spinning');
+      statusEl.innerHTML = '';
+    }, 600);
+  }
+  
+  // Update aria-label for live preview container
+  livePreview.setAttribute('aria-label', `Formatted story preview. Updated.`);
+  
+  // Only announce to screen readers on significant changes (rate limited)
+  let announcer = document.getElementById('liveAnnouncer');
+  if (!announcer) {
+    announcer = document.createElement('div');
+    announcer.id = 'liveAnnouncer';
+    announcer.setAttribute('aria-live', 'polite');
+    announcer.setAttribute('aria-atomic', 'true');
+    announcer.className = 'visually-hidden';
+    document.body.appendChild(announcer);
+  }
+  // Only announce every 2 seconds max to avoid spam
+  const now = Date.now();
+  if (!announcer._lastAnnounce || (now - announcer._lastAnnounce) > 2000) {
+    announcer._lastAnnounce = now;
+    announcer.textContent = 'Preview updated';
+  }
 }
 
 function convertText() {

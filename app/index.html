@@ -23,10 +23,10 @@
   <header class="site-header" role="banner">
     <div class="container header-container">
       <div class="branding-text">
-        <span class="site-logo" aria-label="Written and Formatted">Written <span class="logo-amp" aria-hidden="true">&amp;</span> Formatted</span>
+        <h1 class="site-logo" aria-label="Written and Formatted">Written <span class="logo-amp" aria-hidden="true">&amp;</span> Formatted</h1>
         <span class="site-tagline">Plain Text → Semantic and Accessible HTML</span>
       </div>
-      <button class="theme-btn" id="themeToggle" aria-label="Toggle theme: currently light mode" title="Toggle theme">☀</button>
+      <button type="button"class="theme-btn" id="themeToggle" aria-label="Toggle theme: currently light mode" title="Toggle theme">☀</button>
     </div>
   </header>
 
@@ -83,7 +83,7 @@
 
         <div class="pane-header">
           <span id="editor-label" class="pane-label">Plain Text Input</span>
-          <button class="hint-toggle" id="syntaxToggle" aria-expanded="false" aria-controls="syntaxReference">
+          <button type="button"class="hint-toggle" id="syntaxToggle" aria-expanded="false" aria-controls="syntaxReference" aria-label="Show syntax guide">
             Syntax guide <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
           </button>
         </div>
@@ -139,23 +139,23 @@
 
         <!-- Action bar below textarea -->
         <div class="editor-action-bar" id="editorActionBar">
-          <button id="saveTextBtn" class="btn btn-action" aria-label="Save text to file">
+          <button type="button"id="saveTextBtn" class="btn btn-action" aria-label="Save text to file">
             <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save Text
           </button>
-          <button id="openTextBtn" class="btn btn-action" aria-label="Open text file">
+          <button type="button"id="openTextBtn" class="btn btn-action" aria-label="Open text file">
             <i class="fa-solid fa-folder-open" aria-hidden="true"></i> Open Text
           </button>
-          <button id="clearBtn" class="btn btn-ghost btn-sm" aria-label="Clear all text">
+          <button type="button"id="clearBtn" class="btn btn-ghost btn-sm" aria-label="Clear all text">
             <i class="fa-solid fa-xmark" aria-hidden="true"></i> Clear
           </button>
           <span class="action-bar-break" aria-hidden="true"></span>
-          <button id="viewStandaloneBtn" class="btn btn-action" aria-label="Generate standalone HTML document">
+          <button type="button"id="viewStandaloneBtn" class="btn btn-action" aria-label="Generate standalone HTML document">
             <i class="fa-solid fa-file-code" aria-hidden="true"></i> View Standalone
           </button>
-          <button id="viewEmbedBtn" class="btn btn-action" aria-label="Generate embeddable HTML snippet">
+          <button type="button"id="viewEmbedBtn" class="btn btn-action" aria-label="Generate embeddable HTML snippet">
             <i class="fa-solid fa-code" aria-hidden="true"></i> View Embed
           </button>
-          <button id="viewCssBtn" class="btn btn-action" aria-label="View base CSS stylesheet">
+          <button type="button"id="viewCssBtn" class="btn btn-action" aria-label="View base CSS stylesheet">
             <i class="fa-solid fa-palette" aria-hidden="true"></i> View Base CSS
           </button>
         </div>
@@ -166,17 +166,18 @@
     <!-- ── Right: Live Preview ───────────────────────────────────────────── -->
     <section class="preview-panel" aria-labelledby="preview-label" role="region">
       <div class="preview-header">
-        <span id="preview-label" class="pane-label">Live Preview</span>
+        <div class="preview-header-left">
+          <span id="preview-label" class="pane-label">Live Preview</span>
+          <span id="previewStatus" class="preview-status" aria-live="polite"></span>
+        </div>
         <div class="preview-header-right">
-          <span class="pane-hint">Formatted output</span>
-          <button class="preview-expand-btn" id="previewExpandBtn" title="Expand preview" aria-label="Expand preview to full screen">
+          <button type="button"class="preview-expand-btn" id="previewExpandBtn" title="Expand preview" aria-label="Expand preview to full screen">
             <i class="fa-solid fa-expand" aria-hidden="true"></i>
           </button>
         </div>
       </div>
-      <div id="livePreview" class="story-content preview-body" role="region" aria-label="Formatted story preview" aria-live="polite"></div>
+      <div id="livePreview" class="story-content preview-body" aria-label="Formatted story preview" aria-live="polite" aria-atomic="false"></div>
     </section>
-
   </main>
 
   <!-- Hidden output storage — written by converter, read by View modals -->
@@ -192,6 +193,7 @@
   </footer>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="liveAnnouncer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
 
   <!-- ── View Modals ───────────────────────────────────────────── -->
 
@@ -200,15 +202,15 @@
     <div class="modal-box modal-box--wide">
       <div class="modal-header">
         <h3 class="modal-title" id="viewStandaloneTitle">Standalone HTML</h3>
-        <button class="modal-close" aria-label="Close dialog">&times;</button>
+        <button type="button"class="modal-close" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body modal-body--code">
         <p class="modal-hint">A complete self-contained HTML page with fonts and base CSS embedded. Save it and open in any browser.</p>
         <textarea id="viewStandaloneContent" class="view-code-area" readonly spellcheck="false"></textarea>
       </div>
       <div class="modal-footer">
-        <button id="viewStandaloneDl" class="btn btn-action"><i class="fa-solid fa-download" aria-hidden="true"></i> Download</button>
-        <button id="viewStandaloneCopy" class="btn btn-primary"><i class="fa-regular fa-copy" aria-hidden="true"></i> Copy</button>
+        <button type="button"id="viewStandaloneDl" class="btn btn-action"><i class="fa-solid fa-download" aria-hidden="true"></i> Download</button>
+        <button type="button"id="viewStandaloneCopy" class="btn btn-primary"><i class="fa-regular fa-copy" aria-hidden="true"></i> Copy</button>
       </div>
     </div>
   </div>
@@ -218,15 +220,15 @@
     <div class="modal-box modal-box--wide">
       <div class="modal-header">
         <h3 class="modal-title" id="viewEmbedTitle">Embed HTML</h3>
-        <button class="modal-close" aria-label="Close dialog">&times;</button>
+        <button type="button"class="modal-close" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body modal-body--code">
         <p class="modal-hint">The <code>&lt;article&gt;</code> block ready to paste into a CMS, template, or existing page. Requires the base CSS (and Prism if using code blocks) to be loaded by the host page.</p>
         <textarea id="viewEmbedContent" class="view-code-area" readonly spellcheck="false"></textarea>
       </div>
       <div class="modal-footer">
-        <button id="viewEmbedDl" class="btn btn-action"><i class="fa-solid fa-download" aria-hidden="true"></i> Download</button>
-        <button id="viewEmbedCopy" class="btn btn-primary"><i class="fa-regular fa-copy" aria-hidden="true"></i> Copy</button>
+        <button type="button"id="viewEmbedDl" class="btn btn-action"><i class="fa-solid fa-download" aria-hidden="true"></i> Download</button>
+        <button type="button"id="viewEmbedCopy" class="btn btn-primary"><i class="fa-regular fa-copy" aria-hidden="true"></i> Copy</button>
       </div>
     </div>
   </div>
@@ -236,15 +238,15 @@
     <div class="modal-box modal-box--wide">
       <div class="modal-header">
         <h3 class="modal-title" id="viewCssTitle">Base Stylesheet</h3>
-        <button class="modal-close" aria-label="Close dialog">&times;</button>
+        <button type="button"class="modal-close" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body modal-body--code">
         <p class="modal-hint">Color- and font-free structural CSS. Add your own theme on top. See comments for Prism integration.</p>
         <textarea id="viewCssContent" class="view-code-area" readonly spellcheck="false"></textarea>
       </div>
       <div class="modal-footer">
-        <button id="viewCssDl" class="btn btn-action"><i class="fa-solid fa-download" aria-hidden="true"></i> Download</button>
-        <button id="viewCssCopy" class="btn btn-primary"><i class="fa-regular fa-copy" aria-hidden="true"></i> Copy</button>
+        <button type="button"id="viewCssDl" class="btn btn-action"><i class="fa-solid fa-download" aria-hidden="true"></i> Download</button>
+        <button type="button"id="viewCssCopy" class="btn btn-primary"><i class="fa-regular fa-copy" aria-hidden="true"></i> Copy</button>
       </div>
     </div>
   </div>
@@ -256,11 +258,11 @@
     <div class="preview-modal-box">
       <div class="preview-modal-header">
         <span class="pane-label">Live Preview</span>
-        <button class="modal-close preview-modal-close" id="previewModalClose" aria-label="Close expanded preview">
+        <button type="button"class="modal-close preview-modal-close" id="previewModalClose" aria-label="Close expanded preview">
           <i class="fa-solid fa-compress" aria-hidden="true"></i>
         </button>
       </div>
-      <div id="previewModalBody" class="story-content preview-modal-body" role="region" aria-label="Expanded formatted preview"></div>
+      <div id="previewModalBody" class="story-content preview-modal-body" aria-label="Expanded formatted preview"></div>
     </div>
   </div>
 
@@ -269,7 +271,7 @@
     <div class="modal-box">
       <div class="modal-header">
         <h3 class="modal-title" id="manuscriptModalTitle">Manuscript Submission Header</h3>
-        <button class="modal-close" id="manuscriptModalClose" aria-label="Close dialog">&times;</button>
+        <button type="button"class="modal-close" id="manuscriptModalClose" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body">
         <div class="modal-field"><label class="modal-label" for="msName">Name <span class="modal-required">*</span></label><input class="modal-input" type="text" id="msName" placeholder="Your full name" aria-required="true" /></div>
@@ -284,8 +286,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" id="manuscriptModalCancel">Cancel</button>
-        <button class="btn btn-primary" id="manuscriptModalConfirm">Insert Header</button>
+        <button type="button"class="btn btn-ghost" id="manuscriptModalCancel">Cancel</button>
+        <button type="button"class="btn btn-primary" id="manuscriptModalConfirm">Insert Header</button>
       </div>
     </div>
   </div>
@@ -295,7 +297,7 @@
     <div class="modal-box">
       <div class="modal-header">
         <h3 class="modal-title" id="linkModalTitle">Insert Link</h3>
-        <button class="modal-close" id="linkModalClose" aria-label="Close dialog">&times;</button>
+        <button type="button"class="modal-close" id="linkModalClose" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body">
         <div class="modal-field"><label class="modal-label" for="linkText">Link Text</label><input class="modal-input" type="text" id="linkText" placeholder="Text to display" /></div>
@@ -306,8 +308,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" id="linkModalCancel">Cancel</button>
-        <button class="btn btn-primary" id="linkModalConfirm">Insert Link</button>
+        <button type="button"class="btn btn-ghost" id="linkModalCancel">Cancel</button>
+        <button type="button"class="btn btn-primary" id="linkModalConfirm">Insert Link</button>
       </div>
     </div>
   </div>
@@ -317,7 +319,7 @@
     <div class="modal-box">
       <div class="modal-header">
         <h3 class="modal-title" id="imageModalTitle">Insert Image</h3>
-        <button class="modal-close" id="imageModalClose" aria-label="Close dialog">&times;</button>
+        <button type="button"class="modal-close" id="imageModalClose" aria-label="Close dialog">&times;</button>
       </div>
       <div class="modal-body">
         <div class="modal-field">
@@ -331,8 +333,8 @@
         <p id="alt-hint" class="modal-hint">Adding alt text helps screen reader users understand the image content.</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-ghost" id="imageModalCancel">Cancel</button>
-        <button class="btn btn-primary" id="imageModalConfirm">Insert Image</button>
+        <button type="button"class="btn btn-ghost" id="imageModalCancel">Cancel</button>
+        <button type="button"class="btn btn-primary" id="imageModalConfirm">Insert Image</button>
       </div>
     </div>
   </div>
@@ -348,12 +350,19 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
   <script src="wf.js"></script>
   <script>
-    document.getElementById('syntaxToggle').addEventListener('click', function () {
-      const ref = document.getElementById('syntaxReference');
-      const hidden = ref.hasAttribute('hidden');
-      if (hidden) { ref.removeAttribute('hidden'); this.setAttribute('aria-expanded', 'true'); }
-      else { ref.setAttribute('hidden', ''); this.setAttribute('aria-expanded', 'false'); }
-    });
+      document.getElementById('syntaxToggle').addEventListener('click', function () {
+    const ref = document.getElementById('syntaxReference');
+    const hidden = ref.hasAttribute('hidden');
+    if (hidden) { 
+      ref.removeAttribute('hidden'); 
+      this.setAttribute('aria-expanded', 'true');
+      this.setAttribute('aria-label', 'Hide syntax guide');
+    } else { 
+      ref.setAttribute('hidden', ''); 
+      this.setAttribute('aria-expanded', 'false');
+      this.setAttribute('aria-label', 'Show syntax guide');
+    }
+  });
   </script>
 </body>
 </html>
