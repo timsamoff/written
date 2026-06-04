@@ -17,6 +17,7 @@
     
     <link rel="stylesheet" href="style.css">
     <script src="theme.js" defer></script>
+    <script src="filter.js" defer></script>
 </head>
 <body>
 
@@ -36,6 +37,52 @@
     </header>
 
     <div class="container layout-wrapper-index">
+        <!-- Filter Bar -->
+        <div class="container layout-wrapper-index">
+    <!-- Filter Toggle Button -->
+    <button id="filter-toggle" class="filter-toggle-btn">
+        <i class="fa-solid fa-sliders-h"></i>
+        <span>Filter by Genre & Concept</span>
+        <i class="fa-solid fa-chevron-down filter-chevron"></i>
+    </button>
+    
+    <!-- Collapsible Filter Section -->
+    <div id="filter-section" class="filter-section collapsed">
+        <div class="filter-group">
+            <label class="filter-label">Genre</label>
+            <div class="filter-buttons" id="genre-filters">
+                <button class="filter-chip active" data-filter="all">All</button>
+                <button class="filter-chip" data-filter="sci-fi">Sci-Fi</button>
+                <button class="filter-chip" data-filter="ya">YA</button>
+                <button class="filter-chip" data-filter="article">Article</button>
+                <button class="filter-chip" data-filter="poetry">Poetry</button>
+                <button class="filter-chip" data-filter="essay">Essay</button>
+                <button class="filter-chip" data-filter="guide">Guide</button>
+            </div>
+        </div>
+        
+        <div class="filter-group">
+            <label class="filter-label">Concept / Topic</label>
+            <div class="filter-buttons" id="concept-filters">
+                <button class="filter-chip active" data-filter="all">All</button>
+                <button class="filter-chip" data-filter="technology">Technology</button>
+                <button class="filter-chip" data-filter="writing">Writing</button>
+                <button class="filter-chip" data-filter="post-apocalyptic">Post-Apocalyptic</button>
+                <button class="filter-chip" data-filter="publishing">Publishing</button>
+            </div>
+        </div>
+        
+        <div class="filter-status">
+            <span id="filter-count"></span>
+            <button id="clear-filters" class="clear-btn">Clear All</button>
+        </div>
+    </div>
+    
+    <main class="toc-wrapper">
+        <!-- rest of your table remains the same -->
+    </main>
+</div>
+        
         <main class="toc-wrapper">
             <table class="toc-table">
                 <thead>
@@ -45,8 +92,8 @@
                         <th>Genres & Tags</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
+                <tbody id="toc-body">
+                    <tr data-genres='["sci-fi","ya"]' data-concepts='[]'>
                         <td class="toc-date">May 20, 2026</td>
                         <td class="toc-title">
                             <a href="writing/shorts/threxil.html">The Threxil Pattern</a>
@@ -58,15 +105,29 @@
                             </div>
                         </td>
                     </tr>
-                    <tr>
+                    <tr data-genres='["article"]' data-concepts='["technology","writing","publishing"]'>
+                        <td class="toc-date">June 4, 2026</td>
+                        <td class="toc-title">
+                            <a href="writing/articles/written-formatted.html">Written &amp; Formatted</a>
+                        </td>
+                        <td class="toc-tags">
+                            <div class="pill-container">
+                                <span class="pill">Article</span>
+                                <span class="pill">Technology</span>
+                                <span class="pill">Writing</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr data-genres='["guide"]' data-concepts='["post-apocalyptic","writing"]'>
                         <td class="toc-date">TBD</td>
                         <td class="toc-title">
-                            <a href="#">TBD</a>
+                            <a href="#">Survival Writing Guide</a>
                         </td>
                         <td class="toc-tags">
                             <div class="pill-container">
                                 <span class="pill">Guide</span>
                                 <span class="pill">Post-Apocalyptic</span>
+                                <span class="pill">Writing</span>
                             </div>
                         </td>
                     </tr>

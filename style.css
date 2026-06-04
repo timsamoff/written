@@ -873,3 +873,277 @@ footer.wf-credit a:hover, div.wf-credit a:hover {
     white-space: nowrap !important;
     border: 0 !important;
 }
+
+/* ==========================================================================
+   Filter System Styles
+   ========================================================================== */
+
+/* Reduce spacing between header and filters */
+.layout-wrapper-index {
+    margin-top: var(--space-md) !important; /* Reduced from var(--space-xl) */
+}
+
+/* Filter Toggle Button */
+.filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    width: 100%;
+    padding: 0.6rem var(--space-md);
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: var(--space-sm);
+}
+
+.filter-toggle-btn:hover {
+    background-color: var(--color-border);
+    transform: translateY(-1px);
+}
+
+.filter-toggle-btn i:first-child {
+    color: var(--color-accent);
+    font-size: 0.9rem;
+}
+
+.filter-toggle-btn span {
+    flex: 1;
+    text-align: left;
+}
+
+.filter-chevron {
+    transition: transform 0.3s ease;
+}
+
+.filter-toggle-btn.active .filter-chevron {
+    transform: rotate(180deg);
+}
+
+/* Collapsible Filter Section */
+.filter-section {
+    background-color: var(--color-bg-card);
+    border-radius: 20px;
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: var(--space-lg);
+}
+
+.filter-section.collapsed {
+    max-height: 0;
+    padding: 0 var(--space-md);
+    margin-bottom: 0;
+    border-width: 0;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.filter-section:not(.collapsed) {
+    max-height: 800px; /* Large enough for content */
+    padding: var(--space-md);
+    margin-bottom: var(--space-lg);
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Tighter vertical spacing inside filter section */
+.filter-group {
+    margin-bottom: var(--space-sm); /* Reduced from var(--space-md) */
+}
+
+.filter-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.filter-label {
+    display: block;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem; /* Fixed smaller spacing */
+}
+
+.filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filter-chip {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.35rem 0.9rem; /* Slightly smaller padding */
+    border-radius: 100px;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1.3;
+}
+
+.filter-chip:hover {
+    background-color: var(--color-border);
+    color: var(--color-text);
+    transform: translateY(-1px);
+}
+
+.filter-chip.active {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #ffffff;
+}
+
+.filter-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--space-sm); /* Reduced from var(--space-md) */
+    padding-top: 0.6rem; /* Reduced from var(--space-sm) */
+    border-top: 1px solid var(--color-border);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+#filter-count {
+    font-weight: 600;
+    color: var(--color-accent);
+}
+
+.clear-btn {
+    background: none;
+    border: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    transition: color 0.2s ease;
+}
+
+.clear-btn:hover {
+    color: var(--color-accent);
+}
+
+/* Row visibility transitions */
+.toc-table tbody tr {
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.toc-table tbody tr.filter-hidden {
+    display: none;
+}
+
+/* Empty state message */
+.no-results {
+    text-align: center;
+    padding: var(--space-xl) var(--space-md);
+}
+
+.no-results td {
+    padding: var(--space-xl) var(--space-md) !important;
+}
+
+.no-results i {
+    font-size: 2rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+    display: inline-block;
+}
+
+.no-results p {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.2rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .filter-section:not(.collapsed) {
+        padding: var(--space-sm); /* Reduced padding on tablet */
+    }
+    
+    .filter-buttons {
+        gap: 0.4rem; /* Slightly tighter on tablet */
+    }
+    
+    .filter-chip {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.8rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .filter-toggle-btn {
+        font-size: 0.75rem;
+        padding: 0.5rem var(--space-sm);
+    }
+    
+    .filter-section:not(.collapsed) {
+        padding: 0.8rem; /* Even tighter on mobile */
+    }
+    
+    .filter-group {
+        margin-bottom: 0.8rem; /* Reduced for mobile */
+    }
+    
+    .filter-label {
+        margin-bottom: 0.4rem; /* Tighter label spacing on mobile */
+        font-size: 0.65rem;
+    }
+    
+    .filter-buttons {
+        gap: 0.35rem; /* Tighter gap on mobile */
+    }
+    
+    .filter-chip {
+        font-size: 0.68rem;
+        padding: 0.25rem 0.7rem;
+    }
+    
+    .filter-status {
+        margin-top: 0.8rem;
+        padding-top: 0.5rem;
+        font-size: 0.7rem;
+    }
+    
+    .clear-btn {
+        font-size: 0.65rem;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+    .filter-section:not(.collapsed) {
+        padding: 0.6rem;
+    }
+    
+    .filter-group {
+        margin-bottom: 0.6rem;
+    }
+    
+    .filter-buttons {
+        gap: 0.3rem;
+    }
+    
+    .filter-chip {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.6rem;
+    }
+}
