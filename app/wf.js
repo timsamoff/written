@@ -486,7 +486,7 @@ function renderCode(tok) {
 
   const langLabel = lang ? `<span class="code-lang-label" aria-hidden="true">${lang}</span>` : '';
   const langAttr  = lang ? ` aria-label="Code block: ${lang}"` : ' aria-label="Code block"';
-  return `  <div class="code-block-wrap"${langAttr}>\n  ${langLabel}<button class="code-copy-btn" aria-label="Copy code" title="Copy code"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>\n  <pre class="line-numbered-code" role="img">${rowsHtml}</pre>\n  </div>`;
+  return `  <div class="code-block-wrap"${langAttr}>\n  ${langLabel}<button class="code-copy-btn" aria-label="Copy code" title="Copy code"><i class="fa-regular fa-copy" aria-hidden="true"></i></button>\n  <pre class="line-numbered-code">${rowsHtml}</pre>\n  </div>`;
 }
 
 function renderList(tok, fnMap) {
@@ -593,7 +593,7 @@ function renderCitations(tok, fnMap) {
   ).join('\n');
 
   const heading = tok.title || 'Notes';
-  return `  <section class="citations-section" aria-label="${escAttr(heading)}">\n    <p class="citations-heading" role="heading" aria-level="2">${escHtml(heading)}</p>\n    <ol class="citations-list">\n${items}\n    </ol>\n  </section>`;
+  return `  <section class="citations-section" aria-labelledby="citations-heading">\n    <h2 id="citations-heading" class="citations-heading">${escHtml(heading)}</h2>\n    <ol class="citations-list">\n${items}\n    </ol>\n  </section>`;
 }
 
 function checkAltWarnings(html) {
@@ -1017,11 +1017,95 @@ function buildToolbar() {
     btn.className = 'toolbar-btn';
     btn.textContent = def.label;
     btn.title = def.title;
+    
+    // Add proper aria-label for accessibility
+    if (def.label === 'B') btn.setAttribute('aria-label', 'Bold');
+    else if (def.label === 'I') btn.setAttribute('aria-label', 'Italic');
+    else if (def.label === '• List') btn.setAttribute('aria-label', 'Bullet list');
+    else if (def.label === '1. List') btn.setAttribute('aria-label', 'Numbered list');
+    else if (def.label === 'a. List') btn.setAttribute('aria-label', 'Alphabetical list');
+    else if (def.label === '→ Indent') btn.setAttribute('aria-label', 'Indent lines');
+    else if (def.label === '← Dedent') btn.setAttribute('aria-label', 'Dedent lines');
+    else if (def.label === '⇗ Link') btn.setAttribute('aria-label', 'Insert link');
+    else if (def.label === '⊞ Image') btn.setAttribute('aria-label', 'Insert image');
+    else if (def.label === '❦ End') btn.setAttribute('aria-label', 'Insert end block');
+    else btn.setAttribute('aria-label', `Insert ${def.label}`);
+    
     if (def.bold)   btn.style.fontWeight = '700';
     if (def.italic) btn.style.fontStyle  = 'italic';
     btn.addEventListener('click', def.action);
     toolbar.appendChild(btn);
   });
+}
+
+// Modal inert state management
+let mainContentElement = null;
+
+function setBackgroundInert(isInert) {
+  if (!mainContentElement) {
+    mainContentElement = document.querySelector('main') || document.getElementById('main-content');
+    const header = document.querySelector('.site-header');
+    const footer = document.querySelector('.site-footer');
+    if (header) header.setAttribute('aria-hidden', isInert);
+    if (footer) footer.setAttribute('aria-hidden', isInert);
+  }
+  
+  if (mainContentElement) {
+    mainContentElement.setAttribute('aria-hidden', isInert);
+  }
+}
+
+function openModalWithFocus(modal) {
+  modal.removeAttribute('hidden');
+  document.body.style.overflow = 'hidden';
+  setBackgroundInert(true);
+  
+  const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  if (focusable) {
+    setTimeout(() => focusable.focus(), 10);
+  }
+  
+  const trapHandler = (e) => trapFocus(modal, e);
+  modal.addEventListener('keydown', trapHandler);
+  modal._trapHandler = trapHandler;
+}
+
+function closeModalWithFocus(modal) {
+  modal.setAttribute('hidden', '');
+  document.body.style.overflow = '';
+  
+  const anyOpenModal = Array.from(document.querySelectorAll('.modal-overlay, .preview-modal-overlay'))
+    .some(m => !m.hasAttribute('hidden'));
+  
+  if (!anyOpenModal) {
+    setBackgroundInert(false);
+  }
+  
+  if (modal._trapHandler) {
+    modal.removeEventListener('keydown', modal._trapHandler);
+    delete modal._trapHandler;
+  }
+  inputText.focus();
+}
+
+function trapFocus(element, event) {
+  const focusable = element.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+  const firstFocusable = focusable[0];
+  const lastFocusable = focusable[focusable.length - 1];
+  
+  if (event.key === 'Tab') {
+    if (event.shiftKey) {
+      if (document.activeElement === firstFocusable) {
+        lastFocusable.focus();
+        event.preventDefault();
+      }
+    } else {
+      if (document.activeElement === lastFocusable) {
+        firstFocusable.focus();
+        event.preventDefault();
+      }
+    }
+  }
 }
 
 // Modal functions
@@ -1051,10 +1135,8 @@ function confirmLink() {
   const tag  = `[link]${displayText} -> ${url}[/link]`;
   const insertPoint = modal._selStart;
   
-  // Use replaceRangeWithUndo for proper undo support
   replaceRangeWithUndo(inputText, insertPoint, modal._selEnd, tag);
   
-  // Set cursor position after the inserted tag
   const newCursorPos = insertPoint + tag.length;
   inputText.setSelectionRange(newCursorPos, newCursorPos);
   
@@ -1108,10 +1190,8 @@ function confirmImage() {
   const post = (after.length > 0 && !after.startsWith('\n')) ? '\n' : '';
   const fullTag = pre + tag + post;
   
-  // Use replaceRangeWithUndo for proper undo support
   replaceRangeWithUndo(inputText, insertPoint, insertPoint, fullTag);
   
-  // Set cursor position after the inserted block
   const newCursorPos = insertPoint + fullTag.length;
   inputText.setSelectionRange(newCursorPos, newCursorPos);
   
@@ -1120,50 +1200,6 @@ function confirmImage() {
   scheduleAutosave();
   inputText.focus();
   setTimeout(() => syncPreviewToInputLineImmediate(), 100);
-}
-
-function trapFocus(element, event) {
-  const focusable = element.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-  const firstFocusable = focusable[0];
-  const lastFocusable = focusable[focusable.length - 1];
-  
-  if (event.key === 'Tab') {
-    if (event.shiftKey) {
-      if (document.activeElement === firstFocusable) {
-        lastFocusable.focus();
-        event.preventDefault();
-      }
-    } else {
-      if (document.activeElement === lastFocusable) {
-        firstFocusable.focus();
-        event.preventDefault();
-      }
-    }
-  }
-}
-
-function openModalWithFocus(modal) {
-  modal.removeAttribute('hidden');
-  document.body.style.overflow = 'hidden';
-  
-  const focusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-  if (focusable) {
-    setTimeout(() => focusable.focus(), 10);
-  }
-  
-  const trapHandler = (e) => trapFocus(modal, e);
-  modal.addEventListener('keydown', trapHandler);
-  modal._trapHandler = trapHandler;
-}
-
-function closeModalWithFocus(modal) {
-  modal.setAttribute('hidden', '');
-  document.body.style.overflow = '';
-  if (modal._trapHandler) {
-    modal.removeEventListener('keydown', modal._trapHandler);
-    delete modal._trapHandler;
-  }
-  inputText.focus();
 }
 
 function openManuscriptModal() {
@@ -1211,10 +1247,8 @@ function confirmManuscript() {
   const post = (after.length > 0 && !after.startsWith('\n')) ? '\n' : '';
   const fullTag = pre + tag + post;
   
-  // Use replaceRangeWithUndo for proper undo support
   replaceRangeWithUndo(inputText, insertPoint, insertPoint, fullTag);
   
-  // Set cursor position after the inserted block
   const newCursorPos = insertPoint + fullTag.length;
   inputText.setSelectionRange(newCursorPos, newCursorPos);
   
@@ -1224,6 +1258,7 @@ function confirmManuscript() {
   inputText.focus();
   setTimeout(() => syncPreviewToInputLineImmediate(), 100);
 }
+
 function setupModals() {
   // Link Modal
   const linkModal = document.getElementById('linkModal');
@@ -1877,26 +1912,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const currentLineText = lines[lineIndex] || '';
       const trimmedLine = currentLineText.trim();
       
-      // Check if cursor is at the very end of the document
       const isAtEnd = cursorIdx >= text.length - 1;
       const totalLines = lines.length;
       const isLastLine = lineIndex >= totalLines - 1;
       
-      // Special case: cursor is on a line that's just a markup tag or empty
       const isMarkupLine = /^\[\/?[a-z]+\]$/i.test(trimmedLine) || 
                            trimmedLine === '' ||
                            /^\[\/?[a-z]+=/.test(trimmedLine);
       
-      // Handle end of document
       if (isAtEnd || (isLastLine && isMarkupLine)) {
-        // Scroll to the very bottom of preview
         previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
         return;
       }
       
-      // Handle beginning of document
       if (lineIndex === 0 && isMarkupLine) {
-        // Find the first non-markup line to determine if there's any content
         let firstContentLine = 0;
         while (firstContentLine < lines.length) {
           const line = lines[firstContentLine].trim();
@@ -1908,16 +1937,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         if (firstContentLine < lines.length) {
-          // There's content later, scroll to top
           previewPane.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-          // No content at all, scroll to top
           previewPane.scrollTo({ top: 0, behavior: 'smooth' });
         }
         return;
       }
       
-      // Try to find matching content in preview
       const cleanTarget = trimmedLine
         .replace(/\[\/?[a-z]+\]/gi, '')
         .replace(/\[\/?[a-z]+=.*?\]/gi, '')
@@ -1930,7 +1956,6 @@ document.addEventListener('DOMContentLoaded', () => {
       elements.forEach(el => {
         const textContent = el.textContent || '';
         
-        // Special handling for end elements
         const isEndElement = el.classList?.contains('story-end') || 
                             (el.tagName === 'HR' && el.classList?.contains('fleuron-end'));
         
@@ -1940,7 +1965,6 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
         
-        // Special handling for header elements (title, subtitle, byline)
         const isHeader = el.classList?.contains('story-title') || 
                          el.classList?.contains('story-subtitle') || 
                          el.classList?.contains('story-byline') ||
@@ -1953,27 +1977,19 @@ document.addEventListener('DOMContentLoaded', () => {
             bestMatch = el;
           }
         } else if (isHeader && lineIndex < 10 && cleanTarget.length < 10) {
-          // If near the top and can't find a match, scroll to top
           bestMatch = null;
         }
       });
 
       if (!bestMatch && trimmedLine.length > 0) {
-        // Fallback: scroll based on line position ratio
-        // Cap the ratio to avoid scrolling past the end
         const scrollRatio = Math.min(0.95, Math.max(0, lineIndex / totalLines));
         const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * scrollRatio;
         previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
       } else if (bestMatch) {
-        // Calculate position to place element just under the top of the preview pane
         const elementRect = bestMatch.getBoundingClientRect();
         const previewRect = previewPane.getBoundingClientRect();
         const currentScroll = previewPane.scrollTop;
-        
-        // Small offset (20px) from the top edge
         const offsetFromTop = 20;
-        
-        // Calculate the target scroll position
         const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
         
         previewPane.scrollTo({ 
@@ -1981,10 +1997,8 @@ document.addEventListener('DOMContentLoaded', () => {
           behavior: 'smooth' 
         });
       } else if (lineIndex === 0 || (lineIndex < 5 && isMarkupLine)) {
-        // At the very beginning of the document, scroll to top
         previewPane.scrollTo({ top: 0, behavior: 'smooth' });
       } else if (isLastLine || lineIndex >= totalLines - 2) {
-        // Near the end, scroll to bottom
         previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
       }
     }, 80);

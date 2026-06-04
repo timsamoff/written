@@ -38,7 +38,7 @@
 
       <fieldset class="option-group">
         <legend class="option-label">Drop Cap</legend>
-        <div class="radio-stack" role="radiogroup" aria-label="Drop cap style">
+        <div class="radio-stack">
           <label class="radio-row"><input type="radio" name="dropcap" value="none" checked /><span class="radio-mark" aria-hidden="true"></span><span>None</span></label>
           <label class="radio-row"><input type="radio" name="dropcap" value="first" /><span class="radio-mark" aria-hidden="true"></span><span>First paragraph only</span></label>
           <label class="radio-row"><input type="radio" name="dropcap" value="sections" /><span class="radio-mark" aria-hidden="true"></span><span>First of each section</span></label>
@@ -47,7 +47,7 @@
 
       <fieldset class="option-group">
         <legend class="option-label">Paragraph Indent</legend>
-        <div class="radio-stack" role="radiogroup" aria-label="Paragraph indentation style">
+        <div class="radio-stack">
           <label class="radio-row"><input type="radio" name="indent" value="all" checked /><span class="radio-mark" aria-hidden="true"></span><span>Indent all</span></label>
           <label class="radio-row"><input type="radio" name="indent" value="none" /><span class="radio-mark" aria-hidden="true"></span><span>No indentation</span></label>
           <label class="radio-row"><input type="radio" name="indent" value="section-only" /><span class="radio-mark" aria-hidden="true"></span><span>All except first of each section</span></label>
@@ -56,7 +56,7 @@
 
       <fieldset class="option-group">
         <legend class="option-label">Line Spacing</legend>
-        <div class="radio-stack" role="radiogroup" aria-label="Line spacing">
+        <div class="radio-stack">
           <label class="radio-row"><input type="radio" name="linespacing" value="1" /><span class="radio-mark" aria-hidden="true"></span><span>1× — Tight</span></label>
           <label class="radio-row"><input type="radio" name="linespacing" value="1.5" checked /><span class="radio-mark" aria-hidden="true"></span><span>1.5× — Default</span></label>
           <label class="radio-row"><input type="radio" name="linespacing" value="2" /><span class="radio-mark" aria-hidden="true"></span><span>2× — Airy</span></label>
@@ -65,7 +65,7 @@
 
       <fieldset class="option-group">
         <legend class="option-label">End Ornament</legend>
-        <div class="radio-stack" role="radiogroup" aria-label="End ornament">
+        <div class="radio-stack">
           <label class="radio-row"><input type="radio" name="endhr" value="yes" checked /><span class="radio-mark" aria-hidden="true"></span><span>Show ornament with <code>[end]</code></span></label>
           <label class="radio-row"><input type="radio" name="endhr" value="no" /><span class="radio-mark" aria-hidden="true"></span><span>No ornament</span></label>
         </div>
@@ -78,11 +78,11 @@
     </aside>
 
     <!-- ── Center: Input Pane ────────────────────────────────────────────── -->
-    <section class="editor-area" aria-label="Text editor">
+    <section class="editor-area" aria-labelledby="editor-label" role="region">
       <div class="pane editor-pane">
 
         <div class="pane-header">
-          <span class="pane-label">Plain Text Input</span>
+          <span id="editor-label" class="pane-label">Plain Text Input</span>
           <button class="hint-toggle" id="syntaxToggle" aria-expanded="false" aria-controls="syntaxReference">
             Syntax guide <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
           </button>
@@ -164,9 +164,9 @@
     </section>
 
     <!-- ── Right: Live Preview ───────────────────────────────────────────── -->
-    <section class="preview-panel" aria-label="Live formatted preview">
+    <section class="preview-panel" aria-labelledby="preview-label" role="region">
       <div class="preview-header">
-        <span class="pane-label">Live Preview</span>
+        <span id="preview-label" class="pane-label">Live Preview</span>
         <div class="preview-header-right">
           <span class="pane-hint">Formatted output</span>
           <button class="preview-expand-btn" id="previewExpandBtn" title="Expand preview" aria-label="Expand preview to full screen">
@@ -191,7 +191,7 @@
     </div>
   </footer>
 
-  <div id="toast" class="toast" aria-live="polite" role="status"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- ── View Modals ───────────────────────────────────────────── -->
 

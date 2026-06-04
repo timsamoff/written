@@ -153,6 +153,8 @@ body {
 
 .skip-link:focus {
   top: 0;
+  outline: 3px solid var(--color-accent-inline);
+  outline-offset: 2px;
 }
 
 .visually-hidden {
@@ -247,6 +249,65 @@ body {
 .theme-btn:hover {
   transform: scale(1.1);
   color: var(--color-accent);
+}
+
+/* ==========================================================================
+   Focus Styles - Accessibility
+   ========================================================================== */
+
+.btn:focus,
+.toolbar-btn:focus,
+.theme-btn:focus,
+.preview-expand-btn:focus,
+.hint-toggle:focus,
+.modal-close:focus,
+.code-copy-btn:focus,
+.radio-row:focus-within,
+.radio-row input[type="radio"]:focus-visible ~ .radio-mark {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Provide focus ring for radio buttons */
+.radio-row input[type="radio"]:focus-visible ~ .radio-mark {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Subtle focus for better visual without being obtrusive */
+.btn:focus:not(:focus-visible),
+.toolbar-btn:focus:not(:focus-visible),
+.theme-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ==========================================================================
+   prefers-reduced-motion Support
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .skip-link {
+    transition: none;
+  }
+  
+  .theme-btn {
+    transition: none;
+  }
+  
+  .theme-btn:hover {
+    transform: none;
+  }
 }
 
 /* ==========================================================================
@@ -902,7 +963,7 @@ body {
   border-top: 1px solid var(--color-border);
   padding-top: var(--space-md);
 }
-.story-content p.citations-heading {
+.story-content h2.citations-heading {
   font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
