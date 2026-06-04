@@ -176,7 +176,6 @@ function tokenize(raw) {
     return inner;
   }
 
-  // Helper to extract content from a line that contains both opening and closing tags
   function extractInlineContent(line, openTag, closeTag) {
     const openIndex = line.toLowerCase().indexOf(openTag.toLowerCase());
     const closeIndex = line.toLowerCase().indexOf(closeTag.toLowerCase(), openIndex + openTag.length);
@@ -189,7 +188,6 @@ function tokenize(raw) {
     return null;
   }
 
-  // Helper to check if a line contains an inline block tag (both tags on same line)
   function getInlineBlockMatch(line) {
     const patterns = [
       { open: '[title]', close: '[/title]', type: 'title' },
@@ -207,7 +205,6 @@ function tokenize(raw) {
       { open: '[bullet]', close: '[/bullet]', type: 'bullet' },
       { open: '[num]', close: '[/num]', type: 'num' },
       { open: '[alpha]', close: '[/alpha]', type: 'alpha' },
-      // Also handle inline tags on same line
       { open: '[b]', close: '[/b]', type: 'inline_b', isInline: true },
       { open: '[i]', close: '[/i]', type: 'inline_i', isInline: true },
     ];
@@ -221,7 +218,6 @@ function tokenize(raw) {
             result.push({ type: 'para', content: extracted.beforeOpen.trim() });
           }
           if (pattern.isInline) {
-            // For inline tags, preserve the exact tag syntax
             result.push({ type: 'para', content: `${pattern.open}${extracted.content}${pattern.close}` });
           } else {
             result.push({ type: pattern.type, content: extracted.content });
@@ -236,17 +232,14 @@ function tokenize(raw) {
     return null;
   }
 
-  // Helper to handle multi-line inline tags like [b], [i], [link]
   function handleMultiLineInlineTag(startLine, openTag, closeTag) {
     const inner = [];
     let j = startLine;
     let found = false;
     let afterText = '';
     
-    // Check if the opening line has content before or after the tag
     const currentLine = lines[startLine];
     let beforeOpen = '';
-    let afterOpen = '';
     let contentStart = '';
     
     const openIndex = currentLine.toLowerCase().indexOf(openTag.toLowerCase());
@@ -255,7 +248,6 @@ function tokenize(raw) {
       contentStart = currentLine.substring(openIndex + openTag.length);
     }
     
-    // If there's content on the same line after the opening tag, add it to inner
     if (contentStart.trim()) {
       inner.push(contentStart);
     }
@@ -277,16 +269,13 @@ function tokenize(raw) {
     }
     
     if (found) {
-      // Remove the processed lines
       lines.splice(startLine, j - startLine + 1);
       const content = inner.join('\n').trim();
       
-      // Build the result tokens
       const result = [];
       if (beforeOpen.trim()) {
         result.push({ type: 'para', content: beforeOpen.trim() });
       }
-      // Preserve the exact tag syntax for applyInlineMarkup
       result.push({ type: 'para', content: `${openTag}${content}${closeTag}` });
       if (afterText.trim()) {
         result.push({ type: 'para', content: afterText.trim() });
@@ -296,24 +285,19 @@ function tokenize(raw) {
     return null;
   }
 
-  // Check for inline tags that span multiple lines
   function checkForMultiLineInline(line, lineIndex) {
-    // Check for [b] tag that doesn't have closing on same line
     if (line.toLowerCase().includes('[b]') && !line.toLowerCase().includes('[/b]')) {
       return handleMultiLineInlineTag(lineIndex, '[b]', '[/b]');
     }
-    // Check for [i] tag that doesn't have closing on same line
     if (line.toLowerCase().includes('[i]') && !line.toLowerCase().includes('[/i]')) {
       return handleMultiLineInlineTag(lineIndex, '[i]', '[/i]');
     }
-    // Check for [link] tag that doesn't have closing on same line
     if (line.toLowerCase().includes('[link]') && !line.toLowerCase().includes('[/link]')) {
       return handleMultiLineInlineTag(lineIndex, '[link]', '[/link]');
     }
     return null;
   }
 
-  // Helper to check for opening tag at start of line
   function getOpeningTagMatch(line) {
     const patterns = [
       { regex: /^\[title\]/i, close: '[/title]', type: 'title', open: '[title]' },
@@ -336,7 +320,6 @@ function tokenize(raw) {
     for (const pattern of patterns) {
       if (pattern.regex.test(line)) {
         const contentAfterOpen = line.substring(pattern.open.length);
-        // Check if closing tag is on the same line
         if (contentAfterOpen.toLowerCase().includes(pattern.close.toLowerCase())) {
           const closeIndex = contentAfterOpen.toLowerCase().indexOf(pattern.close.toLowerCase());
           const content = contentAfterOpen.substring(0, closeIndex).trim();
@@ -350,7 +333,6 @@ function tokenize(raw) {
           }
           return result;
         } else {
-          // Opening tag with content on same line, closing tag on later line
           const remainder = contentAfterOpen;
           return { type: pattern.type, remainder, needsBlock: true, openTag: pattern.open, closeTag: pattern.close };
         }
@@ -364,17 +346,14 @@ function tokenize(raw) {
     const t    = line.trim();
     const tl   = t.toLowerCase();
 
-    // Check for multi-line inline tags like [b], [i], [link]
     const multiLineInline = checkForMultiLineInline(line, i);
     if (multiLineInline) {
       for (const token of multiLineInline) {
         tokens.push(token);
       }
-      // lines have been modified, continue without incrementing i
       continue;
     }
 
-    // Check for inline block tags (both tags on same line)
     const inlineMatch = getInlineBlockMatch(line);
     if (inlineMatch) {
       for (const token of inlineMatch) {
@@ -384,7 +363,6 @@ function tokenize(raw) {
       continue;
     }
 
-    // Check for opening tag at start of line
     const openingMatch = getOpeningTagMatch(line);
     if (openingMatch && Array.isArray(openingMatch)) {
       for (const token of openingMatch) {
@@ -395,13 +373,8 @@ function tokenize(raw) {
     }
     
     if (openingMatch && openingMatch.needsBlock) {
-      // Handle opening tag with content on same line, closing tag later
       const closeTag = openingMatch.closeTag;
-      
-      // Modify the current line to remove the opening tag
       lines[i] = openingMatch.remainder;
-      
-      // Now consume the block normally
       i++;
       const inner = consumeBlock(closeTag);
       let fullContent = openingMatch.remainder.trim() + (inner.length ? '\n' + inner.join('\n') : '');
@@ -416,7 +389,6 @@ function tokenize(raw) {
       continue;
     }
 
-    // Original multi-line block handling (opening tag alone on its own line)
     if (tl === '[title]')    { i++; const inner = consumeBlock('[/title]');    tokens.push({ type: 'title',    content: inner.join('\n').trim() }); continue; }
     if (tl === '[subtitle]') { i++; const inner = consumeBlock('[/subtitle]'); tokens.push({ type: 'subtitle', content: inner.join('\n').trim() }); continue; }
     if (tl === '[byline]')   { i++; const inner = consumeBlock('[/byline]');   tokens.push({ type: 'byline',   content: inner.join('\n').trim() }); continue; }
@@ -562,11 +534,9 @@ function renderManuscript(tok, wordCount) {
   let wcDisplay;
   const rawWc = tok.wordcount;
 
-  // Check if wordcount is explicitly set to "0"
   const isZeroWordcount = rawWc === '0' || rawWc === 0;
 
   if (isZeroWordcount) {
-    // Don't show wordcount at all
     wcDisplay = '';
   } else if (!rawWc || rawWc === 'auto') {
     if (wordCount === 0) {
@@ -596,7 +566,6 @@ function renderManuscript(tok, wordCount) {
   const firstLine = leftLines.shift() || '';
   const restLines = leftLines.map(l => `<p class="ms-line">${l}</p>`).join('\n    ');
 
-  // Build the wordcount span only if there's content to show
   const wordcountSpan = wcDisplay ? `<span class="ms-wordcount" aria-label="Approximate word count">${escHtml(wcDisplay)}</span>` : '';
 
   return [
@@ -865,7 +834,6 @@ function announcePreviewUpdate(paraCount) {
   const statusEl = document.getElementById('previewStatus');
   
   if (statusEl) {
-    // Show spinning icon
     statusEl.innerHTML = '<i class="fa-solid fa-rotate-right" aria-hidden="true"></i>';
     statusEl.classList.add('visible', 'spinning');
     
@@ -876,10 +844,8 @@ function announcePreviewUpdate(paraCount) {
     }, 600);
   }
   
-  // Update aria-label for live preview container
   livePreview.setAttribute('aria-label', `Formatted story preview. Updated.`);
   
-  // Only announce to screen readers on significant changes (rate limited)
   let announcer = document.getElementById('liveAnnouncer');
   if (!announcer) {
     announcer = document.createElement('div');
@@ -889,7 +855,6 @@ function announcePreviewUpdate(paraCount) {
     announcer.className = 'visually-hidden';
     document.body.appendChild(announcer);
   }
-  // Only announce every 2 seconds max to avoid spam
   const now = Date.now();
   if (!announcer._lastAnnounce || (now - announcer._lastAnnounce) > 2000) {
     announcer._lastAnnounce = now;
@@ -1052,7 +1017,6 @@ function scheduleAutosave() {
   autosaveTimer = setTimeout(autosaveToLocalStorage, 1000);
 }
 
-// Input events with autosave
 inputText.addEventListener('input', () => {
   scheduleConvert();
   scheduleAutosave();
@@ -1285,7 +1249,6 @@ function buildToolbar() {
     btn.textContent = def.label;
     btn.title = def.title;
     
-    // Add proper aria-label for accessibility
     if (def.label === 'B') btn.setAttribute('aria-label', 'Bold');
     else if (def.label === 'I') btn.setAttribute('aria-label', 'Italic');
     else if (def.label === '• List') btn.setAttribute('aria-label', 'Bullet list');
@@ -1305,7 +1268,6 @@ function buildToolbar() {
   });
 }
 
-// Modal inert state management
 let mainContentElement = null;
 
 function setBackgroundInert(isInert) {
@@ -1375,7 +1337,6 @@ function trapFocus(element, event) {
   }
 }
 
-// Modal functions
 function openLinkModal() {
   const selStart = inputText.selectionStart;
   const selEnd   = inputText.selectionEnd;
@@ -1527,7 +1488,6 @@ function confirmManuscript() {
 }
 
 function setupModals() {
-  // Link Modal
   const linkModal = document.getElementById('linkModal');
   const linkClose = document.getElementById('linkModalClose');
   const linkCancel = document.getElementById('linkModalCancel');
@@ -1541,14 +1501,12 @@ function setupModals() {
     newLinkConfirm.addEventListener('click', confirmLink);
   }
   
-  // Add Enter key handling for Link modal
   const linkText = document.getElementById('linkText');
   const linkUrl = document.getElementById('linkUrl');
   const handleLinkEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); confirmLink(); } };
   if (linkText) linkText.addEventListener('keypress', handleLinkEnter);
   if (linkUrl) linkUrl.addEventListener('keypress', handleLinkEnter);
   
-  // Manuscript Modal
   const msModal = document.getElementById('manuscriptModal');
   const msClose = document.getElementById('manuscriptModalClose');
   const msCancel = document.getElementById('manuscriptModalCancel');
@@ -1562,7 +1520,6 @@ function setupModals() {
     newMsConfirm.addEventListener('click', confirmManuscript);
   }
   
-  // Add Enter key handling for Manuscript modal fields
   const msFields = ['msName', 'msAddress', 'msCity', 'msPhone', 'msEmail', 'msWordcount'];
   const handleMsEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); confirmManuscript(); } };
   msFields.forEach(fieldId => {
@@ -1570,7 +1527,6 @@ function setupModals() {
     if (field) field.addEventListener('keypress', handleMsEnter);
   });
   
-  // Image Modal
   const imgModal = document.getElementById('imageModal');
   const imgClose = document.getElementById('imageModalClose');
   const imgCancel = document.getElementById('imageModalCancel');
@@ -1584,7 +1540,6 @@ function setupModals() {
     newImgConfirm.addEventListener('click', confirmImage);
   }
   
-  // Add Enter key handling for Image modal fields
   const imgFields = ['imgSource', 'imgAlt', 'imgCaption', 'imgCredit'];
   const handleImgEnter = (e) => { if (e.key === 'Enter') { e.preventDefault(); confirmImage(); } };
   imgFields.forEach(fieldId => {
@@ -1592,7 +1547,6 @@ function setupModals() {
     if (field) field.addEventListener('keypress', handleImgEnter);
   });
   
-  // Click outside to close
   const modals = [linkModal, msModal, imgModal];
   modals.forEach(modal => {
     if (modal) {
@@ -1606,7 +1560,6 @@ function setupModals() {
     }
   });
   
-  // Escape key handling
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (linkModal && !linkModal.hasAttribute('hidden')) closeLinkModal();
@@ -1794,6 +1747,54 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPreviewModal();
   setupViewModals();
   loadFromLocalStorage();
+  
+  // Fix cursor position when tabbing into textarea without scrolling
+  inputText.addEventListener('focus', () => {
+    window._programmaticFocus = true;
+    
+    // Store current scroll position
+    const currentScrollTop = inputText.scrollTop;
+    const currentScrollLeft = inputText.scrollLeft;
+    
+    // Set cursor to beginning
+    inputText.setSelectionRange(0, 0);
+    
+    // Restore scroll position immediately
+    inputText.scrollTop = currentScrollTop;
+    inputText.scrollLeft = currentScrollLeft;
+    
+    setTimeout(() => {
+      window._programmaticFocus = false;
+    }, 200);
+  });
+  
+  // Prevent automatic scrolling when cursor is moved
+  inputText.addEventListener('scroll', (e) => {
+    if (window._programmaticFocus) {
+      e.preventDefault();
+      // Keep scroll at top during focus
+      if (inputText.scrollTop !== 0) {
+        inputText.scrollTop = 0;
+      }
+    }
+  }, { passive: false });
+  
+  // Skip link handler
+  const skipLink = document.querySelector('.skip-link');
+  if (skipLink) {
+    skipLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      window._skipLinkActive = true;
+      window._programmaticFocus = true;
+      inputText.focus();
+      inputText.setSelectionRange(0, 0);
+      inputText.scrollTop = 0;
+      setTimeout(() => {
+        window._skipLinkActive = false;
+        window._programmaticFocus = false;
+      }, 200);
+    });
+  }
 });
 
 const BASE_CSS_TEXT = `/* ==========================================================================
@@ -1803,11 +1804,6 @@ const BASE_CSS_TEXT = `/* ======================================================
    NOTE: For [code] syntax highlighting, also include Prism.js:
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"><\/script>
-   ========================================================================== */
-
-/* ==========================================================================
-   CUSTOMIZATION — edit the variables below to retheme the page.
-   All colors and fonts flow from this one block; nothing else needs changing.
    ========================================================================== */
 
 :root {
@@ -2169,6 +2165,10 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(scrollTimeout);
     
     scrollTimeout = setTimeout(() => {
+      if (window._skipLinkActive) {
+        return;
+      }
+
       const text = inputPane.value;
       const cursorIdx = inputPane.selectionStart;
       

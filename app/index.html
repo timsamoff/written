@@ -18,7 +18,11 @@
 <body>
 
   <!-- Skip to main content link -->
-  <a href="#main-content" class="skip-link">Skip to main content</a>
+  <div class="skip-links">
+    <a href="#controls-panel" class="skip-link">Skip to formatting options</a>
+    <a href="#inputText" class="skip-link">Skip to text editor</a>
+    <a href="#livePreview" class="skip-link">Skip to live preview</a>
+  </div>
 
   <header class="site-header" role="banner">
     <div class="container header-container">
@@ -33,7 +37,7 @@
   <main class="container main-layout" id="main-content" role="main">
 
     <!-- ── Left: Formatting Options ─────────────────────────────────────── -->
-    <aside class="controls-panel" aria-label="Formatting controls">
+    <aside id="controls-panel" class="controls-panel" aria-label="Formatting controls">
       <h2 class="panel-title">Formatting Options</h2>
 
       <fieldset class="option-group">

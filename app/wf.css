@@ -138,35 +138,40 @@ body {
   overflow: hidden;
 }
 
-/* Skip link for accessibility */
+/* Skip links container */
+.skip-links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+}
+
+/* Individual skip links - all start at same position */
 .skip-link {
   position: absolute;
-  top: -40px;
+  top: -41px;
   left: 0;
   background: var(--color-accent);
   color: var(--color-bg);
   padding: 8px 16px;
   text-decoration: none;
-  z-index: 10000;
   transition: top 0.2s ease;
+  white-space: nowrap;
 }
 
+/* Only show the first one when any is focused? No - show the specific one */
 .skip-link:focus {
   top: 0;
   outline: 3px solid var(--color-accent-inline);
   outline-offset: 2px;
 }
 
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+/* Alternative: Make them all visible on hover/focus of container? No, keep simple */
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link {
+    transition: none;
+  }
 }
 
 /* Misc. Focus indicators */
@@ -220,6 +225,23 @@ body {
   .preview-status.spinning {
     animation: none;
   }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Ensure it's actually hidden */
+.visually-hidden:not(:focus) {
+  position: absolute !important;
 }
 
 /* ==========================================================================
