@@ -176,30 +176,184 @@ function tokenize(raw) {
     return inner;
   }
 
-  // Helper to check if a line contains an inline block tag
+  // Helper to extract content from a line that contains both opening and closing tags
+  function extractInlineContent(line, openTag, closeTag) {
+    const openIndex = line.toLowerCase().indexOf(openTag.toLowerCase());
+    const closeIndex = line.toLowerCase().indexOf(closeTag.toLowerCase(), openIndex + openTag.length);
+    if (openIndex !== -1 && closeIndex !== -1) {
+      const beforeOpen = line.substring(0, openIndex);
+      const content = line.substring(openIndex + openTag.length, closeIndex);
+      const afterClose = line.substring(closeIndex + closeTag.length);
+      return { content: content.trim(), beforeOpen, afterClose };
+    }
+    return null;
+  }
+
+  // Helper to check if a line contains an inline block tag (both tags on same line)
   function getInlineBlockMatch(line) {
     const patterns = [
-      { regex: /^\[title\]([\s\S]*?)\[\/title\]$/i, type: 'title' },
-      { regex: /^\[subtitle\]([\s\S]*?)\[\/subtitle\]$/i, type: 'subtitle' },
-      { regex: /^\[byline\]([\s\S]*?)\[\/byline\]$/i, type: 'byline' },
-      { regex: /^\[section\]([\s\S]*?)\[\/section\]$/i, type: 'section' },
-      { regex: /^\[subsection\]([\s\S]*?)\[\/subsection\]$/i, type: 'subsection' },
-      { regex: /^\[subsubsection\]([\s\S]*?)\[\/subsubsection\]$/i, type: 'subsubsection' },
-      { regex: /^\[pullquote\]([\s\S]*?)\[\/pullquote\]$/i, type: 'pullquote' },
-      { regex: /^\[aside\]([\s\S]*?)\[\/aside\]$/i, type: 'aside' },
-      { regex: /^\[epigraph\]([\s\S]*?)\[\/epigraph\]$/i, type: 'epigraph' },
-      { regex: /^\[mono\]([\s\S]*?)\[\/mono\]$/i, type: 'mono' },
-      { regex: /^\[code\]([\s\S]*?)\[\/code\]$/i, type: 'code' },
-      { regex: /^\[end\]([\s\S]*?)\[\/end\]$/i, type: 'ending' },
-      { regex: /^\[bullet\]([\s\S]*?)\[\/bullet\]$/i, type: 'bullet' },
-      { regex: /^\[num\]([\s\S]*?)\[\/num\]$/i, type: 'num' },
-      { regex: /^\[alpha\]([\s\S]*?)\[\/alpha\]$/i, type: 'alpha' },
+      { open: '[title]', close: '[/title]', type: 'title' },
+      { open: '[subtitle]', close: '[/subtitle]', type: 'subtitle' },
+      { open: '[byline]', close: '[/byline]', type: 'byline' },
+      { open: '[section]', close: '[/section]', type: 'section' },
+      { open: '[subsection]', close: '[/subsection]', type: 'subsection' },
+      { open: '[subsubsection]', close: '[/subsubsection]', type: 'subsubsection' },
+      { open: '[pullquote]', close: '[/pullquote]', type: 'pullquote' },
+      { open: '[aside]', close: '[/aside]', type: 'aside' },
+      { open: '[epigraph]', close: '[/epigraph]', type: 'epigraph' },
+      { open: '[mono]', close: '[/mono]', type: 'mono' },
+      { open: '[code]', close: '[/code]', type: 'code' },
+      { open: '[end]', close: '[/end]', type: 'ending' },
+      { open: '[bullet]', close: '[/bullet]', type: 'bullet' },
+      { open: '[num]', close: '[/num]', type: 'num' },
+      { open: '[alpha]', close: '[/alpha]', type: 'alpha' },
+      // Also handle inline tags on same line
+      { open: '[b]', close: '[/b]', type: 'inline_b', isInline: true },
+      { open: '[i]', close: '[/i]', type: 'inline_i', isInline: true },
     ];
     
     for (const pattern of patterns) {
-      const match = line.match(pattern.regex);
-      if (match) {
-        return { type: pattern.type, content: match[1].trim() };
+      if (line.toLowerCase().includes(pattern.open.toLowerCase()) && line.toLowerCase().includes(pattern.close.toLowerCase())) {
+        const extracted = extractInlineContent(line, pattern.open, pattern.close);
+        if (extracted) {
+          let result = [];
+          if (extracted.beforeOpen.trim()) {
+            result.push({ type: 'para', content: extracted.beforeOpen.trim() });
+          }
+          if (pattern.isInline) {
+            // For inline tags, preserve the exact tag syntax
+            result.push({ type: 'para', content: `${pattern.open}${extracted.content}${pattern.close}` });
+          } else {
+            result.push({ type: pattern.type, content: extracted.content });
+          }
+          if (extracted.afterClose.trim()) {
+            result.push({ type: 'para', content: extracted.afterClose.trim() });
+          }
+          return result;
+        }
+      }
+    }
+    return null;
+  }
+
+  // Helper to handle multi-line inline tags like [b], [i], [link]
+  function handleMultiLineInlineTag(startLine, openTag, closeTag) {
+    const inner = [];
+    let j = startLine;
+    let found = false;
+    let afterText = '';
+    
+    // Check if the opening line has content before or after the tag
+    const currentLine = lines[startLine];
+    let beforeOpen = '';
+    let afterOpen = '';
+    let contentStart = '';
+    
+    const openIndex = currentLine.toLowerCase().indexOf(openTag.toLowerCase());
+    if (openIndex !== -1) {
+      beforeOpen = currentLine.substring(0, openIndex);
+      contentStart = currentLine.substring(openIndex + openTag.length);
+    }
+    
+    // If there's content on the same line after the opening tag, add it to inner
+    if (contentStart.trim()) {
+      inner.push(contentStart);
+    }
+    
+    j = startLine + 1;
+    
+    while (j < lines.length) {
+      const line = lines[j];
+      if (line.toLowerCase().includes(closeTag.toLowerCase())) {
+        const idx = line.toLowerCase().indexOf(closeTag.toLowerCase());
+        const beforeClose = line.substring(0, idx);
+        if (beforeClose) inner.push(beforeClose);
+        afterText = line.substring(idx + closeTag.length);
+        found = true;
+        break;
+      }
+      inner.push(line);
+      j++;
+    }
+    
+    if (found) {
+      // Remove the processed lines
+      lines.splice(startLine, j - startLine + 1);
+      const content = inner.join('\n').trim();
+      
+      // Build the result tokens
+      const result = [];
+      if (beforeOpen.trim()) {
+        result.push({ type: 'para', content: beforeOpen.trim() });
+      }
+      // Preserve the exact tag syntax for applyInlineMarkup
+      result.push({ type: 'para', content: `${openTag}${content}${closeTag}` });
+      if (afterText.trim()) {
+        result.push({ type: 'para', content: afterText.trim() });
+      }
+      return result;
+    }
+    return null;
+  }
+
+  // Check for inline tags that span multiple lines
+  function checkForMultiLineInline(line, lineIndex) {
+    // Check for [b] tag that doesn't have closing on same line
+    if (line.toLowerCase().includes('[b]') && !line.toLowerCase().includes('[/b]')) {
+      return handleMultiLineInlineTag(lineIndex, '[b]', '[/b]');
+    }
+    // Check for [i] tag that doesn't have closing on same line
+    if (line.toLowerCase().includes('[i]') && !line.toLowerCase().includes('[/i]')) {
+      return handleMultiLineInlineTag(lineIndex, '[i]', '[/i]');
+    }
+    // Check for [link] tag that doesn't have closing on same line
+    if (line.toLowerCase().includes('[link]') && !line.toLowerCase().includes('[/link]')) {
+      return handleMultiLineInlineTag(lineIndex, '[link]', '[/link]');
+    }
+    return null;
+  }
+
+  // Helper to check for opening tag at start of line
+  function getOpeningTagMatch(line) {
+    const patterns = [
+      { regex: /^\[title\]/i, close: '[/title]', type: 'title', open: '[title]' },
+      { regex: /^\[subtitle\]/i, close: '[/subtitle]', type: 'subtitle', open: '[subtitle]' },
+      { regex: /^\[byline\]/i, close: '[/byline]', type: 'byline', open: '[byline]' },
+      { regex: /^\[section\]/i, close: '[/section]', type: 'section', open: '[section]' },
+      { regex: /^\[subsection\]/i, close: '[/subsection]', type: 'subsection', open: '[subsection]' },
+      { regex: /^\[subsubsection\]/i, close: '[/subsubsection]', type: 'subsubsection', open: '[subsubsection]' },
+      { regex: /^\[pullquote\]/i, close: '[/pullquote]', type: 'pullquote', open: '[pullquote]' },
+      { regex: /^\[aside\]/i, close: '[/aside]', type: 'aside', open: '[aside]' },
+      { regex: /^\[epigraph\]/i, close: '[/epigraph]', type: 'epigraph', open: '[epigraph]' },
+      { regex: /^\[mono\]/i, close: '[/mono]', type: 'mono', open: '[mono]' },
+      { regex: /^\[code\]/i, close: '[/code]', type: 'code', open: '[code]' },
+      { regex: /^\[bullet\]/i, close: '[/bullet]', type: 'bullet', open: '[bullet]' },
+      { regex: /^\[num\]/i, close: '[/num]', type: 'num', open: '[num]' },
+      { regex: /^\[alpha\]/i, close: '[/alpha]', type: 'alpha', open: '[alpha]' },
+      { regex: /^\[end\]/i, close: '[/end]', type: 'ending', open: '[end]' },
+    ];
+    
+    for (const pattern of patterns) {
+      if (pattern.regex.test(line)) {
+        const contentAfterOpen = line.substring(pattern.open.length);
+        // Check if closing tag is on the same line
+        if (contentAfterOpen.toLowerCase().includes(pattern.close.toLowerCase())) {
+          const closeIndex = contentAfterOpen.toLowerCase().indexOf(pattern.close.toLowerCase());
+          const content = contentAfterOpen.substring(0, closeIndex).trim();
+          const afterClose = contentAfterOpen.substring(closeIndex + pattern.close.length);
+          let result = [];
+          if (content) {
+            result.push({ type: pattern.type, content: content });
+          }
+          if (afterClose.trim()) {
+            result.push({ type: 'para', content: afterClose.trim() });
+          }
+          return result;
+        } else {
+          // Opening tag with content on same line, closing tag on later line
+          const remainder = contentAfterOpen;
+          return { type: pattern.type, remainder, needsBlock: true, openTag: pattern.open, closeTag: pattern.close };
+        }
       }
     }
     return null;
@@ -210,20 +364,59 @@ function tokenize(raw) {
     const t    = line.trim();
     const tl   = t.toLowerCase();
 
-    // Check for inline block tags first (same line opening and closing)
-    const inlineMatch = getInlineBlockMatch(t);
+    // Check for multi-line inline tags like [b], [i], [link]
+    const multiLineInline = checkForMultiLineInline(line, i);
+    if (multiLineInline) {
+      for (const token of multiLineInline) {
+        tokens.push(token);
+      }
+      // lines have been modified, continue without incrementing i
+      continue;
+    }
+
+    // Check for inline block tags (both tags on same line)
+    const inlineMatch = getInlineBlockMatch(line);
     if (inlineMatch) {
-      if (inlineMatch.type === 'bullet' || inlineMatch.type === 'num' || inlineMatch.type === 'alpha') {
-        const items = inlineMatch.content.split('\n').map(l => l.trim()).filter(Boolean);
-        tokens.push({ type: inlineMatch.type, rawLines: items, items: items });
-      } else {
-        tokens.push({ type: inlineMatch.type, content: inlineMatch.content });
+      for (const token of inlineMatch) {
+        tokens.push(token);
       }
       i++;
       continue;
     }
 
-    // Original multi-line block handling
+    // Check for opening tag at start of line
+    const openingMatch = getOpeningTagMatch(line);
+    if (openingMatch && Array.isArray(openingMatch)) {
+      for (const token of openingMatch) {
+        tokens.push(token);
+      }
+      i++;
+      continue;
+    }
+    
+    if (openingMatch && openingMatch.needsBlock) {
+      // Handle opening tag with content on same line, closing tag later
+      const closeTag = openingMatch.closeTag;
+      
+      // Modify the current line to remove the opening tag
+      lines[i] = openingMatch.remainder;
+      
+      // Now consume the block normally
+      i++;
+      const inner = consumeBlock(closeTag);
+      let fullContent = openingMatch.remainder.trim() + (inner.length ? '\n' + inner.join('\n') : '');
+      fullContent = fullContent.trim();
+      
+      if (openingMatch.type === 'bullet' || openingMatch.type === 'num' || openingMatch.type === 'alpha') {
+        const items = fullContent.split('\n').map(l => l.trim()).filter(Boolean);
+        tokens.push({ type: openingMatch.type, rawLines: items, items: items });
+      } else {
+        tokens.push({ type: openingMatch.type, content: fullContent });
+      }
+      continue;
+    }
+
+    // Original multi-line block handling (opening tag alone on its own line)
     if (tl === '[title]')    { i++; const inner = consumeBlock('[/title]');    tokens.push({ type: 'title',    content: inner.join('\n').trim() }); continue; }
     if (tl === '[subtitle]') { i++; const inner = consumeBlock('[/subtitle]'); tokens.push({ type: 'subtitle', content: inner.join('\n').trim() }); continue; }
     if (tl === '[byline]')   { i++; const inner = consumeBlock('[/byline]');   tokens.push({ type: 'byline',   content: inner.join('\n').trim() }); continue; }
@@ -369,7 +562,13 @@ function renderManuscript(tok, wordCount) {
   let wcDisplay;
   const rawWc = tok.wordcount;
 
-  if (!rawWc || rawWc === 'auto') {
+  // Check if wordcount is explicitly set to "0"
+  const isZeroWordcount = rawWc === '0' || rawWc === 0;
+
+  if (isZeroWordcount) {
+    // Don't show wordcount at all
+    wcDisplay = '';
+  } else if (!rawWc || rawWc === 'auto') {
     if (wordCount === 0) {
       wcDisplay = '';
     } else {
@@ -397,11 +596,14 @@ function renderManuscript(tok, wordCount) {
   const firstLine = leftLines.shift() || '';
   const restLines = leftLines.map(l => `<p class="ms-line">${l}</p>`).join('\n    ');
 
+  // Build the wordcount span only if there's content to show
+  const wordcountSpan = wcDisplay ? `<span class="ms-wordcount" aria-label="Approximate word count">${escHtml(wcDisplay)}</span>` : '';
+
   return [
     `  <div class="manuscript-header" role="group" aria-label="Manuscript submission header">`,
     `    <p class="ms-line ms-first-line">`,
     `      <span class="ms-contact">${firstLine}</span>`,
-    `      <span class="ms-wordcount" aria-label="Approximate word count">${escHtml(wcDisplay)}</span>`,
+    wordcountSpan,
     `    </p>`,
     restLines ? `    ${restLines}` : '',
     `  </div>`,
