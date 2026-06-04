@@ -153,339 +153,80 @@ function isSectionBreak(t) {
 // ── Universal Open/Close Tokenizer ───────────────────────────────────────────
 
 function tokenize(raw) {
-  const lines  = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  // Normalise line endings, then work on the flat string for block extraction
+  // before splitting into lines for paragraph handling.
+  const src = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const tokens = [];
-  let i = 0;
 
-  function consumeBlock(closeTag) {
-    const inner = [];
-    while (i < lines.length) {
-      const currentLineClean = lines[i].trim().toLowerCase();
-      if (currentLineClean.includes(closeTag)) {
-        const idx = lines[i].toLowerCase().indexOf(closeTag);
-        const before = lines[i].substring(0, idx);
-        if (before.trim()) inner.push(before);
-        const after = lines[i].substring(idx + closeTag.length).trim();
-        if (after) lines.splice(i + 1, 0, after);
-        break;
-      }
-      inner.push(lines[i]);
-      i++;
-    }
-    i++;
-    return inner;
-  }
-
-  function extractInlineContent(line, openTag, closeTag) {
-    const openIndex = line.toLowerCase().indexOf(openTag.toLowerCase());
-    const closeIndex = line.toLowerCase().indexOf(closeTag.toLowerCase(), openIndex + openTag.length);
-    if (openIndex !== -1 && closeIndex !== -1) {
-      const beforeOpen = line.substring(0, openIndex);
-      const content = line.substring(openIndex + openTag.length, closeIndex);
-      const afterClose = line.substring(closeIndex + closeTag.length);
-      return { content: content.trim(), beforeOpen, afterClose };
-    }
-    return null;
-  }
-
-  function getInlineBlockMatch(line) {
-    const patterns = [
-      { open: '[title]', close: '[/title]', type: 'title' },
-      { open: '[subtitle]', close: '[/subtitle]', type: 'subtitle' },
-      { open: '[byline]', close: '[/byline]', type: 'byline' },
-      { open: '[section]', close: '[/section]', type: 'section' },
-      { open: '[subsection]', close: '[/subsection]', type: 'subsection' },
-      { open: '[subsubsection]', close: '[/subsubsection]', type: 'subsubsection' },
-      { open: '[pullquote]', close: '[/pullquote]', type: 'pullquote' },
-      { open: '[aside]', close: '[/aside]', type: 'aside' },
-      { open: '[epigraph]', close: '[/epigraph]', type: 'epigraph' },
-      { open: '[mono]', close: '[/mono]', type: 'mono' },
-      { open: '[code]', close: '[/code]', type: 'code' },
-      { open: '[end]', close: '[/end]', type: 'ending' },
-      { open: '[bullet]', close: '[/bullet]', type: 'bullet' },
-      { open: '[num]', close: '[/num]', type: 'num' },
-      { open: '[alpha]', close: '[/alpha]', type: 'alpha' },
-      { open: '[b]', close: '[/b]', type: 'inline_b', isInline: true },
-      { open: '[i]', close: '[/i]', type: 'inline_i', isInline: true },
-    ];
-    
-    for (const pattern of patterns) {
-      if (line.toLowerCase().includes(pattern.open.toLowerCase()) && line.toLowerCase().includes(pattern.close.toLowerCase())) {
-        const extracted = extractInlineContent(line, pattern.open, pattern.close);
-        if (extracted) {
-          let result = [];
-          if (extracted.beforeOpen.trim()) {
-            result.push({ type: 'para', content: extracted.beforeOpen.trim() });
-          }
-          if (pattern.isInline) {
-            result.push({ type: 'para', content: `${pattern.open}${extracted.content}${pattern.close}` });
-          } else {
-            result.push({ type: pattern.type, content: extracted.content });
-          }
-          if (extracted.afterClose.trim()) {
-            result.push({ type: 'para', content: extracted.afterClose.trim() });
-          }
-          return result;
-        }
-      }
-    }
-    return null;
-  }
-
-  function handleMultiLineInlineTag(startLine, openTag, closeTag) {
-    const inner = [];
-    let j = startLine;
-    let found = false;
-    let afterText = '';
-    
-    const currentLine = lines[startLine];
-    let beforeOpen = '';
-    let contentStart = '';
-    
-    const openIndex = currentLine.toLowerCase().indexOf(openTag.toLowerCase());
-    if (openIndex !== -1) {
-      beforeOpen = currentLine.substring(0, openIndex);
-      contentStart = currentLine.substring(openIndex + openTag.length);
-    }
-    
-    if (contentStart.trim()) {
-      inner.push(contentStart);
-    }
-    
-    j = startLine + 1;
-    
-    while (j < lines.length) {
-      const line = lines[j];
-      if (line.toLowerCase().includes(closeTag.toLowerCase())) {
-        const idx = line.toLowerCase().indexOf(closeTag.toLowerCase());
-        const beforeClose = line.substring(0, idx);
-        if (beforeClose) inner.push(beforeClose);
-        afterText = line.substring(idx + closeTag.length);
-        found = true;
-        break;
-      }
-      inner.push(line);
-      j++;
-    }
-    
-    if (found) {
-      lines.splice(startLine, j - startLine + 1);
-      const content = inner.join('\n').trim();
-      
-      const result = [];
-      if (beforeOpen.trim()) {
-        result.push({ type: 'para', content: beforeOpen.trim() });
-      }
-      result.push({ type: 'para', content: `${openTag}${content}${closeTag}` });
-      if (afterText.trim()) {
-        result.push({ type: 'para', content: afterText.trim() });
-      }
-      return result;
-    }
-    return null;
-  }
-
-  function checkForMultiLineInline(line, lineIndex) {
-    if (line.toLowerCase().includes('[b]') && !line.toLowerCase().includes('[/b]')) {
-      return handleMultiLineInlineTag(lineIndex, '[b]', '[/b]');
-    }
-    if (line.toLowerCase().includes('[i]') && !line.toLowerCase().includes('[/i]')) {
-      return handleMultiLineInlineTag(lineIndex, '[i]', '[/i]');
-    }
-    if (line.toLowerCase().includes('[link]') && !line.toLowerCase().includes('[/link]')) {
-      return handleMultiLineInlineTag(lineIndex, '[link]', '[/link]');
-    }
-    return null;
-  }
-
-  function extractBlockTagWithLeadingText(line) {
-  // Only match if the line contains a complete block tag with text before it
-  // and the closing tag is on the same line
-  const patterns = [
-    { regex: /^(.+?)\[title\](.+?)\[\/title\]$/i, type: 'title' },
-    { regex: /^(.+?)\[subtitle\](.+?)\[\/subtitle\]$/i, type: 'subtitle' },
-    { regex: /^(.+?)\[byline\](.+?)\[\/byline\]$/i, type: 'byline' },
-    { regex: /^(.+?)\[section\](.+?)\[\/section\]$/i, type: 'section' },
-    { regex: /^(.+?)\[subsection\](.+?)\[\/subsection\]$/i, type: 'subsection' },
-    { regex: /^(.+?)\[subsubsection\](.+?)\[\/subsubsection\]$/i, type: 'subsubsection' },
-    { regex: /^(.+?)\[pullquote\](.+?)\[\/pullquote\]$/i, type: 'pullquote' },
-    { regex: /^(.+?)\[aside\](.+?)\[\/aside\]$/i, type: 'aside' },
-    { regex: /^(.+?)\[epigraph\](.+?)\[\/epigraph\]$/i, type: 'epigraph' },
-    { regex: /^(.+?)\[mono\](.+?)\[\/mono\]$/i, type: 'mono' },
-    { regex: /^(.+?)\[code\](.+?)\[\/code\]$/i, type: 'code' },
-    { regex: /^(.+?)\[bullet\](.+?)\[\/bullet\]$/i, type: 'bullet' },
-    { regex: /^(.+?)\[num\](.+?)\[\/num\]$/i, type: 'num' },
-    { regex: /^(.+?)\[alpha\](.+?)\[\/alpha\]$/i, type: 'alpha' },
-    { regex: /^(.+?)\[end\](.+?)\[\/end\]$/i, type: 'ending' },
+  // ── Block tag definitions ──────────────────────────────────────────────────
+  // Inline tags ([b], [i], [fn], [link]) are intentionally absent here;
+  // they are handled entirely by applyInlineMarkup() at render time.
+  const BLOCK_TAGS = [
+    { open: '[manuscript]',     close: '[/manuscript]',     type: 'manuscript'     },
+    { open: '[citations]',      close: '[/citations]',      type: 'citations'      },
+    { open: '[image]',          close: '[/image]',          type: 'image'          },
+    { open: '[title]',          close: '[/title]',          type: 'title'          },
+    { open: '[subtitle]',       close: '[/subtitle]',       type: 'subtitle'       },
+    { open: '[byline]',         close: '[/byline]',         type: 'byline'         },
+    { open: '[section]',        close: '[/section]',        type: 'section'        },
+    { open: '[subsection]',     close: '[/subsection]',     type: 'subsection'     },
+    { open: '[subsubsection]',  close: '[/subsubsection]',  type: 'subsubsection'  },
+    { open: '[pullquote]',      close: '[/pullquote]',      type: 'pullquote'      },
+    { open: '[aside]',          close: '[/aside]',          type: 'aside'          },
+    { open: '[epigraph]',       close: '[/epigraph]',       type: 'epigraph'       },
+    { open: '[mono]',           close: '[/mono]',           type: 'mono'           },
+    { open: '[code]',           close: '[/code]',           type: 'code'           },
+    { open: '[bullet]',         close: '[/bullet]',         type: 'bullet'         },
+    { open: '[num]',            close: '[/num]',            type: 'num'            },
+    { open: '[alpha]',          close: '[/alpha]',          type: 'alpha'          },
+    { open: '[end]',            close: '[/end]',            type: 'ending'         },
   ];
-  
-  for (const pattern of patterns) {
-    const match = line.match(pattern.regex);
-    if (match) {
-      const leadingText = match[1].trim();
-      const content = match[2].trim();
-      // Only return if there's actual leading text
-      if (leadingText) {
-        return { leadingText, content, type: pattern.type };
-      }
-    }
-  }
-  return null;
-}
 
-  function getOpeningTagMatch(line) {
-    const patterns = [
-      { regex: /^\[title\]/i, close: '[/title]', type: 'title', open: '[title]' },
-      { regex: /^\[subtitle\]/i, close: '[/subtitle]', type: 'subtitle', open: '[subtitle]' },
-      { regex: /^\[byline\]/i, close: '[/byline]', type: 'byline', open: '[byline]' },
-      { regex: /^\[section\]/i, close: '[/section]', type: 'section', open: '[section]' },
-      { regex: /^\[subsection\]/i, close: '[/subsection]', type: 'subsection', open: '[subsection]' },
-      { regex: /^\[subsubsection\]/i, close: '[/subsubsection]', type: 'subsubsection', open: '[subsubsection]' },
-      { regex: /^\[pullquote\]/i, close: '[/pullquote]', type: 'pullquote', open: '[pullquote]' },
-      { regex: /^\[aside\]/i, close: '[/aside]', type: 'aside', open: '[aside]' },
-      { regex: /^\[epigraph\]/i, close: '[/epigraph]', type: 'epigraph', open: '[epigraph]' },
-      { regex: /^\[mono\]/i, close: '[/mono]', type: 'mono', open: '[mono]' },
-      { regex: /^\[code\]/i, close: '[/code]', type: 'code', open: '[code]' },
-      { regex: /^\[bullet\]/i, close: '[/bullet]', type: 'bullet', open: '[bullet]' },
-      { regex: /^\[num\]/i, close: '[/num]', type: 'num', open: '[num]' },
-      { regex: /^\[alpha\]/i, close: '[/alpha]', type: 'alpha', open: '[alpha]' },
-      { regex: /^\[end\]/i, close: '[/end]', type: 'ending', open: '[end]' },
-    ];
-    
-    for (const pattern of patterns) {
-      if (pattern.regex.test(line)) {
-        const contentAfterOpen = line.substring(pattern.open.length);
-        if (contentAfterOpen.toLowerCase().includes(pattern.close.toLowerCase())) {
-          const closeIndex = contentAfterOpen.toLowerCase().indexOf(pattern.close.toLowerCase());
-          const content = contentAfterOpen.substring(0, closeIndex).trim();
-          const afterClose = contentAfterOpen.substring(closeIndex + pattern.close.length);
-          let result = [];
-          if (content) {
-            result.push({ type: pattern.type, content: content });
-          }
-          if (afterClose.trim()) {
-            result.push({ type: 'para', content: afterClose.trim() });
-          }
-          return result;
-        } else {
-          const remainder = contentAfterOpen;
-          return { type: pattern.type, remainder, needsBlock: true, openTag: pattern.open, closeTag: pattern.close };
-        }
-      }
-    }
-    return null;
+  // Build a regex that matches any block open-tag (case-insensitive).
+  // We escape brackets so they are treated as literals.
+  const blockOpenPattern = new RegExp(
+    BLOCK_TAGS.map(bt => bt.open.replace(/\[/g, '\\[').replace(/\]/g, '\\]')).join('|'),
+    'i'
+  );
+
+  // ── Tag-map for fast lookup ────────────────────────────────────────────────
+  const tagByOpen  = {};
+  const tagByClose = {};
+  for (const bt of BLOCK_TAGS) {
+    tagByOpen[bt.open.toLowerCase()]   = bt;
+    tagByClose[bt.close.toLowerCase()] = bt;
   }
 
-  while (i < lines.length) {
-    const line = lines[i];
-    const t    = line.trim();
-    const tl   = t.toLowerCase();
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
-    // Check for block tags with leading text (e.g., "xxx[title]Title[/title]")
-    const leadingTextMatch = extractBlockTagWithLeadingText(line);
-if (leadingTextMatch) {
-  // Add the leading text as a paragraph
-  if (leadingTextMatch.leadingText) {
-    tokens.push({ type: 'para', content: leadingTextMatch.leadingText });
+  // Flush accumulated plain-text lines as para / break tokens.
+  function flushLines(lines) {
+    let i = 0;
+    while (i < lines.length) {
+      const t  = lines[i].trim();
+      if (t === '') {
+        let blanks = 0;
+        while (i < lines.length && lines[i].trim() === '') { blanks++; i++; }
+        if (blanks >= 2) tokens.push({ type: 'break', content: '' });
+        continue;
+      }
+      if (isSectionBreak(t)) { tokens.push({ type: 'break', content: t }); i++; continue; }
+      tokens.push({ type: 'para', content: t });
+      i++;
+    }
   }
-  // Add the block tag with its content
-  tokens.push({ type: leadingTextMatch.type, content: leadingTextMatch.content });
-  i++;
-  continue;
-}
 
-    // Check for multi-line inline tags like [b], [i], [link]
-    const multiLineInline = checkForMultiLineInline(line, i);
-    if (multiLineInline) {
-      for (const token of multiLineInline) {
-        tokens.push(token);
-      }
-      continue;
-    }
+  // Parse a captured block body (between open and close tags) into a token.
+  function emitBlockToken(bt, body) {
+    // Trim a single leading/trailing newline so all four spacing styles collapse
+    // to the same content:
+    //   [tag]content[/tag]   [tag]\ncontent[/tag]
+    //   [tag]content\n[/tag] [tag]\ncontent\n[/tag]
+    const content = body.replace(/^\n/, '').replace(/\n$/, '');
 
-    // Check for inline block tags (both tags on same line)
-    const inlineMatch = getInlineBlockMatch(line);
-    if (inlineMatch) {
-      for (const token of inlineMatch) {
-        tokens.push(token);
-      }
-      i++;
-      continue;
-    }
-
-    // Check for opening tag at start of line
-    const openingMatch = getOpeningTagMatch(line);
-    if (openingMatch && Array.isArray(openingMatch)) {
-      for (const token of openingMatch) {
-        tokens.push(token);
-      }
-      i++;
-      continue;
-    }
-    
-    if (openingMatch && openingMatch.needsBlock) {
-      const closeTag = openingMatch.closeTag;
-      lines[i] = openingMatch.remainder;
-      i++;
-      const inner = consumeBlock(closeTag);
-      let fullContent = openingMatch.remainder.trim() + (inner.length ? '\n' + inner.join('\n') : '');
-      fullContent = fullContent.trim();
-      
-      if (openingMatch.type === 'bullet' || openingMatch.type === 'num' || openingMatch.type === 'alpha') {
-        const items = fullContent.split('\n').map(l => l.trim()).filter(Boolean);
-        tokens.push({ type: openingMatch.type, rawLines: items, items: items });
-      } else {
-        tokens.push({ type: openingMatch.type, content: fullContent });
-      }
-      continue;
-    }
-
-    // Original multi-line block handling
-    if (tl === '[title]')    { i++; const inner = consumeBlock('[/title]');    tokens.push({ type: 'title',    content: inner.join('\n').trim() }); continue; }
-    if (tl === '[subtitle]') { i++; const inner = consumeBlock('[/subtitle]'); tokens.push({ type: 'subtitle', content: inner.join('\n').trim() }); continue; }
-    if (tl === '[byline]')   { i++; const inner = consumeBlock('[/byline]');   tokens.push({ type: 'byline',   content: inner.join('\n').trim() }); continue; }
-    if (tl === '[section]')       { i++; const inner = consumeBlock('[/section]');       tokens.push({ type: 'section',       content: inner.join('\n').trim() }); continue; }
-    if (tl === '[subsection]')    { i++; const inner = consumeBlock('[/subsection]');    tokens.push({ type: 'subsection',    content: inner.join('\n').trim() }); continue; }
-    if (tl === '[subsubsection]') { i++; const inner = consumeBlock('[/subsubsection]'); tokens.push({ type: 'subsubsection', content: inner.join('\n').trim() }); continue; }
-    if (tl === '[pullquote]') { i++; const inner = consumeBlock('[/pullquote]'); tokens.push({ type: 'pullquote', content: inner.join('\n').trim() }); continue; }
-    if (tl === '[aside]')     { i++; const inner = consumeBlock('[/aside]');     tokens.push({ type: 'aside',     content: inner.join('\n').trim() }); continue; }
-    if (tl === '[epigraph]')  { i++; const inner = consumeBlock('[/epigraph]');  tokens.push({ type: 'epigraph',  content: inner.join('\n').trim() }); continue; }
-    if (tl.startsWith('[mono]')) {
-      const remainder = line.substring(line.toLowerCase().indexOf('[mono]') + 6);
-      i++;
-      const inner = consumeBlock('[/mono]');
-      if (remainder) inner.unshift(remainder);
-      tokens.push({ type: 'mono', content: inner.join('\n').trim() });
-      continue;
-    }
-    if (tl === '[code]')      { i++; const inner = consumeBlock('[/code]');      tokens.push({ type: 'code',      content: inner.join('\n') });        continue; }
-    if (tl === '[bullet]' || tl === '[num]' || tl === '[alpha]') {
-      const type = tl.replace('[', '').replace(']', '');
-      i++;
-      const inner = consumeBlock(`[/${type}]`);
-      tokens.push({ type, rawLines: inner.filter(l => l.trim() !== '' || /^[ \t]/.test(l)), items: inner.map(l => l.trim()).filter(Boolean) });
-      continue;
-    }
-    if (tl === '[image]') {
-      i++;
-      const inner = consumeBlock('[/image]');
-      const props = { source: '', alt: '', caption: '', credit: '' };
-      inner.forEach(l => {
-        const idx = l.indexOf(':');
-        if (idx !== -1) {
-          const key = l.substring(0, idx).trim().toLowerCase();
-          const val = l.substring(idx + 1).trim();
-          if (key in props) props[key] = val;
-        }
-      });
-      tokens.push({ type: 'image', ...props });
-      continue;
-    }
-    if (tl === '[manuscript]') {
-      i++;
-      const inner = consumeBlock('[/manuscript]');
+    if (bt.type === 'manuscript') {
       const props = { name: '', address: '', city: '', phone: '', email: '', wordcount: 'auto' };
-      inner.forEach(l => {
+      content.split('\n').forEach(l => {
         const idx = l.indexOf(':');
         if (idx !== -1) {
           const key = l.substring(0, idx).trim().toLowerCase();
@@ -494,37 +235,140 @@ if (leadingTextMatch) {
         }
       });
       tokens.push({ type: 'manuscript', ...props });
-      continue;
+      return;
     }
-    if (tl === '[citations]') {
-      i++;
-      const inner = consumeBlock('[/citations]');
+    if (bt.type === 'image') {
+      const props = { source: '', alt: '', caption: '', credit: '' };
+      content.split('\n').forEach(l => {
+        const idx = l.indexOf(':');
+        if (idx !== -1) {
+          const key = l.substring(0, idx).trim().toLowerCase();
+          const val = l.substring(idx + 1).trim();
+          if (key in props) props[key] = val;
+        }
+      });
+      tokens.push({ type: 'image', ...props });
+      return;
+    }
+    if (bt.type === 'citations') {
       let citTitle = 'Notes';
       const contentLines = [];
-      for (const l of inner) {
+      for (const l of content.split('\n')) {
         const m = l.match(/^heading:\s*(.+)$/i);
         if (m) citTitle = m[1].trim();
         else contentLines.push(l);
       }
       tokens.push({ type: 'citations', lines: contentLines, title: citTitle });
-      continue;
+      return;
     }
-    if (tl === '[end]') {
-      i++;
-      const inner = consumeBlock('[/end]');
-      tokens.push({ type: 'ending', content: inner.join('\n').trim() });
-      continue;
+    if (bt.type === 'bullet' || bt.type === 'num' || bt.type === 'alpha') {
+      const rawLines = content.split('\n').filter(l => l.trim() !== '' || /^[ \t]/.test(l));
+      tokens.push({ type: bt.type, rawLines, items: rawLines.map(l => l.trim()).filter(Boolean) });
+      return;
     }
-    if (isSectionBreak(t)) { tokens.push({ type: 'break', content: t }); i++; continue; }
-    if (t === '') {
-      let blanks = 0;
-      while (i < lines.length && lines[i].trim() === '') { blanks++; i++; }
-      if (blanks >= 2) tokens.push({ type: 'break', content: '' });
-      continue;
+    // code: preserve exact whitespace (no extra trim beyond the tag-edge trim above)
+    if (bt.type === 'code') {
+      tokens.push({ type: 'code', content });
+      return;
     }
-    tokens.push({ type: 'para', content: t });
-    i++;
+    tokens.push({ type: bt.type, content: content.trim() });
   }
+
+  // ── Inline-tag protection ─────────────────────────────────────────────────
+  // A block open-tag that appears inside [b]...[/b] or [i]...[/i] must NOT
+  // be treated as a real block boundary.  We detect this by checking whether
+  // the candidate match position sits inside an unclosed inline span.
+  // Inline close-tags: [/b], [/i], [/fn], [/link]
+  const INLINE_OPEN_RE  = /\[(?:b|i|fn|link)\]/gi;
+  const INLINE_CLOSE_RE = /\[\/(?:b|i|fn|link)\]/gi;
+
+  function isInsideInlineTag(str, pos) {
+    // Count unmatched open inline tags in str[0..pos-1].
+    // If there are more opens than closes, pos is inside an inline span.
+    const prefix = str.substring(0, pos);
+    const opens  = (prefix.match(INLINE_OPEN_RE)  || []).length;
+    const closes = (prefix.match(INLINE_CLOSE_RE) || []).length;
+    return opens > closes;
+  }
+
+  // ── Main scan ──────────────────────────────────────────────────────────────
+  // We walk the source string looking for the earliest *valid* block open-tag
+  // (one that is not nested inside an inline [b]/[i] span).
+  // Everything before it is plain text; the block body runs to the matching
+  // close-tag. Text on the same line before the open-tag becomes its own para;
+  // text on the same line after the close-tag is re-queued.
+
+  let remaining = src;
+
+  while (remaining.length > 0) {
+    // Find earliest occurrence of any block open-tag that is not inside an
+    // inline span.
+    let earliestIdx = -1;
+    let matchedTag  = null;
+
+    const testLower = remaining.toLowerCase();
+    for (const bt of BLOCK_TAGS) {
+      let searchFrom = 0;
+      while (true) {
+        const idx = testLower.indexOf(bt.open.toLowerCase(), searchFrom);
+        if (idx === -1) break;
+        if (!isInsideInlineTag(remaining, idx)) {
+          if (earliestIdx === -1 || idx < earliestIdx) {
+            earliestIdx = idx;
+            matchedTag  = bt;
+          }
+          break; // found the earliest valid occurrence for this tag
+        }
+        // This occurrence is inside an inline span — skip past it and keep looking
+        searchFrom = idx + bt.open.length;
+      }
+    }
+
+    if (earliestIdx === -1) {
+      // No more valid block tags — flush the rest as lines
+      flushLines(remaining.split('\n'));
+      break;
+    }
+
+    // ── Text before the open-tag ───────────────────────────────────────────
+    const before = remaining.substring(0, earliestIdx);
+
+    // Find the close-tag (also skipping any occurrence inside an inline span,
+    // though that's an edge case — close-tags inside [b] are even rarer)
+    const afterOpen   = remaining.substring(earliestIdx + matchedTag.open.length);
+    const closeTagLow = matchedTag.close.toLowerCase();
+    const closeIdx    = afterOpen.toLowerCase().indexOf(closeTagLow);
+
+    if (closeIdx === -1) {
+      // No matching close-tag found — treat everything as plain text and stop
+      flushLines(remaining.split('\n'));
+      break;
+    }
+
+    const body  = afterOpen.substring(0, closeIdx);
+    const after = afterOpen.substring(closeIdx + matchedTag.close.length);
+
+    // ── Flush "before" text ────────────────────────────────────────────────
+    // Split `before` into complete lines. The last segment (after the last \n)
+    // may sit on the same line as the open-tag; it becomes its own para.
+    // Crucially: these paras go to bodyToks in convertText, but header block
+    // types (title, subtitle, byline, manuscript) are pulled into headerToks.
+    // Text that appears *before* a header tag on the same physical line should
+    // still be treated as a body para (it renders before the header area in
+    // document flow), which is exactly what happens here — we flush it as a
+    // normal para token and the renderer places it in story-body order.
+    if (before.length > 0) {
+      flushLines(before.split('\n'));
+    }
+
+    // ── Emit the block token ───────────────────────────────────────────────
+    emitBlockToken(matchedTag, body);
+
+    // ── Handle text after the close-tag ───────────────────────────────────
+    // Strip at most one leading newline so we don't manufacture a blank line.
+    remaining = after.startsWith('\n') ? after.substring(1) : after;
+  }
+
   return tokens;
 }
 
@@ -933,17 +777,22 @@ function convertText() {
   const fnMap     = buildFnMap(tokens);
   const wordCount = countBodyWords(tokens);
 
-  const headerTypes = ['title', 'subtitle', 'byline', 'manuscript'];
-  const headerToks  = tokens.filter(t => headerTypes.includes(t.type));
-  const bodyToks    = tokens.filter(t => !headerTypes.includes(t.type));
+  const HEADER_TYPES = new Set(['title', 'subtitle', 'byline', 'manuscript']);
+  const BLOCK_TYPES  = new Set(['pullquote','aside','epigraph','mono','code','image',
+                                 'bullet','num','alpha','section','subsection',
+                                 'subsubsection','citations','manuscript']);
 
+  // ── Para metadata pass (body paras only, in document order) ───────────────
+  // We need to know each para's position relative to breaks and blocks so we
+  // can apply drop-cap and indent classes correctly.  Header tokens don't
+  // participate in this numbering.
   let paraIndex = 0;
   let nextAfterBreak = false;
   const paraMap = [];
-  const blockTypes = new Set(['pullquote','aside','epigraph','mono','code','image','bullet','num','alpha','section','subsection','subsubsection','citations','manuscript']);
   let afterBlock = false;
 
-  for (const tok of bodyToks) {
+  for (const tok of tokens) {
+    if (HEADER_TYPES.has(tok.type)) continue; // headers don't affect para flow
     if (tok.type === 'break') {
       nextAfterBreak = true;
       afterBlock = false;
@@ -956,58 +805,97 @@ function convertText() {
       paraIndex++;
       nextAfterBreak = false;
       afterBlock = false;
-    } else if (blockTypes.has(tok.type)) {
+    } else if (BLOCK_TYPES.has(tok.type)) {
       afterBlock = true;
     }
   }
 
-  const lsClass = spacing === '1' ? ' ls-1' : spacing === '2' ? ' ls-2' : ' ls-1-5';
+  const lsClass  = spacing === '1' ? ' ls-1' : spacing === '2' ? ' ls-2' : ' ls-1-5';
+  const hasTitle = tokens.some(t => t.type === 'title');
+  const labelAttr = hasTitle ? ' aria-labelledby="story-title"' : '';
+
   const out = [];
-  const hasTitle   = headerToks.some(t => t.type === 'title');
-  const labelAttr  = hasTitle ? ' aria-labelledby="story-title"' : '';
-  
   out.push(`<article class="story-content${lsClass}"${labelAttr}>`);
-  out.push(`  <header class="story-header">`);
-  
-  const msTok = headerToks.find(t => t.type === 'manuscript');
-  if (msTok) out.push(renderManuscript(msTok, wordCount));
 
-  headerToks.filter(t => t.type !== 'manuscript').forEach(t => {
-    const brokenContent = t.content.split('\n').map(l => processInline(l, fnMap)).join('<br />');
-    if (t.type === 'title') {
-      out.push(`  <h1 class="story-title" id="story-title">${brokenContent}</h1>`);
-    } else if (t.type === 'subtitle') {
-      out.push(`  <p class="story-subtitle">${brokenContent}</p>`);
-    } else if (t.type === 'byline') {
-      out.push(`  <p class="story-byline" role="doc-byline">${brokenContent}</p>`);
-    }
-  });
-
-  if (headerToks.length) out.push(`  <hr class="title-rule" aria-hidden="true">`);
-  out.push(`  </header>`);
-  out.push(`  <main class="story-body">`);
-
+  // ── Single-pass render in document order ──────────────────────────────────
+  // We open <header> lazily when we first hit a header token, and close it
+  // (and open <main>) when we transition to a non-header token.
+  let inHeader = false;
+  let mainOpen = false;
+  let anyHeaderSeen = false;
   let pIdx = 0;
-  for (const tok of bodyToks) {
-    if (tok.type === 'break')    { out.push(`  <hr class="fleuron-break" aria-label="Section break">`); continue; }
-    if (tok.type === 'ending')   {
+
+  // manuscript is rendered first inside the header if present anywhere in
+  // the header cluster, so we find it ahead of time.
+  const msTok = tokens.find(t => t.type === 'manuscript');
+
+  function ensureHeader() {
+    if (!inHeader) {
+      out.push(`  <header class="story-header">`);
+      if (msTok) out.push(renderManuscript(msTok, wordCount));
+      inHeader = true;
+      anyHeaderSeen = true;
+    }
+  }
+
+  function closeHeaderOpenMain() {
+    if (inHeader) {
+      out.push(`  <hr class="title-rule" aria-hidden="true">`);
+      out.push(`  </header>`);
+      inHeader = false;
+    }
+    if (!mainOpen) {
+      out.push(`  <main class="story-body">`);
+      mainOpen = true;
+    }
+  }
+
+  for (const tok of tokens) {
+    // ── Header tokens ────────────────────────────────────────────────────────
+    if (tok.type === 'manuscript') {
+      // already rendered inside ensureHeader(); skip here
+      ensureHeader();
+      continue;
+    }
+    if (HEADER_TYPES.has(tok.type)) {
+      ensureHeader();
+      const brokenContent = tok.content.split('\n').map(l => processInline(l, fnMap)).join('<br />');
+      if (tok.type === 'title') {
+        out.push(`  <h1 class="story-title" id="story-title">${brokenContent}</h1>`);
+      } else if (tok.type === 'subtitle') {
+        out.push(`  <p class="story-subtitle">${brokenContent}</p>`);
+      } else if (tok.type === 'byline') {
+        out.push(`  <p class="story-byline" role="doc-byline">${brokenContent}</p>`);
+      }
+      continue;
+    }
+
+    // ── Body tokens — close header / open main first if needed ───────────────
+    closeHeaderOpenMain();
+
+    if (tok.type === 'break') {
+      out.push(`  <hr class="fleuron-break" aria-label="Section break">`);
+      continue;
+    }
+    if (tok.type === 'ending') {
       if (tok.content) out.push(`  <p class="story-end">${processInline(tok.content, fnMap)}</p>`);
       if (endhr === 'yes') out.push(`  <hr class="fleuron-end" aria-hidden="true">`);
       continue;
     }
-    if (tok.type === 'pullquote')  { out.push(renderPullquote(tok, fnMap));  continue; }
-    if (tok.type === 'aside')      { out.push(renderAside(tok, fnMap));      continue; }
-    if (tok.type === 'epigraph')   { out.push(renderEpigraph(tok, fnMap));   continue; }
-    if (tok.type === 'mono')       { out.push(renderMono(tok, fnMap));       continue; }
-    if (tok.type === 'code')       { out.push(renderCode(tok));              continue; }
+    if (tok.type === 'pullquote')     { out.push(renderPullquote(tok, fnMap));     continue; }
+    if (tok.type === 'aside')         { out.push(renderAside(tok, fnMap));         continue; }
+    if (tok.type === 'epigraph')      { out.push(renderEpigraph(tok, fnMap));      continue; }
+    if (tok.type === 'mono')          { out.push(renderMono(tok, fnMap));          continue; }
+    if (tok.type === 'code')          { out.push(renderCode(tok));                 continue; }
     if (tok.type === 'section')       { out.push(renderSection(tok, fnMap));       continue; }
     if (tok.type === 'subsection')    { out.push(renderSubsection(tok, fnMap));    continue; }
     if (tok.type === 'subsubsection') { out.push(renderSubsubsection(tok, fnMap)); continue; }
-    if (tok.type === 'citations')  { out.push(renderCitations(tok, fnMap));  continue; }
+    if (tok.type === 'citations')     { out.push(renderCitations(tok, fnMap));     continue; }
     if (['bullet','num','alpha'].includes(tok.type)) { out.push(renderList(tok, fnMap)); continue; }
-    if (tok.type === 'image')      { out.push(renderImage(tok));             continue; }
+    if (tok.type === 'image')         { out.push(renderImage(tok));                continue; }
 
-    const { afterBreak, isFirst, afterBlock } = paraMap[pIdx++];
+    // ── Paragraph ────────────────────────────────────────────────────────────
+    const { afterBreak, isFirst, afterBlock: ab } = paraMap[pIdx++];
     const content = processInline(tok.content, fnMap);
     const classes = [];
 
@@ -1018,16 +906,22 @@ function convertText() {
     if (indent === 'none') {
       if (!hasDrop) classes.push('no-indent');
     } else if (indent === 'all') {
-      if (!hasDrop && afterBlock) classes.push('continues');
+      if (!hasDrop && ab) classes.push('continues');
     } else if (indent === 'section-only') {
       if (!hasDrop && (isFirst || afterBreak)) classes.push('no-indent');
-      else if (!hasDrop && afterBlock) classes.push('continues');
+      else if (!hasDrop && ab) classes.push('continues');
     }
 
     const classAttr = classes.length ? ` class="${classes.join(' ')}"` : '';
     out.push(`  <p${classAttr}>${content}</p>`);
   }
 
+  // Close any still-open sections
+  if (inHeader) {
+    out.push(`  <hr class="title-rule" aria-hidden="true">`);
+    out.push(`  </header>`);
+  }
+  if (!mainOpen) out.push(`  <main class="story-body">`);
   out.push(`  </main>`);
   out.push(`</article>`);
 
