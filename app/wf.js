@@ -109,10 +109,10 @@ function applyInlineMarkup(str, fnMap) {
   str = str.replace(/\[i\]([\s\S]*?)\[\/i\]/gi, '<em>$1</em>');
   if (fnMap) {
     str = str.replace(/\[fn\]([\s\S]*?)\[\/fn\]/gi, (_, ref) => {
-      const id = fnMap[ref.trim()];
-      if (!id) return `<sup>${escHtml(ref.trim())}</sup>`;
-      return `<span id="fnref-${id}" class="fn-anchor" aria-hidden="true"></span><sup><a href="#fn-${id}" aria-label="Footnote ${id}" class="fn-ref">${id}</a></sup>`;
-    });
+    const id = fnMap[ref.trim()];
+    if (!id) return `<sup>${escHtml(ref.trim())}</sup>`;
+    return `<sup><span id="fnref-${id}" class="fn-anchor" style="display: inline; position: relative; top: -1.8em; visibility: hidden; pointer-events: none; height: 0; line-height: 0;"></span><a href="#fn-${id}" aria-label="Footnote ${id}" class="fn-ref">${id}</a></sup>`;
+  });
   }
   str = str.replace(/\[link\]([\s\S]*?)\s*(?:->|-&gt;)\s*([^\[]*?)\[\/link\]/gi,
     (_, text, url) => {
