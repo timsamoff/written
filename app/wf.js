@@ -907,7 +907,7 @@ function convertText() {
     if (indent === 'none') {
       if (!hasDrop) classes.push('no-indent');
     } else if (indent === 'all') {
-      if (!hasDrop && ab) classes.push('continues');
+      if (!hasDrop) classes.push('continues');
     } else if (indent === 'section-only') {
       if (!hasDrop && (isFirst || afterBreak)) classes.push('no-indent');
       else if (!hasDrop && ab) classes.push('continues');
