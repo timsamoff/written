@@ -18,6 +18,7 @@ const downloadCleanBtn = document.getElementById('downloadCleanBtn');
 const downloadCssBtn   = document.getElementById('downloadCssBtn');
 const livePreview      = document.getElementById('livePreview');
 const themeToggle      = document.getElementById('themeToggle');
+const helpBtn          = document.getElementById('helpBtn');
 const toast            = document.getElementById('toast');
 const rootEl           = document.documentElement;
 
@@ -1687,11 +1688,37 @@ function setupViewModals() {
   });
 }
 
+function setupHelpModal() {
+  const modal    = document.getElementById('helpModal');
+  const closeBtn = document.getElementById('helpModalClose');
+  const doneBtn  = document.getElementById('helpModalDone');
+
+  function open() {
+    openModalWithFocus(modal);
+    closeBtn.focus();
+  }
+
+  function close() {
+    closeModalWithFocus(modal);
+    helpBtn.focus();
+  }
+
+  if (helpBtn)  helpBtn.addEventListener('click', open);
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  if (doneBtn)  doneBtn.addEventListener('click', close);
+  if (modal)    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal && !modal.hasAttribute('hidden')) close();
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   buildToolbar();
   setupModals();
   setupPreviewModal();
   setupViewModals();
+  setupHelpModal();
   loadFromLocalStorage();
   
   // Fix cursor position when tabbing into textarea without scrolling

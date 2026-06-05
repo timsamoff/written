@@ -306,7 +306,13 @@ body {
   color: var(--color-text-muted);
 }
 
-.theme-btn {
+.header-btn-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.header-circle-btn {
   background-color: var(--color-toggle-bg);
   border: none;
   width: 2.5rem;
@@ -318,13 +324,17 @@ body {
   place-items: center;
   font-size: 1rem;
   flex-shrink: 0;
+  text-decoration: none;
   transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
               background-color var(--transition-base);
 }
-.theme-btn:hover {
+.header-circle-btn:hover {
   transform: scale(1.1);
   color: var(--color-accent);
 }
+
+/* theme-btn inherits circle shape; no extra properties needed */
+.theme-btn {}
 
 /* ==========================================================================
    Focus Styles - Accessibility
@@ -332,7 +342,7 @@ body {
 
 .btn:focus,
 .toolbar-btn:focus,
-.theme-btn:focus,
+.header-circle-btn:focus,
 .preview-expand-btn:focus,
 .hint-toggle:focus,
 .modal-close:focus,
@@ -354,7 +364,7 @@ body {
 /* Subtle focus for better visual without being obtrusive */
 .btn:focus:not(:focus-visible),
 .toolbar-btn:focus:not(:focus-visible),
-.theme-btn:focus:not(:focus-visible) {
+.header-circle-btn:focus:not(:focus-visible) {
   outline: none;
 }
 
@@ -376,11 +386,11 @@ body {
     transition: none;
   }
   
-  .theme-btn {
+  .header-circle-btn {
     transition: none;
   }
   
-  .theme-btn:hover {
+  .header-circle-btn:hover {
     transform: none;
   }
 }
@@ -1666,6 +1676,37 @@ body {
 
 .modal-box--wide {
   max-width: 760px;
+}
+
+.modal-box--help {
+  max-width: 480px;
+}
+
+.modal-body--help {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.modal-body--help p {
+  margin: 0;
+  line-height: 1.6;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+.help-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.help-list li {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--color-text);
 }
 
 .modal-body--code {

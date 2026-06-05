@@ -30,7 +30,11 @@
         <h1 class="site-logo" aria-label="Written and Formatted">Written <span class="logo-amp" aria-hidden="true">&amp;</span> Formatted</h1>
         <span class="site-tagline">Plain Text → Semantic and Accessible HTML</span>
       </div>
-      <button type="button"class="theme-btn" id="themeToggle" aria-label="Toggle theme: currently light mode" title="Toggle theme">☀</button>
+      <div class="header-btn-group" role="group" aria-label="Site controls">
+        <button type="button" class="header-circle-btn" id="helpBtn" aria-label="Help" title="Help"><i class="fa-solid fa-question" aria-hidden="true"></i></button>
+        <a href="mailto:samoff@gmail.com" class="header-circle-btn" id="contactBtn" aria-label="Contact the developer by email" title="Contact"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
+        <button type="button" class="header-circle-btn theme-btn" id="themeToggle" aria-label="Toggle theme: currently light mode" title="Toggle theme">☀</button>
+      </div>
     </div>
   </header>
 
@@ -198,6 +202,31 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div id="liveAnnouncer" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ── Help Modal ───────────────────────────────────────────── -->
+  <div id="helpModal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+    <div class="modal-box modal-box--help">
+      <div class="modal-header">
+        <h3 class="modal-title" id="helpModalTitle">Getting Started</h3>
+        <button type="button" class="modal-close" id="helpModalClose" aria-label="Close help dialog">&times;</button>
+      </div>
+      <div class="modal-body modal-body--help">
+        <p>Type or paste plain text into the <strong>Plain Text Input</strong> pane. Use the <strong>Syntax guide</strong> toggle above the editor to see all available tags.</p>
+        <p>The <strong>Live Preview</strong> pane updates automatically as you type.</p>
+        <p>Use the <strong>toolbar</strong> above the text area to insert tags at the cursor, or type them manually — every tag follows the pattern <code>[tag]content[/tag]</code>.</p>
+        <p>When you're ready to export, use the buttons in the action bar below the editor:</p>
+        <ul class="help-list">
+          <li><strong>View Standalone</strong> — a complete self-contained HTML page, ready to open in any browser.</li>
+          <li><strong>View Embed</strong> — just the <code>&lt;article&gt;</code> block, ready to paste into a CMS or existing page.</li>
+          <li><strong>View Base CSS</strong> — the structural stylesheet to load alongside embedded output.</li>
+        </ul>
+        <p>Use <strong>Save Text</strong> and <strong>Open Text</strong> to save and reload your plain-text source.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="helpModalDone">Done</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ── View Modals ───────────────────────────────────────────── -->
 
