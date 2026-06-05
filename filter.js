@@ -1,13 +1,13 @@
 /**
  * Written by Tim Samoff - Filter System
- * Handles multi-category filtering for genres and concepts
+ * Handles multi-category filtering for genres and themes
  */
 
 document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const tbody = document.getElementById('toc-body');
     const genreFilterContainer = document.getElementById('genre-filters');
-    const conceptFilterContainer = document.getElementById('concept-filters');
+    const themeFilterContainer = document.getElementById('theme-filters');
     const filterCountSpan = document.getElementById('filter-count');
     const clearFiltersBtn = document.getElementById('clear-filters');
     
@@ -17,10 +17,37 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // State
     let activeGenres = new Set(['all']);
-    let activeConcepts = new Set(['all']);
+    let activethemes = new Set(['all']);
     
     // Get all rows
     const rows = Array.from(document.querySelectorAll('#toc-body tr'));
+    
+    /**
+     * Sort filter buttons alphabetically, keeping "All" first
+     */
+    function sortFilterButtons(container) {
+        const buttons = Array.from(container.querySelectorAll('.filter-chip'));
+        
+        // Separate "All" button from others
+        const allButton = buttons.find(btn => btn.dataset.filter === 'all');
+        const otherButtons = buttons.filter(btn => btn.dataset.filter !== 'all');
+        
+        // Sort other buttons alphabetically by their text content
+        otherButtons.sort((a, b) => {
+            const textA = a.textContent.trim().toLowerCase();
+            const textB = b.textContent.trim().toLowerCase();
+            return textA.localeCompare(textB);
+        });
+        
+        // Reorder buttons in DOM: "All" first, then sorted others
+        container.innerHTML = '';
+        if (allButton) {
+            container.appendChild(allButton);
+        }
+        otherButtons.forEach(btn => {
+            container.appendChild(btn);
+        });
+    }
     
     /**
      * Initialize collapsible filter section
@@ -50,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function matchesFilters(row) {
         const genres = JSON.parse(row.dataset.genres || '[]');
-        const concepts = JSON.parse(row.dataset.concepts || '[]');
+        const themes = JSON.parse(row.dataset.themes || '[]');
         
         // Genre matching
         let genreMatch = false;
@@ -65,20 +92,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Concept matching  
-        let conceptMatch = false;
-        if (activeConcepts.has('all')) {
-            conceptMatch = true;
+        // theme matching  
+        let themeMatch = false;
+        if (activethemes.has('all')) {
+            themeMatch = true;
         } else {
-            for (let concept of activeConcepts) {
-                if (concepts.includes(concept)) {
-                    conceptMatch = true;
+            for (let theme of activethemes) {
+                if (themes.includes(theme)) {
+                    themeMatch = true;
                     break;
                 }
             }
         }
         
-        return genreMatch && conceptMatch;
+        return genreMatch && themeMatch;
     }
     
     /**
@@ -99,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Update filter count display
         const totalCount = rows.length;
-        if (visibleCount === totalCount && activeGenres.has('all') && activeConcepts.has('all')) {
+        if (visibleCount === totalCount && activeGenres.has('all') && activethemes.has('all')) {
             filterCountSpan.textContent = `Showing all ${totalCount} ${totalCount === 1 ? 'piece' : 'pieces'}`;
         } else {
             filterCountSpan.textContent = `Showing ${visibleCount} of ${totalCount} ${totalCount === 1 ? 'piece' : 'pieces'}`;
@@ -130,8 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function handleFilterClick(button, type, value) {
         const isActive = button.classList.contains('active');
-        const activeSet = type === 'genre' ? activeGenres : activeConcepts;
-        const container = type === 'genre' ? genreFilterContainer : conceptFilterContainer;
+        const activeSet = type === 'genre' ? activeGenres : activethemes;
+        const container = type === 'genre' ? genreFilterContainer : themeFilterContainer;
         
         // If clicking "All" button
         if (value === 'all') {
@@ -188,8 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset state
         activeGenres.clear();
         activeGenres.add('all');
-        activeConcepts.clear();
-        activeConcepts.add('all');
+        activethemes.clear();
+        activethemes.add('all');
         
         // Reset UI for genre filters
         const genreButtons = genreFilterContainer.querySelectorAll('.filter-chip');
@@ -201,9 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Reset UI for concept filters
-        const conceptButtons = conceptFilterContainer.querySelectorAll('.filter-chip');
-        conceptButtons.forEach(btn => {
+        // Reset UI for theme filters
+        const themeButtons = themeFilterContainer.querySelectorAll('.filter-chip');
+        themeButtons.forEach(btn => {
             if (btn.dataset.filter === 'all') {
                 btn.classList.add('active');
             } else {
@@ -219,6 +246,10 @@ document.addEventListener('DOMContentLoaded', () => {
      * Initialize filter event listeners
      */
     function initFilters() {
+        // Sort filter buttons alphabetically (keeping "All" first)
+        sortFilterButtons(genreFilterContainer);
+        sortFilterButtons(themeFilterContainer);
+        
         // Initialize collapsible section
         initCollapsible();
         
@@ -231,12 +262,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         
-        // Concept filter listeners
-        const conceptButtons = conceptFilterContainer.querySelectorAll('.filter-chip');
-        conceptButtons.forEach(btn => {
+        // theme filter listeners
+        const themeButtons = themeFilterContainer.querySelectorAll('.filter-chip');
+        themeButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const filterValue = btn.dataset.filter;
-                handleFilterClick(btn, 'concept', filterValue);
+                handleFilterClick(btn, 'theme', filterValue);
             });
         });
         
