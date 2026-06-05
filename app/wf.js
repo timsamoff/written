@@ -2204,7 +2204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nextContentLine++;
       }
       
-      // Also check previous content line
+      // Check previous content line
       let prevContentLine = lineIndex - 1;
       while (prevContentLine >= 0) {
         const prevLine = lines[prevContentLine].trim();
@@ -2215,7 +2215,7 @@ document.addEventListener('DOMContentLoaded', () => {
         prevContentLine--;
       }
       
-      // Try to match the content before or after the tag
+      // Match the content before or after the tag
       let targetLine = -1;
       if (nextContentLine < lines.length) {
         targetLine = nextContentLine;
@@ -2289,13 +2289,25 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/\[\/?[a-z]+\]/gi, '')
       .replace(/\[\/?[a-z]+=.*?\]/gi, '')
       .trim();
-    
+
+    function normalizeForMatch(str) {
+      return str
+        .toLowerCase()
+        .replace(/[^\w\s]/g, '') // Remove punctuation
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    const normalizedTarget = normalizeForMatch(cleanTarget);
+    const targetWords = normalizedTarget.split(/\s+/).filter(w => w.length > 3); // Only use words with 4+ chars for matching
+
     const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure, .manuscript-header, .story-title, .story-subtitle, .story-byline, .story-end');
     let bestMatch = null;
     let bestMatchScore = 0;
 
     elements.forEach(el => {
       const textContent = el.textContent || '';
+      const normalizedContent = normalizeForMatch(textContent);
       
       const isEndElement = el.classList?.contains('story-end') || 
                           (el.tagName === 'HR' && el.classList?.contains('fleuron-end'));
@@ -2311,11 +2323,28 @@ document.addEventListener('DOMContentLoaded', () => {
                        el.classList?.contains('story-byline') ||
                        el.classList?.contains('manuscript-header');
       
-      if (cleanTarget.length > 0 && textContent.includes(cleanTarget.substring(0, 30))) {
-        const score = Math.min(cleanTarget.length, textContent.length);
-        if (score > bestMatchScore) {
-          bestMatchScore = score;
-          bestMatch = el;
+      if (cleanTarget.length > 0) {
+        // Try exact substring match first
+        if (normalizedContent.includes(normalizedTarget) && normalizedTarget.length > 0) {
+          const score = normalizedTarget.length;
+          if (score > bestMatchScore) {
+            bestMatchScore = score;
+            bestMatch = el;
+          }
+        } 
+        // Then try word-by-word matching for better accuracy
+        else if (targetWords.length > 0) {
+          let matchCount = 0;
+          for (const word of targetWords) {
+            if (normalizedContent.includes(word)) {
+              matchCount++;
+            }
+          }
+          const score = matchCount / targetWords.length;
+          if (score > bestMatchScore && score > 0.3) { // At least 30% word match
+            bestMatchScore = score;
+            bestMatch = el;
+          }
         }
       } else if (isHeader && lineIndex < 10 && cleanTarget.length < 10) {
         bestMatch = null;
