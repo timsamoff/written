@@ -995,6 +995,16 @@ function getDocTitle() {
   return titleEl ? titleEl.textContent.trim() : null;
 }
 
+function getDocSubtitle() {
+  const subEl = livePreview.querySelector('p.story-subtitle');
+  return subEl ? subEl.textContent.trim() : null;
+}
+
+function getFirstImageSrc() {
+  const imgEl = livePreview.querySelector('img.editorial-image[src]:not([src=""])');
+  return imgEl ? imgEl.getAttribute('src') : null;
+}
+
 function getDownloadFilename(type) {
   const title = getDocTitle();
   if (title) {
@@ -1005,16 +1015,40 @@ function getDownloadFilename(type) {
 }
 
 function getStandaloneHtml() {
-  const title = getDocTitle() || 'Story';
+  const title       = getDocTitle() || 'Story';
+  const subtitle    = getDocSubtitle();
+  const imageSrc    = getFirstImageSrc();
+  const siteName    = 'Written & Formatted';
+  const description = subtitle || title;
+
+  const ogImage = imageSrc
+    ? `\n  <meta property="og:image" content="${escAttr(imageSrc)}">
+  <meta name="twitter:image" content="${escAttr(imageSrc)}">`
+    : '';
+
   const storyFooter = `<footer class="wf-credit" aria-label="Formatted by Written &amp; Formatted">
   <p>Page formatted by <a href="https://samoff.com/written/app" target="_blank" rel="noopener">Written &amp; Formatted</a>. &copy; Tim Samoff.</p>
 </footer>`;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escHtml(title)}</title>
+  <meta name="description" content="${escAttr(description)}">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="${escAttr(title)}">
+  <meta property="og:description" content="${escAttr(description)}">
+  <meta property="og:site_name" content="${escAttr(siteName)}">${ogImage}
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="${imageSrc ? 'summary_large_image' : 'summary'}">
+  <meta name="twitter:title" content="${escAttr(title)}">
+  <meta name="twitter:description" content="${escAttr(description)}">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
