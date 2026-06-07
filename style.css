@@ -168,7 +168,13 @@ body {
     line-height: 1.4;
 }
 
-.theme-btn {
+.header-btn-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.header-circle-btn {
     background-color: var(--color-toggle-bg);
     border: none;
     width: calc(var(--rhythm-unit) * 5);
@@ -180,12 +186,34 @@ body {
     place-items: center;
     font-size: 1rem;
     flex-shrink: 0;
+    text-decoration: none;
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.3s;
 }
 
-.theme-btn:hover {
+.header-circle-btn:hover {
     transform: scale(1.08);
     color: var(--color-accent);
+}
+
+.header-circle-btn:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.header-circle-btn:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* theme-btn inherits circle shape */
+.theme-btn {}
+
+@media (prefers-reduced-motion: reduce) {
+    .header-circle-btn {
+        transition: none;
+    }
+    .header-circle-btn:hover {
+        transform: none;
+    }
 }
 
 /* ==========================================================================
