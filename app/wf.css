@@ -1167,6 +1167,30 @@ body {
   text-indent: 0 !important;
 }
 
+/* ── Centered text ── */
+.story-content .text-center {
+  text-align: center !important;
+  text-indent: 0 !important;
+}
+
+/* Centered lists: markers sit inline with centered text */
+.story-content ul.list-centered,
+.story-content ol.list-centered {
+  list-style-position: inside;
+  padding-left: 0;
+}
+.story-content ul.list-centered li,
+.story-content ol.list-centered li {
+  text-align: center;
+  list-style-position: inside;
+}
+.story-content ul.list-centered li ul,
+.story-content ul.list-centered li ol,
+.story-content ol.list-centered li ul,
+.story-content ol.list-centered li ol {
+  padding-left: 0;
+}
+
 .story-content hr.fleuron-end {
   border: none;
   height: 1px;

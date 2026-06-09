@@ -181,6 +181,7 @@ function tokenize(raw) {
     { open: '[num]',            close: '[/num]',            type: 'num'            },
     { open: '[alpha]',          close: '[/alpha]',          type: 'alpha'          },
     { open: '[end]',            close: '[/end]',            type: 'ending'         },
+    { open: '[c]',              close: '[/c]',              type: 'center'         },
   ];
 
   // Build a regex that matches any block open-tag (case-insensitive).
@@ -212,6 +213,34 @@ function tokenize(raw) {
         continue;
       }
       if (isSectionBreak(t)) { tokens.push({ type: 'break', content: t }); i++; continue; }
+
+      // Detect loose Markdown-style bullet/numbered list lines and collect
+      // them into a proper list token rather than individual paragraphs.
+      const isBulletLine = /^[*\-+] \S/.test(t);
+      const isNumLine    = /^\d+\. \S/.test(t);
+      if (isBulletLine || isNumLine) {
+        const listType = isNumLine ? 'num' : 'bullet';
+        const items = [];
+        while (i < lines.length) {
+          const lt = lines[i].trim();
+          if (/^[*\-+] \S/.test(lt)) {
+            items.push(lt.replace(/^[*\-+] /, ''));
+            i++;
+          } else if (/^\d+\. \S/.test(lt)) {
+            items.push(lt.replace(/^\d+\. /, ''));
+            i++;
+          } else if (lt === '') {
+            // Allow a single blank line within a list; two blanks ends it
+            if (i + 1 < lines.length && lines[i + 1].trim() === '') break;
+            i++;
+          } else {
+            break;
+          }
+        }
+        tokens.push({ type: listType, rawLines: items, items, centered: false });
+        continue;
+      }
+
       tokens.push({ type: 'para', content: t });
       i++;
     }
@@ -263,8 +292,10 @@ function tokenize(raw) {
       return;
     }
     if (bt.type === 'bullet' || bt.type === 'num' || bt.type === 'alpha') {
-      const rawLines = content.split('\n').filter(l => l.trim() !== '' || /^[ \t]/.test(l));
-      tokens.push({ type: bt.type, rawLines, items: rawLines.map(l => l.trim()).filter(Boolean) });
+      const centerResult = extractCenter(content);
+      const listContent = centerResult.centered ? centerResult.content : content;
+      const rawLines = listContent.split('\n').filter(l => l.trim() !== '' || /^[ \t]/.test(l));
+      tokens.push({ type: bt.type, rawLines, items: rawLines.map(l => l.trim()).filter(Boolean), centered: centerResult.centered });
       return;
     }
     // code: preserve exact whitespace (no extra trim beyond the tag-edge trim above)
@@ -374,7 +405,7 @@ function tokenize(raw) {
 }
 
 function countBodyWords(tokens) {
-  const proseTypes = new Set(['para','pullquote','aside','epigraph','mono']);
+  const proseTypes = new Set(['para','pullquote','aside','epigraph','mono','center']);
   let words = 0;
   for (const tok of tokens) {
     if (proseTypes.has(tok.type) && tok.content) {
@@ -409,6 +440,20 @@ function buildFnMap(tokens) {
   return map;
 }
 
+// ── Center-tag helper ─────────────────────────────────────────────────────────
+// Detects whether a content string is wrapped in [c]...[/c] (with any
+// surrounding whitespace/newlines), strips the wrapper, and returns
+// { centered: bool, content: string }.  Case-insensitive; handles all
+// spacing variants: same-line, tags on own lines, mixed.
+function extractCenter(raw) {
+  const trimmed = raw.trim();
+  const match = trimmed.match(/^\[c\]([\s\S]*?)\[\/c\]$/i);
+  if (match) {
+    return { centered: true, content: match[1].trim() };
+  }
+  return { centered: false, content: raw };
+}
+
 function renderBlockLines(content, fnMap, extraClass) {
   return content.split('\n').map(l => {
     if (l.trim() === '') return `    <p class="block-spacer"></p>`;
@@ -418,12 +463,15 @@ function renderBlockLines(content, fnMap, extraClass) {
 }
 
 function renderPullquote(tok, fnMap) {
-  const rows = renderBlockLines(tok.content, fnMap);
-  return `  <aside class="pullquote" role="note" aria-label="Pull quote">\n${rows}\n  </aside>`;
+  const { centered, content } = extractCenter(tok.content);
+  const cls = centered ? ' text-center' : '';
+  const rows = renderBlockLines(content, fnMap, centered ? 'text-center' : null);
+  return `  <aside class="pullquote${cls}" role="note" aria-label="Pull quote">\n${rows}\n  </aside>`;
 }
 
 function renderAside(tok, fnMap) {
-  const rows = renderBlockLines(tok.content, fnMap);
+  const { centered, content } = extractCenter(tok.content);
+  const rows = renderBlockLines(content, fnMap, centered ? 'text-center' : null);
   return `  <aside class="editorial-aside">\n${rows}\n  </aside>`;
 }
 
@@ -477,7 +525,9 @@ function renderManuscript(tok, wordCount) {
 }
 
 function renderEpigraph(tok, fnMap) {
-  const lines = tok.content.split('\n');
+  const { centered, content } = extractCenter(tok.content);
+  const pCls = centered ? ' class="text-center"' : '';
+  const lines = content.split('\n');
   let attrLine = null;
   let quoteLines = lines;
 
@@ -490,7 +540,7 @@ function renderEpigraph(tok, fnMap) {
 
   const quoteHtml = quoteLines
     .filter(l => l.trim() !== '')
-    .map(l => `    <p>${processInline(l, fnMap)}</p>`)
+    .map(l => `    <p${pCls}>${processInline(l, fnMap)}</p>`)
     .join('\n');
   const attrHtml = attrLine
     ? `\n    <footer class="epigraph-attribution"><cite>${processInline(attrLine, fnMap)}</cite></footer>`
@@ -500,10 +550,11 @@ function renderEpigraph(tok, fnMap) {
 }
 
 function renderMono(tok, fnMap) {
+  const { centered, content } = extractCenter(tok.content);
   let isBoldGlobal = false;
   let isItalicGlobal = false;
 
-  const rows = tok.content.split('\n').map(l => {
+  const rows = content.split('\n').map(l => {
     if (l.trim() === '') return `    <p class="block-spacer"></p>`;
 
     let lineText = processInlineMono(l, fnMap);
@@ -534,7 +585,8 @@ function renderMono(tok, fnMap) {
     if (hasCloseBold && !hasOpenBold) isBoldGlobal = false;
     if (hasCloseItalic && !hasOpenItalic) isItalicGlobal = false;
 
-    return `    <p class="mono-line">${lineText}</p>`;
+    const cls = centered ? 'mono-line text-center' : 'mono-line';
+    return `    <p class="${cls}">${lineText}</p>`;
   }).join('\n');
 
   return `  <div class="literary-mono" role="region" aria-label="Monospace text">\n${rows}\n  </div>`;
@@ -548,15 +600,21 @@ function processInlineMono(str, fnMap) {
 }
 
 function renderSection(tok, fnMap) {
-  return `  <h2 class="section-heading">${processInline(tok.content, fnMap)}</h2>`;
+  const { centered, content } = extractCenter(tok.content);
+  const cls = centered ? 'section-heading text-center' : 'section-heading';
+  return `  <h2 class="${cls}">${processInline(content, fnMap)}</h2>`;
 }
 
 function renderSubsection(tok, fnMap) {
-  return `  <h3 class="subsection-heading">${processInline(tok.content, fnMap)}</h3>`;
+  const { centered, content } = extractCenter(tok.content);
+  const cls = centered ? 'subsection-heading text-center' : 'subsection-heading';
+  return `  <h3 class="${cls}">${processInline(content, fnMap)}</h3>`;
 }
 
 function renderSubsubsection(tok, fnMap) {
-  return `  <h4 class="subsubsection-heading">${processInline(tok.content, fnMap)}</h4>`;
+  const { centered, content } = extractCenter(tok.content);
+  const cls = centered ? 'subsubsection-heading text-center' : 'subsubsection-heading';
+  return `  <h4 class="${cls}">${processInline(content, fnMap)}</h4>`;
 }
 
 function renderCode(tok) {
@@ -601,9 +659,15 @@ function renderCode(tok) {
 }
 
 function renderList(tok, fnMap) {
-  const rootTag   = tok.type === 'bullet' ? 'ul' : 'ol';
-  const rootClass = tok.type === 'alpha'  ? ' class="list-alpha"' : '';
-  const rawLines  = tok.rawLines || tok.items;
+  const rootTag      = tok.type === 'bullet' ? 'ul' : 'ol';
+  const centered     = !!tok.centered;
+  const rawLines     = tok.rawLines || tok.items;
+
+  // Build root class list
+  const rootClasses  = [];
+  if (tok.type === 'alpha') rootClasses.push('list-alpha');
+  if (centered)             rootClasses.push('list-centered');
+  const rootClass    = rootClasses.length ? ` class="${rootClasses.join(' ')}"` : '';
 
   function depth(line) {
     const m = line.match(/^([ \t]*)/);
@@ -628,13 +692,14 @@ function renderList(tok, fnMap) {
         else break;
       }
 
-      const text = line.trim();
+      const text    = line.trim();
+      const liClass = centered ? ' class="text-center"' : '';
       if (children.length) {
         const childDepth = depth(children.find(l => l.trim()) || children[0]);
         const childHtml  = buildList(children, childDepth, pad + '  ');
-        items.push(`${pad}  <li>${processInline(text, fnMap)}\n${childHtml}\n${pad}  </li>`);
+        items.push(`${pad}  <li${liClass}>${processInline(text, fnMap)}\n${childHtml}\n${pad}  </li>`);
       } else {
-        items.push(`${pad}  <li>${processInline(text, fnMap)}</li>`);
+        items.push(`${pad}  <li${liClass}>${processInline(text, fnMap)}</li>`);
       }
       i = j;
     }
@@ -781,7 +846,7 @@ function convertText() {
   const HEADER_TYPES = new Set(['title', 'subtitle', 'byline', 'manuscript']);
   const BLOCK_TYPES  = new Set(['pullquote','aside','epigraph','mono','code','image',
                                  'bullet','num','alpha','section','subsection',
-                                 'subsubsection','citations','manuscript']);
+                                 'subsubsection','citations','manuscript','center']);
 
   // ── Para metadata pass (body paras only, in document order) ───────────────
   // We need to know each para's position relative to breaks and blocks so we
@@ -879,8 +944,23 @@ function convertText() {
       continue;
     }
     if (tok.type === 'ending') {
-      if (tok.content) out.push(`  <p class="story-end">${processInline(tok.content, fnMap)}</p>`);
+      if (tok.content) {
+        const { centered, content: endContent } = extractCenter(tok.content);
+        const endCls = centered ? 'story-end text-center' : 'story-end';
+        out.push(`  <p class="${endCls}">${processInline(endContent, fnMap)}</p>`);
+      }
       if (endhr === 'yes') out.push(`  <hr class="fleuron-end" aria-hidden="true">`);
+      continue;
+    }
+    if (tok.type === 'center') {
+      // Standalone [c]...[/c] — renders as a centered paragraph block.
+      // Multi-line content: each non-empty line becomes its own centered <p>.
+      const lines = tok.content.split('\n');
+      const rendered = lines.map(l => {
+        if (l.trim() === '') return `  <p class="block-spacer"></p>`;
+        return `  <p class="text-center no-indent">${processInline(l.trim(), fnMap)}</p>`;
+      }).join('\n');
+      out.push(rendered);
       continue;
     }
     if (tok.type === 'pullquote')     { out.push(renderPullquote(tok, fnMap));     continue; }
@@ -1070,6 +1150,233 @@ function showToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 2000);
 }
 
+// ── Markdown → WF paste converter ────────────────────────────────────────────
+// Runs on pasted text only. Converts the predictable Markdown subset produced
+// by ChatGPT and similar tools into WF tag syntax. Unsupported constructs have
+// their Markdown syntax stripped while their text content is preserved.
+
+function markdownToWF(raw) {
+  const lines = raw.split('\n');
+  const out   = [];
+  let i = 0;
+
+  // ── Inline conversion ──────────────────────────────────────────────────────
+  function convertInline(str) {
+    str = str.replace(/\*\*(.+?)\*\*/g,  '[b]$1[/b]');
+    str = str.replace(/__(.+?)__/g,       '[b]$1[/b]');
+    str = str.replace(/\*(.+?)\*/g,       '[i]$1[/i]');
+    str = str.replace(/_(.+?)_/g,         '[i]$1[/i]');
+    str = str.replace(/`([^`]+)`/g,       '$1');
+    str = str.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '[link]$1 -> $2[/link]');
+    str = str.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) =>
+      `\n[image]\nsource: ${src}\nalt: ${alt}\n[/image]\n`
+    );
+    return str;
+  }
+
+  // ── List detection ─────────────────────────────────────────────────────────
+  function listMatch(line) {
+    const bullet = line.match(/^([ \t]*)[*\-+] (.*)$/);
+    if (bullet) return { type: 'bullet', depth: bullet[1].replace(/\t/g, '  ').length, text: bullet[2] };
+    const num    = line.match(/^([ \t]*)\d+\. (.*)$/);
+    if (num)    return { type: 'num',    depth: num[1].replace(/\t/g, '  ').length,    text: num[2] };
+    return null;
+  }
+
+  // ── Block consumers ────────────────────────────────────────────────────────
+  function consumeList() {
+    const items  = [];
+    let listType = null;
+    while (i < lines.length) {
+      const m = listMatch(lines[i]);
+      if (!m) break;
+      if (!listType) listType = m.type;
+      items.push(' '.repeat(m.depth) + convertInline(m.text.trim()));
+      i++;
+    }
+    const tag = listType === 'num' ? 'num' : 'bullet';
+    return `[${tag}]\n${items.join('\n')}\n[/${tag}]`;
+  }
+
+  function consumeBlockquote() {
+    const bqLines = [];
+    while (i < lines.length && /^> ?/.test(lines[i])) {
+      bqLines.push(convertInline(lines[i].replace(/^> ?/, '')));
+      i++;
+    }
+    return `[aside]\n${bqLines.join('\n')}\n[/aside]`;
+  }
+
+  function consumeCodeFence(fence) {
+    const lang = fence.replace(/^`{3,}/, '').trim();
+    i++;
+    const codeLines = [];
+    while (i < lines.length && !/^`{3,}/.test(lines[i])) {
+      codeLines.push(lines[i]);
+      i++;
+    }
+    if (i < lines.length) i++;
+    const langHint = lang ? `// lang: ${lang}\n` : '';
+    return `[code]\n${langHint}${codeLines.join('\n')}\n[/code]`;
+  }
+
+  function consumeTable() {
+    const tableLines = [];
+    while (i < lines.length && /\|/.test(lines[i])) {
+      const row = lines[i];
+      if (/^\|?[\s\-:|]+\|/.test(row)) { i++; continue; }
+      const cells = row.split('|').map(c => c.trim()).filter(Boolean);
+      if (cells.length) tableLines.push(cells.join('  '));
+      i++;
+    }
+    return tableLines.join('\n');
+  }
+
+  // ── Main line loop ─────────────────────────────────────────────────────────
+  while (i < lines.length) {
+    const line    = lines[i];
+    const trimmed = line.trim();
+
+    if (trimmed === '') { out.push(''); i++; continue; }
+
+    // Fenced code block
+    if (/^`{3,}/.test(trimmed)) { out.push(consumeCodeFence(trimmed)); continue; }
+
+    // ATX headings
+    const heading = trimmed.match(/^(#{1,4})\s+(.+)$/);
+    if (heading) {
+      const level = heading[1].length;
+      const text  = convertInline(heading[2]);
+      if      (level === 1) out.push(`[title]\n${text}\n[/title]`);
+      else if (level === 2) out.push(`[section]\n${text}\n[/section]`);
+      else if (level === 3) out.push(`[subsection]\n${text}\n[/subsection]`);
+      else                  out.push(`[subsubsection]\n${text}\n[/subsubsection]`);
+      i++; continue;
+    }
+
+    // Setext headings
+    if (i + 1 < lines.length) {
+      const next = lines[i + 1];
+      if (/^=+\s*$/.test(next)) {
+        out.push(`[title]\n${convertInline(trimmed)}\n[/title]`);
+        i += 2; continue;
+      }
+      if (/^-+\s*$/.test(next) && trimmed.length > 0 && !listMatch(line)) {
+        out.push(`[section]\n${convertInline(trimmed)}\n[/section]`);
+        i += 2; continue;
+      }
+    }
+
+    // Horizontal rule
+    if (/^(\*{3,}|-{3,}|_{3,})$/.test(trimmed.replace(/\s/g, ''))) {
+      out.push('[break]'); i++; continue;
+    }
+
+    // Blockquote
+    if (/^> ?/.test(trimmed)) { out.push(consumeBlockquote()); continue; }
+
+    // Table
+    if (/\|/.test(trimmed)) { out.push(consumeTable()); continue; }
+
+    // List (bullet or numbered)
+    if (listMatch(line)) { out.push(consumeList()); continue; }
+
+    // Plain paragraph line
+    out.push(convertInline(trimmed));
+    i++;
+  }
+
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// Post-process: wrap any remaining bare * bullet or 1. numbered lines
+// that survived markdownToWF (e.g. inside already-converted WF content)
+// into proper [bullet]/[num] blocks.
+function wrapLooseBullets(text) {
+  const lines = text.split('\n');
+  const out   = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const t    = line.trim();
+    const isBullet = /^[*\-+] \S/.test(t);
+    const isNum    = /^\d+\. \S/.test(t);
+    if (isBullet || isNum) {
+      const tag   = isNum ? 'num' : 'bullet';
+      const items = [];
+      while (i < lines.length) {
+        const lt = lines[i].trim();
+        if (/^[*\-+] \S/.test(lt)) { items.push(lt.replace(/^[*\-+] /, '')); i++; }
+        else if (/^\d+\. \S/.test(lt)) { items.push(lt.replace(/^\d+\. /, '')); i++; }
+        else if (lt === '' && i + 1 < lines.length && /^[*\-+] \S|^\d+\. \S/.test(lines[i + 1].trim())) { i++; }
+        else break;
+      }
+      out.push(`[${tag}]\n${items.join('\n')}\n[/${tag}]`);
+      continue;
+    }
+    out.push(line);
+    i++;
+  }
+  return out.join('\n');
+}
+
+// Detect whether a string contains Markdown patterns worth converting.
+// Threshold is intentionally low — a single bullet list qualifies.
+function looksLikeMarkdown(text) {
+  return (
+    /^#{1,4} /m.test(text)          ||  // ATX headings
+    /^[*\-+] \S/m.test(text)        ||  // bullet list items (* - +)
+    /^\d+\. \S/m.test(text)         ||  // numbered list items
+    /\*\*[^*]+\*\*/.test(text)      ||  // bold **text**
+    /^> /m.test(text)               ||  // blockquotes
+    /^`{3}/m.test(text)             ||  // fenced code blocks
+    /\[.+\]\(.+\)/.test(text)           // Markdown links
+  );
+}
+
+// Strip a leading AI preamble: any lines of plain prose (no WF tags, no
+// Markdown signals) appearing before the first recognizable WF block tag or
+// Markdown heading. Returns { cleaned: string, stripped: bool }.
+function stripAIPreamble(text) {
+  const lines = text.split('\n');
+  let firstContentLine = -1;
+
+  // A "content line" is one that opens with a WF block tag or a Markdown heading.
+  const contentStart = /^\[(title|subtitle|byline|section|subsection|subsubsection|pullquote|aside|epigraph|mono|center|code|image|bullet|num|alpha|end|break|manuscript|citations)\]/i;
+  const mdHeading    = /^#{1,4} /;
+
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i].trim();
+    if (contentStart.test(t) || mdHeading.test(t)) {
+      // If the first hit is a bare [break] and the very next non-blank line
+      // is [title], treat the [break] as part of the preamble too.
+      if (/^\[break\]$/i.test(t)) {
+        let j = i + 1;
+        while (j < lines.length && lines[j].trim() === '') j++;
+        if (j < lines.length && /^\[title\]/i.test(lines[j].trim())) {
+          firstContentLine = j;
+          break;
+        }
+      }
+      firstContentLine = i;
+      break;
+    }
+  }
+
+  // No recognizable content start found, or it's the very first line — nothing to strip.
+  if (firstContentLine <= 0) return { cleaned: text, stripped: false };
+
+  // Only strip if the preceding lines look like prose (no WF tags at all),
+  // to avoid accidentally removing legitimate content.
+  const preamble = lines.slice(0, firstContentLine).join('\n');
+  if (/\[\/?(b|i|fn|link)\]/i.test(preamble)) return { cleaned: text, stripped: false };
+
+  return {
+    cleaned: lines.slice(firstContentLine).join('\n').replace(/^\n+/, ''),
+    stripped: true,
+  };
+}
+
 function insertTextWithUndo(textarea, text) {
   textarea.focus();
   const ok = document.execCommand('insertText', false, text);
@@ -1206,15 +1513,16 @@ const TOOLBAR_BUTTONS = [
   { label: 'Aside',      title: 'Insert [aside] block',      action: () => wrapSelection('[aside]',      '[/aside]',      true) },
   { label: 'Epigraph',   title: 'Insert [epigraph] block',   action: () => wrapSelection('[epigraph]',   '[/epigraph]',   true) },
   { label: 'Mono',       title: 'Insert [mono] block',       action: () => wrapSelection('[mono]',       '[/mono]',       true) },
+  { label: 'Center',    title: 'Insert [c] centered block', action: () => wrapSelection('[c]',          '[/c]',          true) },
   { label: 'Code',       title: 'Insert [code] block',       action: () => wrapSelection('[code]',       '[/code]',       true) },
   { label: '⊞ Image',   title: 'Insert [image] block',      action: () => openImageModal() },
-  { label: 'B',          title: 'Bold [b]',                  action: () => wrapSelection('[b]', '[/b]'),  bold: true },
-  { label: 'I',          title: 'Italic [i]',                action: () => wrapSelection('[i]', '[/i]'),  italic: true },
   { label: '• List',     title: 'Insert [bullet] list',      action: () => insertList('bullet') },
   { label: '1. List',    title: 'Insert [num] list',         action: () => insertList('num') },
   { label: 'a. List',    title: 'Insert [alpha] list',       action: () => insertList('alpha') },
   { label: '→ Indent',   title: 'Indent selected lines (nest list items)', action: () => indentLines('in') },
   { label: '← Dedent',   title: 'Dedent selected lines',    action: () => indentLines('out') },
+  { label: 'B',          title: 'Bold [b]',                  action: () => wrapSelection('[b]', '[/b]'),  bold: true },
+  { label: 'I',          title: 'Italic [i]',                action: () => wrapSelection('[i]', '[/i]'),  italic: true },
   { label: 'Footnote',   title: 'Insert [fn] footnote ref',  action: () => insertFn() },
   { label: 'Citations',  title: 'Insert [citations] block',  action: () => insertCitations() },
   { label: '❦ End',      title: 'Insert [end] block',        action: () => wrapSelection('[end]',        '[/end]',        true) },
@@ -2042,6 +2350,26 @@ body {
   text-align: center; font-style: italic; color: var(--wf-text-muted);
   margin: 3rem 0; text-indent: 0 !important;
 }
+
+/* ── Centered text ── */
+.story-content .text-center {
+  text-align: center !important; text-indent: 0 !important;
+}
+.story-content ul.list-centered,
+.story-content ol.list-centered {
+  list-style-position: inside; padding-left: 0;
+}
+.story-content ul.list-centered li,
+.story-content ol.list-centered li {
+  text-align: center; list-style-position: inside;
+}
+.story-content ul.list-centered li ul,
+.story-content ul.list-centered li ol,
+.story-content ol.list-centered li ul,
+.story-content ol.list-centered li ol {
+  padding-left: 0;
+}
+
 .story-content hr.fleuron-end {
   border: none; height: 1px; background: var(--wf-border);
   width: 10%; margin: 5rem auto; position: relative; overflow: visible;
@@ -2415,3 +2743,56 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// ── Markdown / AI-preamble paste interception ─────────────────────────────
+inputText.addEventListener('paste', (e) => {
+  let raw = e.clipboardData && e.clipboardData.getData('text/plain');
+
+  if (!raw || !raw.trim()) {
+    const html = e.clipboardData && e.clipboardData.getData('text/html');
+    if (html && html.trim()) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<\/p>/gi, '\n')
+        .replace(/<\/div>/gi, '\n')
+        .replace(/<\/li>/gi, '\n')
+        .replace(/<\/h[1-6]>/gi, '\n')
+        .replace(/<\/blockquote>/gi, '\n')
+        .replace(/<\/pre>/gi, '\n');
+      raw = tmp.textContent || tmp.innerText || '';
+    }
+  }
+
+  if (!raw || !raw.trim()) return;
+
+  const { cleaned, stripped } = stripAIPreamble(raw);
+  const needsConversion = looksLikeMarkdown(cleaned);
+  if (!stripped && !needsConversion) return;
+
+  // Prevent the native paste from inserting anything.
+  e.preventDefault();
+  e.stopImmediatePropagation();
+
+  const result = needsConversion ? wrapLooseBullets(markdownToWF(cleaned)) : wrapLooseBullets(cleaned);
+
+  // Manually splice the converted text into the textarea value,
+  // replacing the current selection (or inserting at cursor).
+  const start = inputText.selectionStart;
+  const end   = inputText.selectionEnd;
+  const before = inputText.value.substring(0, start);
+  const after  = inputText.value.substring(end);
+  inputText.value = before + result + after;
+  const newCursor = start + result.length;
+  inputText.setSelectionRange(newCursor, newCursor);
+
+  // Trigger conversion and autosave by dispatching input event.
+  inputText.dispatchEvent(new Event('input'));
+  scheduleAutosave();
+
+  let msg;
+  if (stripped && needsConversion)  msg = 'Markdown converted to WF syntax';
+  else if (stripped)                 msg = 'AI preamble removed from pasted text';
+  else                               msg = 'Markdown converted to WF syntax';
+  showToast(msg);
+}, true);
