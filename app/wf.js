@@ -209,7 +209,7 @@ function tokenize(raw) {
       if (t === '') {
         let blanks = 0;
         while (i < lines.length && lines[i].trim() === '') { blanks++; i++; }
-        if (blanks >= 2) tokens.push({ type: 'break', content: '' });
+        if (blanks >= 3) tokens.push({ type: 'break', content: '' });
         continue;
       }
       if (isSectionBreak(t)) { tokens.push({ type: 'break', content: t }); i++; continue; }
@@ -1156,6 +1156,7 @@ function showToast(msg) {
 // their Markdown syntax stripped while their text content is preserved.
 
 function markdownToWF(raw) {
+  raw = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const lines = raw.split('\n');
   const out   = [];
   let i = 0;
@@ -1167,10 +1168,11 @@ function markdownToWF(raw) {
     str = str.replace(/\*(.+?)\*/g,       '[i]$1[/i]');
     str = str.replace(/_(.+?)_/g,         '[i]$1[/i]');
     str = str.replace(/`([^`]+)`/g,       '$1');
-    str = str.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '[link]$1 -> $2[/link]');
+    // Images MUST come before links — ![alt](url) matches the link pattern otherwise.
     str = str.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, src) =>
       `\n[image]\nsource: ${src}\nalt: ${alt}\n[/image]\n`
     );
+    str = str.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '[link]$1 -> $2[/link]');
     return str;
   }
 
@@ -1281,6 +1283,27 @@ function markdownToWF(raw) {
     // List (bullet or numbered)
     if (listMatch(line)) { out.push(consumeList()); continue; }
 
+    // Standalone image line: ![alt](url) — handle before plain paragraph
+    if (/^!/.test(trimmed)) {
+      const imgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
+      if (imgMatch) {
+        const alt = imgMatch[1];
+        const src = imgMatch[2];
+        // Look ahead for a figure caption: next non-blank *italic* or _italic_ line
+        let caption = '';
+        let j = i + 1;
+        while (j < lines.length && lines[j].trim() === '') j++;
+        if (j < lines.length) {
+          const nextLine = lines[j].trim();
+          const capMatch = nextLine.match(/^\*([^*]+)\*$/) || nextLine.match(/^_([^_]+)_$/);
+          if (capMatch) { caption = capMatch[1]; i = j; }
+        }
+        const captionLine = caption ? `\ncaption: ${caption}` : '';
+        out.push(`[image]\nsource: ${src}\nalt: ${alt}${captionLine}\n[/image]`);
+        i++; continue;
+      }
+    }
+
     // Plain paragraph line
     out.push(convertInline(trimmed));
     i++;
@@ -1338,6 +1361,7 @@ function looksLikeMarkdown(text) {
 // Markdown signals) appearing before the first recognizable WF block tag or
 // Markdown heading. Returns { cleaned: string, stripped: bool }.
 function stripAIPreamble(text) {
+  text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   const lines = text.split('\n');
   let firstContentLine = -1;
 
@@ -2747,6 +2771,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── Markdown / AI-preamble paste interception ─────────────────────────────
 inputText.addEventListener('paste', (e) => {
   let raw = e.clipboardData && e.clipboardData.getData('text/plain');
+  if (raw) raw = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
   if (!raw || !raw.trim()) {
     const html = e.clipboardData && e.clipboardData.getData('text/html');
