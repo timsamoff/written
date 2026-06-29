@@ -24,6 +24,10 @@ A beautifully crafted digital publishing platform for writers. Browse stories, e
 ### Written & Formatted Editor
 - ✍️ **Live Preview** — See your formatted story update in real-time as you type
 - 🏷️ **Simple Markup Syntax** — Intuitive tag-based formatting: `[b]bold[/b]`, `[i]italic[/i]`, `[section]Heading[/section]`, and more
+- 🎨 **Four Output Styles** — Choose how your story looks:
+  - **Written & Formatted Light/Dark** — Classic serif typography with warm, timeless tones
+  - **Modern Light/Dark** — Clean sans-serif design with a contemporary feel
+  - Switch styles instantly in the preview; exports use your selected style
 - 📖 **Professional Features**:
   - Smart typography (curly quotes, ligatures, proper dashes)
   - Drop caps and paragraph indentation options
@@ -34,11 +38,12 @@ A beautifully crafted digital publishing platform for writers. Browse stories, e
   - Images with captions and credits
   - Lists (bullets, numbered, alphabetical) with nesting
 - 📤 **Export Options**:
-  - **Standalone HTML** — Complete, self-contained page ready to open anywhere
+  - **Standalone HTML** — Complete, self-contained page with your chosen style embedded
   - **Embeddable HTML** — Clean `<article>` block for pasting into CMSs or existing sites
-  - **Base CSS** — Structural stylesheet for consistent styling
+  - **Base CSS** — Structural stylesheet for custom theming
 - 💾 **Local Storage** — Save and load your work directly from your browser
 - 🎯 **Formatting Toolbar** — Click to insert tags or type manually—your choice
+- 🌗 **App Theme** — Switch between light and dark mode for comfortable editing
 
 ---
 
