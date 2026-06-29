@@ -194,6 +194,16 @@
           <span id="previewStatus" class="preview-status" aria-live="polite"></span>
         </div>
         <div class="preview-header-right">
+          <!-- Style Selector -->
+          <div class="style-selector-wrapper" id="previewStyleSelector">
+            <label for="previewStyleSelect" class="style-label">Style:</label>
+            <select id="previewStyleSelect" aria-label="Select output style for preview">
+              <option value="wf-light">Written &amp; Formatted Light</option>
+              <option value="wf-dark">Written &amp; Formatted Dark</option>
+              <option value="modern-light">Modern Light</option>
+              <option value="modern-dark">Modern Dark</option>
+            </select>
+          </div>
           <button type="button"class="preview-expand-btn" id="previewExpandBtn" title="Expand preview" aria-label="Expand preview to full screen">
             <i class="fa-solid fa-expand" aria-hidden="true"></i>
           </button>
@@ -220,28 +230,34 @@
 
   <!-- ── Help Modal ───────────────────────────────────────────── -->
   <div id="helpModal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
-    <div class="modal-box modal-box--help">
-      <div class="modal-header">
-        <h3 class="modal-title" id="helpModalTitle">Getting Started</h3>
-        <button type="button" class="modal-close" id="helpModalClose" aria-label="Close help dialog">&times;</button>
-      </div>
-      <div class="modal-body modal-body--help">
-        <p>Type or paste plain text into the <strong>Plain Text Input</strong> pane. Use the <strong>Syntax guide</strong> toggle above the editor to see all available tags.</p>
-        <p>The <strong>Live Preview</strong> pane updates automatically as you type.</p>
-        <p>Use the <strong>toolbar</strong> above the text area to insert tags at the cursor, or type them manually — every tag follows the pattern <code>[tag]content[/tag]</code>.</p>
-        <p>When you're ready to export, use the buttons in the action bar below the editor:</p>
-        <ul class="help-list">
-          <li><strong>View Standalone</strong> — a complete self-contained HTML page, ready to open in any browser.</li>
-          <li><strong>View Embed</strong> — just the <code>&lt;article&gt;</code> block, ready to paste into a CMS or existing page.</li>
-          <li><strong>View Base CSS</strong> — the structural stylesheet to load alongside embedded output.</li>
-        </ul>
-        <p>Use <strong>Save Text</strong> and <strong>Open Text</strong> to save and reload your plain-text source.</p>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-primary" id="helpModalDone">Done</button>
-      </div>
+  <div class="modal-box modal-box--help">
+    <div class="modal-header">
+      <h3 class="modal-title" id="helpModalTitle">Getting Started</h3>
+      <button type="button" class="modal-close" id="helpModalClose" aria-label="Close help dialog">&times;</button>
+    </div>
+    <div class="modal-body modal-body--help">
+      <p>Type or paste plain text into the <strong>Plain Text Input</strong> pane. Use the <strong>Syntax guide</strong> toggle above the editor to see all available tags.</p>
+      <p>The <strong>Live Preview</strong> pane updates automatically as you type.</p>
+      <p>Use the <strong>toolbar</strong> above the text area to insert tags at the cursor, or type them manually — every tag follows the pattern <code>[tag]content[/tag]</code>.</p>
+      <p><strong>Style Selector:</strong> Use the Style dropdown in the preview header to change the visual style of your document. Choose between:</p>
+      <ul class="help-list">
+        <li><strong>Written &amp; Formatted Light/Dark</strong> — Classic serif typography with warm tones</li>
+        <li><strong>Modern Light/Dark</strong> — Clean sans-serif design with a contemporary feel</li>
+      </ul>
+      <p>The style selector affects the preview and exported Standalone HTML.</p>
+      <p>When you're ready to <strong>export</strong>, use the buttons in the action bar below the editor:</p>
+      <ul class="help-list">
+        <li><strong>View Standalone</strong> — a complete self-contained HTML page, ready to open in any browser.</li>
+        <li><strong>View Embed</strong> — just the <code>&lt;article&gt;</code> block, ready to paste into a CMS or existing page.</li>
+        <li><strong>View Base CSS</strong> — the structural stylesheet to load alongside embedded output.</li>
+      </ul>
+      <p>Use <strong>Save Text</strong> and <strong>Open Text</strong> to save and reload your plain-text source.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" id="helpModalDone">Done</button>
     </div>
   </div>
+</div>
 
   <!-- ── View Modals ───────────────────────────────────────────── -->
 
