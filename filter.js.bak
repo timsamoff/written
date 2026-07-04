@@ -1,0 +1,307 @@
+<script>
+    // ==========================================================================
+    // Dynamic Index - Loads projects from projects.json
+    // ==========================================================================
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const tbody = document.getElementById('toc-body');
+        
+        // Fetch the projects data
+        fetch('/data/projects.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Could not load projects.json');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const projects = data.projects || [];
+                renderTable(projects);
+                // Re-initialize filters after rendering
+                setTimeout(() => {
+                    reinitializeFilters();
+                }, 50);
+            })
+            .catch(error => {
+                console.error('Error loading projects:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align:center; padding:2rem; color:var(--color-text-muted);">
+                            <p>Could not load projects. Please make sure the server is running.</p>
+                            <p style="font-size:0.8rem; margin-top:0.5rem;">Error: ${error.message}</p>
+                        </td>
+                    </tr>
+                `;
+            });
+    });
+
+    function renderTable(projects) {
+        const tbody = document.getElementById('toc-body');
+
+        const publishedProjects = projects.filter(p => p.published !== false);
+        
+        if (!publishedProjects || publishedProjects.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" style="text-align:center; padding:2rem; color:var(--color-text-muted);">
+                        <p>No published pieces yet. Check back soon!</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Sort by order if available, otherwise by date
+        const sorted = [...publishedProjects].sort((a, b) => {
+            if (a.order !== undefined && b.order !== undefined) {
+                return a.order - b.order;
+            }
+            return new Date(b.date) - new Date(a.date);
+        });
+
+        let html = '';
+        sorted.forEach(project => {
+            const genres = project.genres || [];
+            const themes = project.themes || [];
+            const allTags = [...genres, ...themes];
+            
+            const pills = allTags.map(tag => 
+                `<span class="pill">${escapeHtml(tag)}</span>`
+            ).join('\n                                ');
+            
+            const dateDisplay = project.dateDisplay || formatDate(project.date);
+            const fullPath = project.fullPath || `writing/${project.path}${project.slug}.html`;
+            
+            html += `
+                <tr data-genres='${JSON.stringify(genres)}' data-themes='${JSON.stringify(themes)}'>
+                    <td class="toc-date">${dateDisplay}</td>
+                    <td class="toc-title">
+                        <a href="${fullPath}">${escapeHtml(project.title)}</a>
+                    </td>
+                    <td class="toc-tags">
+                        <div class="pill-container">
+                            ${pills}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tbody.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
+    // ==========================================================================
+    // Re-initialize filters after dynamic content loads
+    // ==========================================================================
+
+    function reinitializeFilters() {
+        // Get all filter buttons
+        const genreFilters = document.querySelectorAll('#genre-filters .filter-chip');
+        const themeFilters = document.querySelectorAll('#theme-filters .filter-chip');
+        const clearFiltersBtn = document.getElementById('clear-filters');
+        const filterCountSpan = document.getElementById('filter-count');
+        const tbody = document.getElementById('toc-body');
+        
+        // Get all rows
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        // State
+        let activeGenres = new Set(['all']);
+        let activeThemes = new Set(['all']);
+        
+        // Remove existing event listeners by cloning and replacing buttons
+        const genreContainer = document.getElementById('genre-filters');
+        const themeContainer = document.getElementById('theme-filters');
+        
+        // Store button data
+        const genreButtons = Array.from(genreContainer.querySelectorAll('.filter-chip'));
+        const themeButtons = Array.from(themeContainer.querySelectorAll('.filter-chip'));
+        
+        // Clear containers
+        genreContainer.innerHTML = '';
+        themeContainer.innerHTML = '';
+        
+        // Rebuild genre buttons
+        genreButtons.forEach(btn => {
+            const clone = btn.cloneNode(true);
+            clone.addEventListener('click', () => {
+                const filterValue = clone.dataset.filter;
+                handleFilterClick(clone, 'genre', filterValue);
+            });
+            genreContainer.appendChild(clone);
+        });
+        
+        // Rebuild theme buttons
+        themeButtons.forEach(btn => {
+            const clone = btn.cloneNode(true);
+            clone.addEventListener('click', () => {
+                const filterValue = clone.dataset.filter;
+                handleFilterClick(clone, 'theme', filterValue);
+            });
+            themeContainer.appendChild(clone);
+        });
+        
+        // Clear filters button
+        if (clearFiltersBtn) {
+            const clearClone = clearFiltersBtn.cloneNode(true);
+            clearFiltersBtn.parentNode.replaceChild(clearClone, clearFiltersBtn);
+            clearClone.addEventListener('click', clearAllFilters);
+        }
+        
+        function matchesFilters(row) {
+            const genres = JSON.parse(row.dataset.genres || '[]');
+            const themes = JSON.parse(row.dataset.themes || '[]');
+            
+            let genreMatch = false;
+            if (activeGenres.has('all')) {
+                genreMatch = true;
+            } else {
+                for (let genre of activeGenres) {
+                    if (genres.includes(genre)) {
+                        genreMatch = true;
+                        break;
+                    }
+                }
+            }
+            
+            let themeMatch = false;
+            if (activeThemes.has('all')) {
+                themeMatch = true;
+            } else {
+                for (let theme of activeThemes) {
+                    if (themes.includes(theme)) {
+                        themeMatch = true;
+                        break;
+                    }
+                }
+            }
+            
+            return genreMatch && themeMatch;
+        }
+        
+        function updateDisplay() {
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const isVisible = matchesFilters(row);
+                if (isVisible) {
+                    row.classList.remove('filter-hidden');
+                    visibleCount++;
+                } else {
+                    row.classList.add('filter-hidden');
+                }
+            });
+            
+            const totalCount = rows.length;
+            if (visibleCount === totalCount && activeGenres.has('all') && activeThemes.has('all')) {
+                filterCountSpan.textContent = `Showing all ${totalCount} ${totalCount === 1 ? 'piece' : 'pieces'}`;
+            } else {
+                filterCountSpan.textContent = `Showing ${visibleCount} of ${totalCount} ${totalCount === 1 ? 'piece' : 'pieces'}`;
+            }
+            
+            // Remove any existing empty state
+            const existingEmpty = document.querySelector('.no-results');
+            if (existingEmpty) {
+                existingEmpty.remove();
+            }
+            
+            // Show empty state if no results
+            if (visibleCount === 0) {
+                const emptyMessage = document.createElement('tr');
+                emptyMessage.className = 'no-results';
+                emptyMessage.innerHTML = `
+                    <td colspan="3">
+                        <i class="fa-regular fa-folder-open"></i>
+                        <p>No matching pieces found. Try adjusting your filters.</p>
+                    </td>
+                `;
+                tbody.appendChild(emptyMessage);
+            }
+        }
+        
+        function handleFilterClick(button, type, value) {
+            const isActive = button.classList.contains('active');
+            const activeSet = type === 'genre' ? activeGenres : activeThemes;
+            const container = type === 'genre' ? genreContainer : themeContainer;
+            
+            if (value === 'all') {
+                activeSet.clear();
+                activeSet.add('all');
+                
+                const buttons = container.querySelectorAll('.filter-chip');
+                buttons.forEach(btn => {
+                    if (btn.dataset.filter === 'all') {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            } else {
+                if (activeSet.has('all')) {
+                    activeSet.delete('all');
+                    const allButton = container.querySelector('.filter-chip[data-filter="all"]');
+                    if (allButton) allButton.classList.remove('active');
+                }
+                
+                if (isActive) {
+                    activeSet.delete(value);
+                    button.classList.remove('active');
+                } else {
+                    activeSet.add(value);
+                    button.classList.add('active');
+                }
+                
+                if (activeSet.size === 0) {
+                    activeSet.add('all');
+                    const allButton = container.querySelector('.filter-chip[data-filter="all"]');
+                    if (allButton) allButton.classList.add('active');
+                }
+            }
+            
+            updateDisplay();
+        }
+        
+        function clearAllFilters() {
+            activeGenres.clear();
+            activeGenres.add('all');
+            activeThemes.clear();
+            activeThemes.add('all');
+            
+            const genreButtons = genreContainer.querySelectorAll('.filter-chip');
+            genreButtons.forEach(btn => {
+                if (btn.dataset.filter === 'all') {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            const themeButtons = themeContainer.querySelectorAll('.filter-chip');
+            themeButtons.forEach(btn => {
+                if (btn.dataset.filter === 'all') {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            updateDisplay();
+        }
+        
+        // Initial display update
+        updateDisplay();
+    }
+</script>

@@ -1,0 +1,814 @@
+/* ==========================================================================
+   Admin Panel - Minimal Overrides
+   ========================================================================== */
+
+/* ============================================
+   SCROLLBAR - Theme styles
+   ============================================ */
+
+.admin-panel::-webkit-scrollbar,
+.admin-form::-webkit-scrollbar,
+.sortable-list::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.admin-panel::-webkit-scrollbar-track,
+.admin-form::-webkit-scrollbar-track,
+.sortable-list::-webkit-scrollbar-track {
+    background: var(--color-bg);
+    border-radius: 3px;
+}
+
+.admin-panel::-webkit-scrollbar-thumb,
+.admin-form::-webkit-scrollbar-thumb,
+.sortable-list::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+}
+
+.admin-panel::-webkit-scrollbar-thumb:hover,
+.admin-form::-webkit-scrollbar-thumb:hover,
+.sortable-list::-webkit-scrollbar-thumb:hover {
+    background: var(--color-accent);
+}
+
+/* Firefox scrollbar */
+.admin-panel,
+.admin-form,
+.sortable-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) var(--color-bg);
+}
+
+/* ============================================
+   FULL WIDTH HEADER
+   ============================================ */
+
+.admin-header-full {
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-sm) 0;
+    position: sticky;
+    top: 0;
+    background: var(--color-bg);
+    z-index: 1000;
+    backdrop-filter: blur(8px);
+}
+
+.header-container-full {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 100%;
+    padding: 0 var(--space-xl);
+}
+
+/* ============================================
+   50/50 SPLIT LAYOUT
+   ============================================ */
+
+.admin-container {
+    display: flex;
+    height: calc(100vh - 140px);
+    overflow: hidden;
+}
+
+.admin-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-md);
+    min-width: 0;
+}
+
+.admin-panel-left {
+    background: var(--color-bg);
+    border-right: 1px solid var(--color-border);
+}
+
+.admin-panel-right {
+    background: var(--color-bg-card);
+}
+
+.admin-panel-inner {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ============================================
+   ADMIN FORM - Proper spacing & fonts
+   ============================================ */
+
+.admin-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+}
+
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.form-header h3 {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+}
+
+/* Form groups - normal spacing */
+.admin-form .form-group {
+    margin-bottom: 0.5rem;
+}
+
+.admin-form .form-group label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.admin-form .form-group input,
+.admin-form .form-group textarea,
+.admin-form .form-group select {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: var(--color-text);
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.admin-form .form-group input:focus,
+.admin-form .form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(139, 90, 74, 0.12);
+}
+
+.admin-form .form-group textarea {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    min-height: 70px;
+    resize: vertical;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-form .form-group small {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    display: block;
+    margin-top: 0.2rem;
+}
+
+.admin-form .form-group small code {
+    background: var(--color-bg);
+    padding: 0.05rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.7rem;
+}
+
+/* Title - Full width, larger */
+#form-title {
+    font-size: 1.15rem !important;
+    font-weight: 500;
+}
+
+/* ============================================
+   PATH + SLUG - Two column layout
+   ============================================ */
+
+.form-row {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Path input wrapper */
+.path-input-wrapper {
+    display: flex;
+    align-items: center;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.path-input-wrapper:focus-within {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(139, 90, 74, 0.12);
+}
+
+.path-prefix,
+.path-suffix {
+    padding: 0.4rem 0.5rem;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    background: var(--color-bg);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.path-prefix {
+    padding-left: 0.7rem;
+}
+
+.path-suffix {
+    padding-right: 0.7rem;
+}
+
+.path-input-wrapper input {
+    border: none !important;
+    border-radius: 0 !important;
+    background: var(--color-bg) !important;
+    padding: 0.5rem 0.3rem !important;
+    flex: 1;
+    min-width: 0;
+    font-size: 0.95rem !important;
+}
+
+.path-input-wrapper input:focus {
+    box-shadow: none !important;
+}
+
+#url-preview {
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+/* ============================================
+   PUBLISH TOGGLE
+   ============================================ */
+
+.publish-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    padding: 0.5rem 0.7rem;
+    background: var(--color-bg);
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+}
+
+.publish-toggle span {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* ============================================
+   FILE UPLOAD
+   ============================================ */
+
+.file-upload-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.file-upload-wrapper input[type="file"] {
+    display: none;
+}
+
+.file-upload-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    background: var(--color-bg);
+    border: 2px dashed var(--color-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    flex: 1;
+}
+
+.file-upload-label:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text);
+}
+
+.file-upload-label i {
+    color: var(--color-accent);
+}
+
+.file-upload-label.has-file {
+    border-color: var(--color-accent);
+    border-style: solid;
+}
+
+.clear-file-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.9rem;
+    display: none;
+}
+
+.clear-file-btn.visible {
+    display: block;
+}
+
+/* ============================================
+   TAG MANAGER - Add field below pills, left aligned
+   ============================================ */
+
+.tag-manager {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.4rem 0.5rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    min-height: 40px;
+}
+
+.tag-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    align-items: center;
+}
+
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 100px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    height: 28px;
+}
+
+.tag-chip:hover {
+    border-color: var(--color-accent);
+}
+
+.tag-chip.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-inverted, #fff);
+}
+
+.tag-chip .remove-tag {
+    cursor: pointer;
+    opacity: 0.6;
+    font-size: 0.8rem;
+    background: none;
+    border: none;
+    color: inherit;
+    padding: 0 0.1rem;
+    line-height: 1;
+}
+
+.tag-chip .remove-tag:hover {
+    opacity: 1;
+}
+
+.tag-add {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.tag-add input {
+    width: 80px;
+    padding: 0.15rem 0.4rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.7rem;
+    height: 26px;
+}
+
+.tag-add input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.tag-add .filter-btn {
+    padding: 0.1rem 0.6rem;
+    font-size: 0.7rem;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.tag-add .filter-btn:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-inverted, #fff);
+}
+
+/* ============================================
+   PUBLISH TOGGLE
+   ============================================ */
+
+.publish-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    padding: 0.5rem 0.7rem;
+    background: var(--color-bg);
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    transition: all 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.publish-toggle:hover {
+    border-color: var(--color-accent);
+    background: var(--color-bg-card);
+}
+
+.publish-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.publish-toggle .custom-checkbox-box {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--color-border);
+    border-radius: 4px;
+    display: inline-block;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    background: var(--color-bg);
+}
+
+.publish-toggle input:checked + .custom-checkbox-box {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    position: relative;
+}
+
+.publish-toggle input:checked + .custom-checkbox-box::after {
+    content: "✓";
+    color: var(--color-text-inverted, #fff);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}
+
+.publish-toggle .toggle-label {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+/* ============================================
+   SORTABLE LIST
+   ============================================ */
+
+.sorting-zone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    overflow: hidden;
+}
+
+.sorting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.sorting-header h3 {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin: 0;
+}
+
+#piece-count {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+.admin-search {
+    flex-shrink: 0;
+}
+
+.admin-search-input {
+    padding: 0.4rem 0.6rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: var(--color-text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.8rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-search-input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.sortable-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sort-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.5rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    cursor: grab;
+    gap: 0.3rem;
+}
+
+.sort-item:hover {
+    border-color: var(--color-accent);
+    background: var(--color-bg-card);
+}
+
+.sort-item.editing {
+    border-color: var(--color-accent);
+    border-width: 2px;
+    box-shadow: 0 0 0 2px rgba(139, 90, 74, 0.15);
+}
+
+.sort-item .sort-content {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.sort-item .sort-content strong {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 0.95rem;
+    color: var(--color-text);
+}
+
+.sort-item .sort-content .sort-meta {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    margin-left: 0.3rem;
+}
+
+.sort-item .sort-actions {
+    display: flex;
+    gap: 0.1rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.row-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: 0.65rem;
+}
+
+.row-btn:hover {
+    background: var(--color-border);
+    color: var(--color-text);
+}
+
+.row-btn.delete-btn:hover {
+    background: var(--color-accent);
+    color: var(--color-text-inverted, #fff);
+}
+
+.sort-handle {
+    cursor: grab;
+    font-size: 0.75rem;
+    opacity: 0.4;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: var(--space-xl) var(--space-md);
+    color: var(--color-text-muted);
+}
+
+.empty-state i {
+    font-size: 1.5rem;
+    margin-bottom: var(--space-sm);
+    display: inline-block;
+}
+
+.empty-state p {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1rem;
+    font-style: italic;
+    margin: 0;
+}
+
+/* ============================================
+   NOTIFICATION
+   ============================================ */
+
+.admin-notification {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 10px 20px;
+    border-radius: 40px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    animation: slideInRight 0.3s ease;
+    pointer-events: none;
+}
+
+.admin-notification.success {
+    background: var(--color-success, #10b981);
+    color: var(--color-text-inverted, #fff);
+}
+
+.admin-notification.error {
+    background: var(--color-error, #ef4444);
+    color: var(--color-text-inverted, #fff);
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 1024px) {
+    .admin-container {
+        flex-direction: column;
+        height: auto;
+        min-height: calc(100vh - 140px);
+    }
+    
+    .admin-panel {
+        flex: none;
+        padding: var(--space-sm);
+        max-height: 50vh;
+    }
+    
+    .admin-panel-left {
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        max-height: 55vh;
+    }
+    
+    .admin-panel-right {
+        max-height: 50vh;
+    }
+    
+    .admin-form {
+        max-height: calc(55vh - 20px);
+    }
+    
+    .sortable-list {
+        max-height: calc(50vh - 100px);
+    }
+}
+
+@media (max-width: 640px) {
+    .admin-panel {
+        padding: var(--space-xs);
+        max-height: 45vh;
+    }
+    
+    .admin-panel-left {
+        max-height: 50vh;
+    }
+    
+    .admin-panel-right {
+        max-height: 45vh;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    
+    .tag-add input {
+        width: 60px;
+    }
+}
+
+/* ============================================
+   FORM ACTIONS - Full width buttons
+   ============================================ */
+
+.form-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.form-actions .filter-btn {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.form-actions .filter-btn.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-inverted, #fff);
+}
+
+.form-actions .filter-btn.active:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+.form-actions .filter-btn:not(.active):hover {
+    background: var(--color-border);
+    border-color: var(--color-accent);
+}
+
+.form-actions .filter-btn#download-btn {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+}
+
+.form-actions .filter-btn#download-btn:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-inverted, #fff);
+}
