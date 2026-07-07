@@ -116,32 +116,52 @@ function renderTable(projects, series) {
             return (a.order || 0) - (b.order || 0);
         });
 
-        // Series header row
+        // Collect all unique genres and themes from the series
+        const allGenres = new Set();
+        const allThemes = new Set();
+        groupItems.forEach(p => {
+            (p.genres || []).forEach(g => allGenres.add(g));
+            (p.themes || []).forEach(t => allThemes.add(t));
+        });
+        
+        // Build series-level pills
+        const seriesTags = [];
+        allGenres.forEach(g => seriesTags.push(g));
+        allThemes.forEach(t => seriesTags.push(t));
+        const seriesPills = seriesTags.map(tag => 
+            `<span class="pill">${escapeHtml(tag)}</span>`
+        ).join(' ');
+
+        // Series header row with tags
         html += `
-            <tr class="series-header-row">
+            <tr class="series-header-row" data-genres='${JSON.stringify(Array.from(allGenres))}' data-themes='${JSON.stringify(Array.from(allThemes))}'>
                 <td colspan="3" class="series-header">
                     <span class="series-icon">📚</span>
                     <span class="series-name">${s ? escapeHtml(s.name) : escapeHtml(seriesId)}</span>
                     <span class="series-count">(${groupItems.length} part${groupItems.length !== 1 ? 's' : ''})</span>
                     ${s && s.description ? `<span class="series-description">— ${escapeHtml(s.description)}</span>` : ''}
+                    <div class="series-pills">
+                        ${seriesPills}
+                    </div>
                 </td>
             </tr>
         `;
 
+        // Individual pieces in the series - NO tags (they're on the header)
         groupItems.forEach(project => {
             html += createRow(project, true);
             rowCount++;
         });
     });
 
-    // Render standalone
+    // Render standalone - header has NO tags
     if (standalone.length > 0) {
         html += `
-            <tr class="series-header-row">
+            <tr class="series-header-row standalone-header">
                 <td colspan="3" class="series-header standalone-header">
                     <span class="series-icon">📄</span>
                     <span class="series-name">Standalone</span>
-                    <span class="series-count">(${standalone.length} piece${standalone.length !== 1 ? 's' : ''})</span>
+                    <span class="series-count">(${standalone.length} article${standalone.length !== 1 ? 's' : ''})</span>
                 </td>
             </tr>
         `;
@@ -165,14 +185,6 @@ function renderTable(projects, series) {
 }
 
 function createRow(project, isSeries) {
-    const genres = project.genres || [];
-    const themes = project.themes || [];
-    const allTags = [...genres, ...themes];
-    
-    const pills = allTags.map(tag => 
-        `<span class="pill">${escapeHtml(tag)}</span>`
-    ).join('\n                                ');
-    
     const dateDisplay = project.dateDisplay || formatDate(project.date);
     const fullPath = project.fullPath || `writing/${project.path}${project.slug}.html`;
     
@@ -181,19 +193,41 @@ function createRow(project, isSeries) {
         ? ` <span class="part-badge">Part ${project.part}</span>`
         : '';
     
-    return `
-        <tr data-genres='${JSON.stringify(genres)}' data-themes='${JSON.stringify(themes)}' class="${isSeries ? 'series-article' : ''}">
-            <td class="toc-date">${dateDisplay}</td>
-            <td class="toc-title">
-                <a href="${fullPath}">${escapeHtml(project.title)}</a>${partBadge}
-            </td>
-            <td class="toc-tags">
-                <div class="pill-container">
-                    ${pills}
-                </div>
-            </td>
-        </tr>
-    `;
+    if (isSeries) {
+        // Series pieces: no tags displayed (tags are on the series header)
+        return `
+            <tr data-genres='[]' data-themes='[]' class="series-article">
+                <td class="toc-date">${dateDisplay}</td>
+                <td class="toc-title">
+                    <a href="${fullPath}">${escapeHtml(project.title)}</a>${partBadge}
+                </td>
+                <td class="toc-tags"></td>
+            </tr>
+        `;
+    } else {
+        // Standalone pieces: show their own tags
+        const genres = project.genres || [];
+        const themes = project.themes || [];
+        const allTags = [...genres, ...themes];
+        
+        const pills = allTags.map(tag => 
+            `<span class="pill">${escapeHtml(tag)}</span>`
+        ).join('\n                                ');
+        
+        return `
+            <tr data-genres='${JSON.stringify(genres)}' data-themes='${JSON.stringify(themes)}'>
+                <td class="toc-date">${dateDisplay}</td>
+                <td class="toc-title">
+                    <a href="${fullPath}">${escapeHtml(project.title)}</a>
+                </td>
+                <td class="toc-tags">
+                    <div class="pill-container">
+                        ${pills}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
 }
 
 function escapeHtml(text) {

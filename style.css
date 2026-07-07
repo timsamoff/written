@@ -1278,3 +1278,37 @@ footer.wf-credit a:hover, div.wf-credit a:hover {
         padding-left: 0.8rem !important;
     }
 }
+
+/* ==========================================================================
+   Series Pills on Index Page
+   ========================================================================== */
+
+.series-pills {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    margin-left: 0.5rem;
+}
+
+.series-pills .pill {
+    font-size: 0.5rem;
+    padding: 0.05rem 0.35rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .series-pills {
+        display: block;
+        margin-left: 1.5rem;
+        margin-top: 0.2rem;
+    }
+    .series-pills .pill {
+        font-size: 0.45rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .series-pills {
+        margin-left: 0.5rem;
+    }
+}

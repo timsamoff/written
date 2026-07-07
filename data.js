@@ -58,7 +58,7 @@ window.__WRITTEN_DATA__ = {
       "themes": [
         "game-design",
         "culture",
-        "post-apocalyptic"
+        "dystopia"
       ],
       "published": true,
       "series_id": "new-improved-",
@@ -81,7 +81,8 @@ window.__WRITTEN_DATA__ = {
     "publishing",
     "autobiographical",
     "game-design",
-    "culture"
+    "culture",
+    "dystopia"
   ],
   "series": [
     {
