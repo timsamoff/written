@@ -45,145 +45,150 @@
         <!-- LEFT PANEL: Form -->
         <div class="admin-panel admin-panel-left">
             <div class="admin-panel-inner">
-                <form id="piece-form" class="admin-form">
-                    <div class="form-header">
-                        <h3 id="form-title-heading">New Piece</h3>
-                        <button type="button" id="new-piece-btn" class="filter-btn new-btn" style="display:none;">
-                            ✨ New
-                        </button>
-                    </div>
-                    <input type="hidden" id="form-edit-id" value="" />
 
-                    <!-- Title -->
-                    <div class="form-group">
-                        <label for="form-title">Title <span class="required">*</span></label>
-                        <input type="text" id="form-title" required placeholder="e.g., The Story Title" />
-                    </div>
+                <!-- Scrollable form content -->
+                <div class="admin-form-scroll">
+                    <form id="piece-form" class="admin-form">
+                        <div class="form-header">
+                            <h3 id="form-title-heading">New Piece</h3>
+                            <button type="button" id="new-piece-btn" class="filter-btn new-btn" style="display:none;">
+                                ✨ New
+                            </button>
+                        </div>
+                        <input type="hidden" id="form-edit-id" value="" />
 
-                    <!-- Path + Slug -->
-                    <div class="form-row">
-                        <div class="form-group" style="flex:1;">
-                            <label for="form-path">Path <span class="required">*</span></label>
+                        <!-- Title -->
+                        <div class="form-group">
+                            <label for="form-title">Title <span class="required">*</span></label>
+                            <input type="text" id="form-title" required placeholder="e.g., The Story Title" />
+                        </div>
+
+                        <!-- Path + Slug -->
+                        <div class="form-row">
+                            <div class="form-group" style="flex:1;">
+                                <label for="form-path">Path <span class="required">*</span></label>
+                                <div class="path-input-wrapper">
+                                    <span class="path-prefix">writing/</span>
+                                    <input type="text" id="form-path" required placeholder="shorts/" />
+                                    <span class="path-suffix">/</span>
+                                </div>
+                                <small>Folder (e.g., <code>shorts/</code>)</small>
+                            </div>
+                            <div class="form-group" style="flex:0.7;">
+                                <label for="form-slug">Slug <span class="required">*</span></label>
+                                <input type="text" id="form-slug" required placeholder="title-of-piece" />
+                                <small>URL: <code id="url-preview">writing/shorts/title.html</code></small>
+                            </div>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="form-group">
+                            <label for="form-date">Date <span class="required">*</span></label>
+                            <input type="date" id="form-date" required />
+                        </div>
+
+                        <!-- Media Path -->
+                        <div class="form-group">
+                            <label for="form-media">Media Path</label>
                             <div class="path-input-wrapper">
                                 <span class="path-prefix">writing/</span>
-                                <input type="text" id="form-path" required placeholder="shorts/" />
-                                <span class="path-suffix">/</span>
+                                <input type="text" id="form-media" placeholder="shorts/story" />
                             </div>
-                            <small>Folder (e.g., <code>shorts/</code>)</small>
+                            <small>Optional: folder for images/videos</small>
                         </div>
-                        <div class="form-group" style="flex:0.7;">
-                            <label for="form-slug">Slug <span class="required">*</span></label>
-                            <input type="text" id="form-slug" required placeholder="title-of-piece" />
-                            <small>URL: <code id="url-preview">writing/shorts/title.html</code></small>
-                        </div>
-                    </div>
 
-                    <!-- Date -->
-                    <div class="form-group">
-                        <label for="form-date">Date <span class="required">*</span></label>
-                        <input type="date" id="form-date" required />
-                    </div>
-
-                    <!-- Media Path -->
-                    <div class="form-group">
-                        <label for="form-media">Media Path</label>
-                        <div class="path-input-wrapper">
-                            <span class="path-prefix">writing/</span>
-                            <input type="text" id="form-media" placeholder="shorts/story" />
-                        </div>
-                        <small>Optional: folder for images/videos</small>
-                    </div>
-
-                    <!-- Series -->
-                    <div class="form-row">
-                        <div class="form-group" style="flex:1;">
-                            <label for="form-series">Series</label>
-                            <div style="display:flex; gap:0.3rem; align-items:center;">
-                                <select id="form-series" style="flex:1;">
-                                    <option value="">None (Standalone)</option>
-                                    <!-- Series options generated by JS -->
-                                </select>
-                                <button type="button" id="add-series-inline-btn" class="filter-btn" style="font-size:0.65rem; padding:0.2rem 0.5rem; white-space:nowrap;">
-                                    + New
-                                </button>
+                        <!-- Series -->
+                        <div class="form-row">
+                            <div class="form-group" style="flex:1;">
+                                <label for="form-series">Series</label>
+                                <div style="display:flex; gap:0.3rem; align-items:center;">
+                                    <select id="form-series" style="flex:1;">
+                                        <option value="">None (Standalone)</option>
+                                        <!-- Series options generated by JS -->
+                                    </select>
+                                    <button type="button" id="add-series-inline-btn" class="filter-btn add-series-btn">
+                                        + New
+                                    </button>
+                                </div>
+                                <small>Assign to a series, or leave as standalone</small>
                             </div>
-                            <small>Assign to a series, or leave as standalone</small>
-                        </div>
-                        <div class="form-group" style="flex:0.3;">
-                            <label for="form-part">Part</label>
-                            <input type="number" id="form-part" placeholder="#" min="1" />
-                            <small>Auto-filled if series selected</small>
-                        </div>
-                    </div>
-
-                    <!-- Publish Toggle -->
-                    <div class="form-group">
-                        <label class="publish-toggle">
-                            <input type="checkbox" id="form-published" checked />
-                            <span class="custom-checkbox-box"></span>
-                            <span class="toggle-label">📢 Published (visible on index page)</span>
-                        </label>
-                        <small style="color:var(--color-text-muted); display:block; margin-top:0.2rem; padding-left:0.2rem;">
-                            Uncheck to hide this piece from the index page.
-                        </small>
-                    </div>
-
-                    <!-- Genres -->
-                    <div class="form-group">
-                        <label>Genres</label>
-                        <div class="tag-manager" id="genre-tag-manager">
-                            <div class="tag-pills" id="genre-pills">
-                                <!-- Generated by JS -->
-                            </div>
-                            <div class="tag-add">
-                                <input type="text" id="new-genre-input" placeholder="Add genre..." />
-                                <button type="button" id="add-genre-btn" class="filter-btn">+</button>
+                            <div class="form-group" style="flex:0.3;">
+                                <label for="form-part">Part</label>
+                                <input type="number" id="form-part" placeholder="#" min="1" />
+                                <small>Auto-filled if series selected</small>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Themes -->
-                    <div class="form-group">
-                        <label>Themes</label>
-                        <div class="tag-manager" id="theme-tag-manager">
-                            <div class="tag-pills" id="theme-pills">
-                                <!-- Generated by JS -->
-                            </div>
-                            <div class="tag-add">
-                                <input type="text" id="new-theme-input" placeholder="Add theme..." />
-                                <button type="button" id="add-theme-btn" class="filter-btn">+</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- HTML Upload -->
-                    <div class="form-group">
-                        <label for="form-html-file">HTML Content <span class="required">*</span></label>
-                        <div class="file-upload-wrapper">
-                            <input type="file" id="form-html-file" accept=".html,.htm" />
-                            <label for="form-html-file" class="file-upload-label">
-                                <i class="fa-solid fa-cloud-upload-alt"></i>
-                                <span id="file-upload-text">Choose HTML file...</span>
+                        <!-- Publish Toggle -->
+                        <div class="form-group">
+                            <label class="publish-toggle">
+                                <input type="checkbox" id="form-published" checked />
+                                <span class="custom-checkbox-box"></span>
+                                <span class="toggle-label">📢 Published (visible on index page)</span>
                             </label>
-                            <button type="button" id="clear-file-btn" class="clear-file-btn" title="Clear file">✕</button>
+                            <small style="color:var(--color-text-muted); display:block; margin-top:0.15rem; padding-left:0.2rem;">
+                                Uncheck to hide this piece from the index page.
+                            </small>
                         </div>
-                        <textarea id="form-html" rows="10" placeholder="Paste the article HTML here, or upload a file..."></textarea>
-                        <small>Upload an HTML file or paste the <code>&lt;article&gt;</code> block directly.</small>
-                    </div>
 
-                    <!-- Actions -->
-                    <div class="form-actions">
-                        <button type="submit" id="submit-btn" class="filter-btn active">
-                            + Add Piece
-                        </button>
-                        <button type="button" id="preview-btn" class="filter-btn preview-btn" style="display:none;">
-                            👁️ Preview
-                        </button>
-                        <button type="button" id="download-btn" class="filter-btn download-btn" style="display:none;">
-                            ⬇️ Download
-                        </button>
-                    </div>
-                </form>
+                        <!-- Genres -->
+                        <div class="form-group">
+                            <label>Genres</label>
+                            <div class="tag-manager" id="genre-tag-manager">
+                                <div class="tag-pills" id="genre-pills">
+                                    <!-- Generated by JS -->
+                                </div>
+                                <div class="tag-add">
+                                    <input type="text" id="new-genre-input" placeholder="Add genre..." />
+                                    <button type="button" id="add-genre-btn" class="filter-btn">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Themes -->
+                        <div class="form-group">
+                            <label>Themes</label>
+                            <div class="tag-manager" id="theme-tag-manager">
+                                <div class="tag-pills" id="theme-pills">
+                                    <!-- Generated by JS -->
+                                </div>
+                                <div class="tag-add">
+                                    <input type="text" id="new-theme-input" placeholder="Add theme..." />
+                                    <button type="button" id="add-theme-btn" class="filter-btn">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- HTML Upload -->
+                        <div class="form-group">
+                            <label for="form-html-file">HTML Content <span class="required">*</span></label>
+                            <div class="file-upload-wrapper">
+                                <input type="file" id="form-html-file" accept=".html,.htm" />
+                                <label for="form-html-file" class="file-upload-label">
+                                    <i class="fa-solid fa-cloud-upload-alt"></i>
+                                    <span id="file-upload-text">Choose HTML file...</span>
+                                </label>
+                                <button type="button" id="clear-file-btn" class="clear-file-btn" title="Clear file">✕</button>
+                            </div>
+                            <textarea id="form-html" rows="8" placeholder="Paste the article HTML here, or upload a file..."></textarea>
+                            <small>Upload an HTML file or paste the <code>&lt;article&gt;</code> block directly.</small>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Fixed bottom actions -->
+                <div class="form-actions">
+                    <button type="submit" id="submit-btn" class="filter-btn active">
+                        + Add Piece
+                    </button>
+                    <button type="button" id="preview-btn" class="filter-btn preview-btn" style="display:none;">
+                        👁️ Preview
+                    </button>
+                    <button type="button" id="download-btn" class="filter-btn download-btn" style="display:none;">
+                        ⬇️ Download
+                    </button>
+                </div>
+
             </div>
         </div>
 

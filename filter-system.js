@@ -12,8 +12,8 @@ function initFilterSystem() {
     const clearFiltersBtn = document.getElementById('clear-filters');
     const tbody = document.getElementById('toc-body');
     
-    // Get all rows (excluding series headers)
-    const rows = Array.from(tbody.querySelectorAll('tr:not(.series-header-row)'));
+    // Get all rows
+    const allRows = Array.from(tbody.querySelectorAll('tr'));
     
     // State
     let activeGenres = new Set(['all']);
@@ -24,10 +24,7 @@ function initFilterSystem() {
     // ============================================
     
     if (filterToggleBtn && filterSection) {
-        // Make sure it starts collapsed
         filterSection.classList.add('collapsed');
-        
-        // Remove any existing listeners by cloning
         const newToggle = filterToggleBtn.cloneNode(true);
         filterToggleBtn.parentNode.replaceChild(newToggle, filterToggleBtn);
         
@@ -50,6 +47,39 @@ function initFilterSystem() {
     // ============================================
     
     function matchesFilters(row) {
+        // Check if it's a series header row
+        if (row.classList.contains('series-header-row')) {
+            const genres = JSON.parse(row.dataset.genres || '[]');
+            const themes = JSON.parse(row.dataset.themes || '[]');
+            
+            let genreMatch = false;
+            if (activeGenres.has('all')) {
+                genreMatch = true;
+            } else {
+                for (let genre of activeGenres) {
+                    if (genres.includes(genre)) {
+                        genreMatch = true;
+                        break;
+                    }
+                }
+            }
+            
+            let themeMatch = false;
+            if (activeThemes.has('all')) {
+                themeMatch = true;
+            } else {
+                for (let theme of activeThemes) {
+                    if (themes.includes(theme)) {
+                        themeMatch = true;
+                        break;
+                    }
+                }
+            }
+            
+            return genreMatch && themeMatch;
+        }
+        
+        // Regular row
         const genres = JSON.parse(row.dataset.genres || '[]');
         const themes = JSON.parse(row.dataset.themes || '[]');
         
@@ -84,8 +114,6 @@ function initFilterSystem() {
         let visibleCount = 0;
         let totalCount = 0;
         
-        // Process all rows including series headers
-        const allRows = tbody.querySelectorAll('tr');
         allRows.forEach(row => {
             if (row.classList.contains('series-header-row')) {
                 // Check if any child rows are visible
@@ -97,7 +125,9 @@ function initFilterSystem() {
                     }
                     next = next.nextElementSibling;
                 }
-                if (childVisible) {
+                // Check if the series header itself matches filters
+                const headerMatches = matchesFilters(row);
+                if (childVisible && headerMatches) {
                     row.classList.remove('filter-hidden');
                 } else {
                     row.classList.add('filter-hidden');
@@ -115,10 +145,17 @@ function initFilterSystem() {
             }
         });
         
-        if (visibleCount === totalCount && activeGenres.has('all') && activeThemes.has('all')) {
+        // Count visible rows (non-header rows)
+        const visibleRows = allRows.filter(row => 
+            !row.classList.contains('filter-hidden') && 
+            !row.classList.contains('series-header-row')
+        );
+        const actualVisibleCount = visibleRows.length;
+        
+        if (actualVisibleCount === totalCount && activeGenres.has('all') && activeThemes.has('all')) {
             filterCountSpan.textContent = `Showing all ${totalCount} ${totalCount === 1 ? 'piece' : 'pieces'}`;
         } else {
-            filterCountSpan.textContent = `Showing ${visibleCount} of ${totalCount} ${totalCount === 1 ? 'piece' : 'pieces'}`;
+            filterCountSpan.textContent = `Showing ${actualVisibleCount} of ${totalCount} ${totalCount === 1 ? 'piece' : 'pieces'}`;
         }
         
         // Remove any existing empty state
@@ -128,7 +165,7 @@ function initFilterSystem() {
         }
         
         // Show empty state if no results
-        if (visibleCount === 0) {
+        if (actualVisibleCount === 0) {
             const emptyMessage = document.createElement('tr');
             emptyMessage.className = 'no-results';
             emptyMessage.innerHTML = `
@@ -214,7 +251,6 @@ function initFilterSystem() {
     // Attach Event Listeners to Filter Buttons
     // ============================================
     
-    // Clear existing listeners by cloning all buttons
     function rebuildButtonListeners() {
         // Genre filters
         const genreButtons = genreFilterContainer.querySelectorAll('.filter-chip');
@@ -241,7 +277,6 @@ function initFilterSystem() {
         });
     }
     
-    // Rebuild listeners
     rebuildButtonListeners();
     
     // Clear filters button

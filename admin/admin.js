@@ -96,65 +96,71 @@ function getFirstImageFromHtml(html) {
 
 function extractArticleContent(html) {
     if (!html) return '';
-    const articleMatch = html.match(/<article[^>]*class="story-content[^>]*>([\s\S]*?)<\/article>/i);
-    if (articleMatch) {
-        const nestedMatch = articleMatch[1].match(/<article[^>]*class="story-content[^>]*>([\s\S]*?)<\/article>/i);
-        if (nestedMatch) {
-            return nestedMatch[0].trim();
+    
+    // First, try to find the innermost article with story-content class
+    let content = html;
+    let previousContent = '';
+    let iterations = 0;
+    const maxIterations = 10;
+    
+    // Keep stripping outer article tags until we get the innermost content
+    while (iterations < maxIterations) {
+        const match = content.match(/<article[^>]*class="story-content[^>]*>([\s\S]*?)<\/article>/i);
+        if (!match) break;
+        
+        // Store the inner content
+        const innerContent = match[1].trim();
+        
+        // If the inner content doesn't contain another article tag with story-content, we're done
+        if (!innerContent.match(/<article[^>]*class="story-content[^>]*>/i)) {
+            content = innerContent;
+            break;
         }
-        return articleMatch[0].trim();
+        
+        // Otherwise, continue stripping
+        content = innerContent;
+        iterations++;
     }
-    const genericMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
-    if (genericMatch) {
-        const nestedMatch = genericMatch[1].match(/<article[^>]*>([\s\S]*?)<\/article>/i);
-        if (nestedMatch) {
-            return nestedMatch[0].trim();
+    
+    // If we still have an article tag, try a different approach
+    if (content.match(/<article[^>]*>/i)) {
+        const finalMatch = content.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
+        if (finalMatch) {
+            content = finalMatch[1].trim();
         }
-        return genericMatch[0].trim();
     }
-    return html;
+    
+    return content || html;
 }
 
 // ==========================================================================
-// Fix image paths in HTML content
+// Fix image paths for different contexts
 // ==========================================================================
 
-function fixImagePaths(html, project) {
+function fixImagePaths(html, project, context) {
     if (!html || !project) return html;
     
-    // Build the base media path
     let mediaPath = project.mediaPath || project.path.replace(/\/$/, '');
-    // Remove trailing slash if present
     mediaPath = mediaPath.replace(/\/$/, '');
+    const folderName = mediaPath.split('/').pop();
+    const absoluteBase = `/writing/${mediaPath}/`;
     
-    // Build the base URL path - start from root
-    const basePath = `/writing/${mediaPath}/`;
-    
-    console.log('🔧 fixImagePaths:', { mediaPath, basePath });
-    
-    // Replace relative image paths (not starting with http://, https://, /, or data:)
     return html.replace(/<img([^>]+)src=["']([^"']+)["']/gi, function(match, attrs, src) {
-        // Skip if already absolute
-        if (src.startsWith('http://') || src.startsWith('https://') || 
-            src.startsWith('/') || src.startsWith('data:')) {
+        if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('data:')) {
             return match;
         }
         
-        // Skip if it's already a full path with writing/
-        if (src.includes('writing/')) {
-            return match;
+        const filename = src.split('/').pop();
+        
+        if (context === 'save') {
+            // Use relative path: folderName/filename (e.g., ni/ni_001.png)
+            const correctedSrc = `${folderName}/${filename}`;
+            return `<img${attrs}src="${correctedSrc}"`;
+        } else {
+            // Use absolute path: /writing/mediaPath/filename
+            const correctedSrc = `${absoluteBase}${filename}`;
+            return `<img${attrs}src="${correctedSrc}"`;
         }
-        
-        // Remove leading ./ or ../
-        const cleanSrc = src.replace(/^\.\.?\//, '');
-        
-        // Build the corrected path
-        const correctedSrc = `${basePath}${cleanSrc}`;
-        
-        console.log('🔄 Image path fixed:', src, '→', correctedSrc);
-        
-        // Replace the src attribute
-        return `<img${attrs}src="${correctedSrc}"`;
     });
 }
 
@@ -176,8 +182,7 @@ async function loadContentFromFile(project) {
         if (!response.ok) return '';
         const html = await response.text();
         const content = extractArticleContent(html);
-        // Fix image paths in the loaded content
-        const fixedContent = fixImagePaths(content, project);
+        const fixedContent = fixImagePaths(content, project, 'preview');
         contentCache[cacheKey] = fixedContent;
         return fixedContent;
     } catch (err) {
@@ -228,7 +233,6 @@ fileInput.addEventListener('change', function(e) {
         fileUploadText.textContent = file.name;
         fileUploadText.parentElement.classList.add('has-file');
         clearFileBtn.classList.add('visible');
-        // Remove placeholder styling
         formHtml.classList.remove('placeholder-warning');
         showNotification(`Loaded: ${file.name}`, 'success');
         if (isEditing) debouncedAutoSave();
@@ -403,14 +407,11 @@ function saveSeries() {
     renderSeriesChips();
     renderList();
     
-    // Auto-select the series if it was a new series created from the dropdown
     if (seriesAutoSelect.value === 'true' && isEditing && editId) {
         formSeries.value = id;
-        // Auto-fill part number
         const parts = projects.filter(p => p.series_id === id && p.id !== editId);
         const nextPart = parts.length + 1;
         formPart.value = nextPart;
-        // Auto-save the piece with the new series
         autoSave();
         showNotification(`Series "${name}" created and assigned to current piece`, 'success');
     } else {
@@ -469,7 +470,6 @@ seriesDeleteModal.addEventListener('click', (e) => {
     if (e.target === seriesDeleteModal) seriesDeleteModal.style.display = 'none';
 });
 
-// Series dropdown change - auto-save
 formSeries.addEventListener('change', function() {
     if (this.value) {
         const parts = projects.filter(p => p.series_id === this.value && p.id !== editId);
@@ -478,7 +478,6 @@ formSeries.addEventListener('change', function() {
     } else {
         formPart.value = '';
     }
-    // Auto-save if editing
     if (isEditing && editId) {
         debouncedAutoSave();
     }
@@ -689,16 +688,14 @@ function loadProject(id) {
     
     isEditing = true;
     editId = id;
-    formHeading.textContent = `Editing: ${project.title}`;
+    formHeading.textContent = `Editing... ${project.title}`;
     formEditId.value = id;
     
-    // Load content from file
     loadContentFromFile(project).then(content => {
         if (content) {
             formHtml.value = content;
             formHtml.classList.remove('placeholder-warning');
         } else {
-            // Show hint in textarea (as placeholder-like text, not actual value)
             formHtml.value = '';
             formHtml.placeholder = `⚠️ No HTML file found at writing/${project.path}${project.slug}.html\n\nTo add content:\n1. Upload an HTML file using the "Choose HTML file" button\n2. Or paste the <article> content directly into this textarea\n3. Click "Add Piece" (or "Update") to save both metadata and HTML`;
             formHtml.classList.add('placeholder-warning');
@@ -1142,9 +1139,9 @@ adminSearchClear.addEventListener('click', () => {
 // Build Assembled HTML with image path fixing
 // ==========================================================================
 
-function buildAssembledHtml(project, content) {
-    // Fix image paths in the content
-    const fixedContent = fixImagePaths(content, project);
+function buildAssembledHtml(project, content, context) {
+    // content should already be extracted - just fix image paths
+    const fixedContent = fixImagePaths(content, project, context || 'preview');
     
     return fetch('http://localhost:3000/templates/template.html')
         .then(response => {
@@ -1216,8 +1213,9 @@ function buildAssembledHtml(project, content) {
                 } else if (imgPath.startsWith('/')) {
                     ogImage = `https://samoff.com${imgPath}`;
                 } else {
-                    // Image path should already be fixed, but just in case
-                    ogImage = `https://samoff.com${imgPath}`;
+                    let mediaPath = project.mediaPath || project.path.replace(/\/$/, '');
+                    mediaPath = mediaPath.replace(/\/$/, '');
+                    ogImage = `https://samoff.com/written/writing/${mediaPath}/${imgPath.split('/').pop()}`;
                 }
             }
             
@@ -1246,30 +1244,23 @@ function buildAssembledHtml(project, content) {
             template = template.replace(/<!-- SERIES_NAV: Generated by admin -->/, seriesNavHtml);
             template = template.replace(/<div class="pill-container">[\s\S]*?<\/div>/, `<div class="pill-container">\n                        ${allPills}\n                    </div>`);
             
-            let cleanContent = fixedContent;
-            const nestedArticle = cleanContent.match(/<article[^>]*class="story-content[^>]*>([\s\S]*?)<\/article>/i);
-            if (nestedArticle) {
-                const innerArticle = nestedArticle[1].match(/<article[^>]*>([\s\S]*?)<\/article>/i);
-                if (innerArticle) {
-                    cleanContent = innerArticle[0].trim();
-                } else {
-                    cleanContent = nestedArticle[0].trim();
-                }
-            }
-            
+            // Replace article content - insert the cleaned content directly without adding extra article tags
+            // Look for the article tag in the template
             const articleMatch = template.match(/<article class="story-content ls-2">[\s\S]*?<\/article>/);
             if (articleMatch) {
                 const articleTag = articleMatch[0];
-                const newArticle = `<article class="story-content ls-2">\n${cleanContent}\n</article>`;
+                // IMPORTANT: fixedContent is already the inner content, NOT wrapped in article tags
+                const newArticle = `<article class="story-content ls-2">\n${fixedContent}\n</article>`;
                 template = template.replace(articleTag, newArticle);
             } else {
+                // Fallback: try to find any article tag
                 const genericArticle = template.match(/<article[^>]*>[\s\S]*?<\/article>/);
                 if (genericArticle) {
                     const articleTag = genericArticle[0];
-                    const newArticle = `<article class="story-content ls-2">\n${cleanContent}\n</article>`;
+                    const newArticle = `<article class="story-content ls-2">\n${fixedContent}\n</article>`;
                     template = template.replace(articleTag, newArticle);
                 } else {
-                    template = template.replace(/<!-- REPLACED BY ADMIN -->/g, cleanContent);
+                    template = template.replace(/<!-- REPLACED BY ADMIN -->/g, fixedContent);
                 }
             }
             
@@ -1307,7 +1298,6 @@ form.addEventListener('submit', async (e) => {
         return;
     }
     
-    // Check if content is empty
     if (!html) {
         showNotification('Please add HTML content before saving', 'error');
         return;
@@ -1337,9 +1327,8 @@ form.addEventListener('submit', async (e) => {
     
     try {
         const content = html;
-        // Fix image paths before saving to HTML file
-        const fixedContent = fixImagePaths(content, data);
-        const assembledHtml = await buildAssembledHtml(data, fixedContent);
+        const fixedContent = fixImagePaths(content, data, 'save');
+        const assembledHtml = await buildAssembledHtml(data, fixedContent, 'save');
         
         const saved = await saveHtmlToServer(fullPath, assembledHtml);
         if (!saved) {
@@ -1348,7 +1337,8 @@ form.addEventListener('submit', async (e) => {
         }
         
         const cacheKey = `${cleanPath}${slug}`;
-        contentCache[cacheKey] = fixedContent;
+        const previewContent = fixImagePaths(content, data, 'preview');
+        contentCache[cacheKey] = previewContent;
         
         if (isEditing && editId) {
             const index = projects.findIndex(p => p.id === editId);
@@ -1381,7 +1371,7 @@ form.addEventListener('submit', async (e) => {
 });
 
 // ==========================================================================
-// Preview Button - Opens in new tab with fixed image paths
+// Preview Button - Opens in new tab with absolute image paths
 // ==========================================================================
 
 previewBtn.addEventListener('click', async () => {
@@ -1398,7 +1388,6 @@ previewBtn.addEventListener('click', async () => {
     
     let content = await getContentForAction(project);
     
-    // Check if form has content (user might have added it)
     const formContent = formHtml.value;
     if (formContent && !formContent.includes('⚠️ No HTML file found')) {
         content = formContent;
@@ -1413,16 +1402,8 @@ previewBtn.addEventListener('click', async () => {
         const formData = getFormData();
         const mergedProject = { ...project, ...formData };
         
-        // DEBUG: Log the project data
-        console.log('📋 Preview Project:', mergedProject);
-        console.log('📋 Media Path:', mergedProject.mediaPath);
+        const assembledHtml = await buildAssembledHtml(mergedProject, content, 'preview');
         
-        // Fix image paths
-        const fixedContent = fixImagePaths(content, mergedProject);
-        
-        const assembledHtml = await buildAssembledHtml(mergedProject, fixedContent);
-        
-        // Open in new tab
         const newWindow = window.open('', '_blank');
         if (newWindow) {
             newWindow.document.write(assembledHtml);
@@ -1438,12 +1419,12 @@ previewBtn.addEventListener('click', async () => {
 });
 
 // ==========================================================================
-// Download HTML
+// Download Button - Saves directly to server (no dialog)
 // ==========================================================================
 
 downloadBtn.addEventListener('click', async () => {
     if (!isEditing || !editId) {
-        showNotification('No piece loaded to download', 'error');
+        showNotification('No piece loaded to save', 'error');
         return;
     }
     
@@ -1455,7 +1436,6 @@ downloadBtn.addEventListener('click', async () => {
     
     let content = await getContentForAction(project);
     
-    // Check if form has content (user might have added it)
     const formContent = formHtml.value;
     if (formContent && !formContent.includes('⚠️ No HTML file found')) {
         content = formContent;
@@ -1469,44 +1449,24 @@ downloadBtn.addEventListener('click', async () => {
     try {
         const formData = getFormData();
         const mergedProject = { ...project, ...formData };
-        // Fix image paths before download
-        const fixedContent = fixImagePaths(content, mergedProject);
-        const assembledHtml = await buildAssembledHtml(mergedProject, fixedContent);
         
-        if ('showSaveFilePicker' in window) {
-            try {
-                const fileHandle = await window.showSaveFilePicker({
-                    suggestedName: `${project.slug || 'untitled'}.html`,
-                    types: [{
-                        description: 'HTML File',
-                        accept: { 'text/html': ['.html', '.htm'] }
-                    }]
-                });
-                const writable = await fileHandle.createWritable();
-                await writable.write(assembledHtml);
-                await writable.close();
-                showNotification(`Saved: ${project.slug || 'untitled'}.html`, 'success');
-                return;
-            } catch (err) {
-                if (err.name === 'AbortError') return;
-                console.warn('File System API failed, falling back to download:', err);
-            }
+        const fullPath = `writing/${mergedProject.path}${mergedProject.slug}.html`;
+        const assembledHtml = await buildAssembledHtml(mergedProject, content, 'save');
+        
+        const saved = await saveHtmlToServer(fullPath, assembledHtml);
+        
+        if (saved) {
+            const cacheKey = `${mergedProject.path}${mergedProject.slug}`;
+            const previewContent = fixImagePaths(content, mergedProject, 'preview');
+            contentCache[cacheKey] = previewContent;
+            showNotification(`✅ Saved: ${fullPath}`, 'success');
+        } else {
+            showNotification('Failed to save HTML file', 'error');
         }
         
-        const blob = new Blob([assembledHtml], { type: 'text/html;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${project.slug || 'untitled'}.html`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => { URL.revokeObjectURL(url); }, 100);
-        showNotification(`Downloaded: ${project.slug || 'untitled'}.html`, 'success');
-        
     } catch (err) {
-        console.error('Download error:', err);
-        showNotification('Error downloading: ' + err.message, 'error');
+        console.error('Save error:', err);
+        showNotification('Error saving: ' + err.message, 'error');
     }
 });
 
