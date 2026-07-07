@@ -14,24 +14,6 @@ console.log('========================================');
 console.log('📍 Data file:', DATA_FILE);
 console.log('');
 
-// Ensure data directory exists
-const dataDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// Initialize projects.json if it doesn't exist
-if (!fs.existsSync(DATA_FILE)) {
-    const defaultData = {
-        projects: [],
-        genres: ['sci-fi', 'ya', 'article', 'poetry', 'essay', 'guide'],
-        themes: ['technology', 'writing', 'post-apocalyptic', 'publishing', 'autobiographical'],
-        series: []
-    };
-    fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
-    console.log('✅ Created default projects.json');
-}
-
 // Create the server
 const server = http.createServer((req, res) => {
     const url = req.url;

@@ -1,85 +1,58 @@
 /**
  * Written by Tim Samoff - Filter System
- * Handles multi-category filtering for genres and themes
+ * Handles multi-category filtering for genres and themes on the index page
  */
 
-document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
-    const tbody = document.getElementById('toc-body');
+function initFilterSystem() {
+    const filterToggleBtn = document.getElementById('filter-toggle');
+    const filterSection = document.getElementById('filter-section');
     const genreFilterContainer = document.getElementById('genre-filters');
     const themeFilterContainer = document.getElementById('theme-filters');
     const filterCountSpan = document.getElementById('filter-count');
     const clearFiltersBtn = document.getElementById('clear-filters');
+    const tbody = document.getElementById('toc-body');
     
-    // Collapsible section elements
-    const filterToggleBtn = document.getElementById('filter-toggle');
-    const filterSection = document.getElementById('filter-section');
+    // Get all rows
+    const rows = Array.from(tbody.querySelectorAll('tr'));
     
     // State
     let activeGenres = new Set(['all']);
-    let activethemes = new Set(['all']);
+    let activeThemes = new Set(['all']);
     
-    // Get all rows
-    const rows = Array.from(document.querySelectorAll('#toc-body tr'));
+    // ============================================
+    // Collapsible Section
+    // ============================================
     
-    /**
-     * Sort filter buttons alphabetically, keeping "All" first
-     */
-    function sortFilterButtons(container) {
-        const buttons = Array.from(container.querySelectorAll('.filter-chip'));
-        
-        // Separate "All" button from others
-        const allButton = buttons.find(btn => btn.dataset.filter === 'all');
-        const otherButtons = buttons.filter(btn => btn.dataset.filter !== 'all');
-        
-        // Sort other buttons alphabetically by their text content
-        otherButtons.sort((a, b) => {
-            const textA = a.textContent.trim().toLowerCase();
-            const textB = b.textContent.trim().toLowerCase();
-            return textA.localeCompare(textB);
-        });
-        
-        // Reorder buttons in DOM: "All" first, then sorted others
-        container.innerHTML = '';
-        if (allButton) {
-            container.appendChild(allButton);
-        }
-        otherButtons.forEach(btn => {
-            container.appendChild(btn);
-        });
-    }
-    
-    /**
-     * Initialize collapsible filter section
-     */
-    function initCollapsible() {
-        if (!filterToggleBtn || !filterSection) return;
-        
-        // Set collapsed by default
+    if (filterToggleBtn && filterSection) {
+        // Make sure it starts collapsed
         filterSection.classList.add('collapsed');
         
-        // Toggle on click
-        filterToggleBtn.addEventListener('click', () => {
+        // Remove any existing listeners by cloning
+        const newToggle = filterToggleBtn.cloneNode(true);
+        filterToggleBtn.parentNode.replaceChild(newToggle, filterToggleBtn);
+        
+        newToggle.addEventListener('click', function(e) {
+            e.preventDefault();
             const isCollapsed = filterSection.classList.contains('collapsed');
             
             if (isCollapsed) {
                 filterSection.classList.remove('collapsed');
-                filterToggleBtn.classList.add('active');
+                newToggle.classList.add('active');
             } else {
                 filterSection.classList.add('collapsed');
-                filterToggleBtn.classList.remove('active');
+                newToggle.classList.remove('active');
             }
         });
     }
     
-    /**
-     * Check if a row matches current filters
-     */
+    // ============================================
+    // Filter Functions
+    // ============================================
+    
     function matchesFilters(row) {
         const genres = JSON.parse(row.dataset.genres || '[]');
         const themes = JSON.parse(row.dataset.themes || '[]');
         
-        // Genre matching
         let genreMatch = false;
         if (activeGenres.has('all')) {
             genreMatch = true;
@@ -92,12 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // theme matching  
         let themeMatch = false;
-        if (activethemes.has('all')) {
+        if (activeThemes.has('all')) {
             themeMatch = true;
         } else {
-            for (let theme of activethemes) {
+            for (let theme of activeThemes) {
                 if (themes.includes(theme)) {
                     themeMatch = true;
                     break;
@@ -108,9 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return genreMatch && themeMatch;
     }
     
-    /**
-     * Update the UI by showing/hiding rows
-     */
     function updateDisplay() {
         let visibleCount = 0;
         
@@ -124,9 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Update filter count display
         const totalCount = rows.length;
-        if (visibleCount === totalCount && activeGenres.has('all') && activethemes.has('all')) {
+        if (visibleCount === totalCount && activeGenres.has('all') && activeThemes.has('all')) {
             filterCountSpan.textContent = `Showing all ${totalCount} ${totalCount === 1 ? 'piece' : 'pieces'}`;
         } else {
             filterCountSpan.textContent = `Showing ${visibleCount} of ${totalCount} ${totalCount === 1 ? 'piece' : 'pieces'}`;
@@ -152,21 +120,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    /**
-     * Handle filter chip clicks
-     */
     function handleFilterClick(button, type, value) {
         const isActive = button.classList.contains('active');
-        const activeSet = type === 'genre' ? activeGenres : activethemes;
+        const activeSet = type === 'genre' ? activeGenres : activeThemes;
         const container = type === 'genre' ? genreFilterContainer : themeFilterContainer;
         
-        // If clicking "All" button
         if (value === 'all') {
-            // Clear all other filters of this type
             activeSet.clear();
             activeSet.add('all');
             
-            // Update UI for this filter group
             const buttons = container.querySelectorAll('.filter-chip');
             buttons.forEach(btn => {
                 if (btn.dataset.filter === 'all') {
@@ -175,19 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     btn.classList.remove('active');
                 }
             });
-        } 
-        // If clicking a specific filter
-        else {
-            // Remove "all" from this filter type if present
+        } else {
             if (activeSet.has('all')) {
                 activeSet.delete('all');
-                
-                // Update the "All" button UI
                 const allButton = container.querySelector('.filter-chip[data-filter="all"]');
                 if (allButton) allButton.classList.remove('active');
             }
             
-            // Toggle this filter
             if (isActive) {
                 activeSet.delete(value);
                 button.classList.remove('active');
@@ -196,7 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.classList.add('active');
             }
             
-            // If no filters remain, default to "all"
             if (activeSet.size === 0) {
                 activeSet.add('all');
                 const allButton = container.querySelector('.filter-chip[data-filter="all"]');
@@ -204,21 +159,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         
-        // Update display
         updateDisplay();
     }
     
-    /**
-     * Clear all filters
-     */
     function clearAllFilters() {
-        // Reset state
         activeGenres.clear();
         activeGenres.add('all');
-        activethemes.clear();
-        activethemes.add('all');
+        activeThemes.clear();
+        activeThemes.add('all');
         
-        // Reset UI for genre filters
         const genreButtons = genreFilterContainer.querySelectorAll('.filter-chip');
         genreButtons.forEach(btn => {
             if (btn.dataset.filter === 'all') {
@@ -228,7 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Reset UI for theme filters
         const themeButtons = themeFilterContainer.querySelectorAll('.filter-chip');
         themeButtons.forEach(btn => {
             if (btn.dataset.filter === 'all') {
@@ -238,48 +186,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // Update display
         updateDisplay();
     }
     
-    /**
-     * Initialize filter event listeners
-     */
-    function initFilters() {
-        // Sort filter buttons alphabetically (keeping "All" first)
-        sortFilterButtons(genreFilterContainer);
-        sortFilterButtons(themeFilterContainer);
-        
-        // Initialize collapsible section
-        initCollapsible();
-        
-        // Genre filter listeners
-        const genreButtons = genreFilterContainer.querySelectorAll('.filter-chip');
-        genreButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const filterValue = btn.dataset.filter;
-                handleFilterClick(btn, 'genre', filterValue);
-            });
+    // ============================================
+    // Attach Event Listeners to Filter Buttons
+    // ============================================
+    
+    // Genre filters - rebuild with fresh listeners
+    const genreButtons = genreFilterContainer.querySelectorAll('.filter-chip');
+    genreButtons.forEach(btn => {
+        const clone = btn.cloneNode(true);
+        btn.parentNode.replaceChild(clone, btn);
+        clone.addEventListener('click', function() {
+            handleFilterClick(this, 'genre', this.dataset.filter);
         });
-        
-        // theme filter listeners
-        const themeButtons = themeFilterContainer.querySelectorAll('.filter-chip');
-        themeButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const filterValue = btn.dataset.filter;
-                handleFilterClick(btn, 'theme', filterValue);
-            });
+    });
+    
+    // Theme filters - rebuild with fresh listeners
+    const themeButtons = themeFilterContainer.querySelectorAll('.filter-chip');
+    themeButtons.forEach(btn => {
+        const clone = btn.cloneNode(true);
+        btn.parentNode.replaceChild(clone, btn);
+        clone.addEventListener('click', function() {
+            handleFilterClick(this, 'theme', this.dataset.filter);
         });
-        
-        // Clear filters button
-        if (clearFiltersBtn) {
-            clearFiltersBtn.addEventListener('click', clearAllFilters);
-        }
-        
-        // Initial display update
-        updateDisplay();
+    });
+    
+    // Clear filters button
+    if (clearFiltersBtn) {
+        const clearClone = clearFiltersBtn.cloneNode(true);
+        clearFiltersBtn.parentNode.replaceChild(clearClone, clearFiltersBtn);
+        clearClone.addEventListener('click', clearAllFilters);
     }
     
-    // Start the filter system
-    initFilters();
-});
+    // Initial display update
+    updateDisplay();
+}

@@ -1,6 +1,5 @@
 // ==========================================================================
-// Written Admin - Complete Admin Logic with Series Support
-// Content is stored in HTML files, not in JSON
+// Written Admin - Complete Admin Logic
 // ==========================================================================
 
 // State
@@ -14,13 +13,6 @@ let editId = null;
 let currentSearchTerm = '';
 let autoSaveTimeout = null;
 
-// Series state
-let series = [];
-let selectedSeriesFilter = null;
-
-// Content cache (memory only - not saved to JSON)
-let contentCache = {};
-
 // DOM Elements
 const form = document.getElementById('piece-form');
 const formHeading = document.getElementById('form-title-heading');
@@ -31,8 +23,6 @@ const formSlug = document.getElementById('form-slug');
 const formDate = document.getElementById('form-date');
 const formMedia = document.getElementById('form-media');
 const formHtml = document.getElementById('form-html');
-const formSeries = document.getElementById('form-series');
-const formPart = document.getElementById('form-part');
 const submitBtn = document.getElementById('submit-btn');
 const downloadBtn = document.getElementById('download-btn');
 const newPieceBtn = document.getElementById('new-piece-btn');
@@ -52,27 +42,6 @@ const themeTagManager = document.getElementById('theme-tag-manager');
 const newThemeInput = document.getElementById('new-theme-input');
 const addThemeBtn = document.getElementById('add-theme-btn');
 
-// Series elements
-const seriesList = document.getElementById('series-list');
-const addSeriesBtn = document.getElementById('add-series-btn');
-
-// Series Modal
-const seriesModal = document.getElementById('series-modal');
-const seriesModalTitle = document.getElementById('series-modal-title');
-const seriesName = document.getElementById('series-name');
-const seriesDescription = document.getElementById('series-description');
-const seriesEditId = document.getElementById('series-edit-id');
-const seriesModalSave = document.getElementById('series-modal-save');
-const seriesModalCancel = document.getElementById('series-modal-cancel');
-const seriesModalClose = document.getElementById('series-modal-close');
-
-// Series Delete Modal
-const seriesDeleteModal = document.getElementById('series-delete-modal');
-const seriesDeleteMessage = document.getElementById('series-delete-message');
-const seriesDeleteConfirm = document.getElementById('series-delete-confirm');
-const seriesDeleteCancel = document.getElementById('series-delete-cancel');
-const seriesDeleteClose = document.getElementById('series-delete-close');
-
 // ==========================================================================
 // Helper Functions
 // ==========================================================================
@@ -86,6 +55,7 @@ function escapeHtml(text) {
 
 function getFirstImageFromHtml(html) {
     if (!html) return null;
+    // Look for img tags with src
     const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
     if (imgMatch && imgMatch[1]) {
         return imgMatch[1];
@@ -95,44 +65,48 @@ function getFirstImageFromHtml(html) {
 
 function extractArticleContent(html) {
     if (!html) return '';
+    
+    // Try to find the article content - look for the first article tag with story-content class
     const articleMatch = html.match(/<article[^>]*class="story-content[^>]*>([\s\S]*?)<\/article>/i);
     if (articleMatch) {
+        // Check if there's a nested article tag inside
         const nestedMatch = articleMatch[1].match(/<article[^>]*class="story-content[^>]*>([\s\S]*?)<\/article>/i);
         if (nestedMatch) {
+            // Return the nested article content (the actual content)
             return nestedMatch[0].trim();
         }
         return articleMatch[0].trim();
     }
+    
+    // Fallback: try to find any article tag
     const genericMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
     if (genericMatch) {
+        // Check for nested article
         const nestedMatch = genericMatch[1].match(/<article[^>]*>([\s\S]*?)<\/article>/i);
         if (nestedMatch) {
             return nestedMatch[0].trim();
         }
         return genericMatch[0].trim();
     }
+    
     return html;
 }
 
 // ==========================================================================
-// Load content from existing HTML file (cached in memory)
+// Load content from existing HTML file
 // ==========================================================================
 
 async function loadContentFromFile(project) {
     if (!project || !project.path || !project.slug) return '';
     
-    const cacheKey = `${project.path}${project.slug}`;
-    if (contentCache[cacheKey]) {
-        return contentCache[cacheKey];
-    }
-    
     const filePath = `http://localhost:3000/writing/${project.path}${project.slug}.html`;
+    
     try {
         const response = await fetch(filePath);
         if (!response.ok) return '';
+        
         const html = await response.text();
         const content = extractArticleContent(html);
-        contentCache[cacheKey] = content;
         return content;
     } catch (err) {
         console.warn(`Could not load content for ${project.slug}:`, err);
@@ -151,15 +125,18 @@ const clearFileBtn = document.getElementById('clear-file-btn');
 fileInput.addEventListener('change', function(e) {
     const file = this.files[0];
     if (!file) return;
+    
     const reader = new FileReader();
     reader.onload = function(event) {
         const content = event.target.result;
         const extracted = extractArticleContent(content);
         formHtml.value = extracted || content;
+        
         fileUploadText.textContent = file.name;
         fileUploadText.parentElement.classList.add('has-file');
         clearFileBtn.classList.add('visible');
         showNotification(`Loaded: ${file.name}`, 'success');
+        
         if (isEditing) debouncedAutoSave();
     };
     reader.readAsText(file);
@@ -197,208 +174,15 @@ formPath.addEventListener('input', updateUrlPreview);
 formSlug.addEventListener('input', updateUrlPreview);
 
 // ==========================================================================
-// Series Management
-// ==========================================================================
-
-function renderSeriesDropdown() {
-    const currentValue = formSeries.value;
-    formSeries.innerHTML = '<option value="">None (Standalone)</option>';
-    const sorted = [...series].sort((a, b) => a.name.localeCompare(b.name));
-    sorted.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.id;
-        const count = projects.filter(p => p.series_id === s.id).length;
-        opt.textContent = `${s.name} (${count} part${count !== 1 ? 's' : ''})`;
-        formSeries.appendChild(opt);
-    });
-    if (currentValue && series.some(s => s.id === currentValue)) {
-        formSeries.value = currentValue;
-    }
-}
-
-function renderSeriesChips() {
-    seriesList.innerHTML = '';
-    const sorted = [...series].sort((a, b) => a.name.localeCompare(b.name));
-    sorted.forEach(s => {
-        const count = projects.filter(p => p.series_id === s.id).length;
-        const chip = document.createElement('span');
-        chip.className = 'series-chip';
-        if (selectedSeriesFilter === s.id) chip.classList.add('active');
-        
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = s.name;
-        chip.appendChild(nameSpan);
-        
-        const countSpan = document.createElement('span');
-        countSpan.className = 'series-chip-count';
-        countSpan.textContent = count;
-        chip.appendChild(countSpan);
-        
-        const editBtn = document.createElement('button');
-        editBtn.className = 'series-chip-delete';
-        editBtn.textContent = '✎';
-        editBtn.title = 'Edit series';
-        editBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openSeriesModal(s.id);
-        });
-        chip.appendChild(editBtn);
-        
-        const delBtn = document.createElement('button');
-        delBtn.className = 'series-chip-delete';
-        delBtn.textContent = '×';
-        delBtn.title = 'Delete series';
-        delBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            confirmDeleteSeries(s.id);
-        });
-        chip.appendChild(delBtn);
-        
-        chip.addEventListener('click', () => {
-            if (selectedSeriesFilter === s.id) {
-                selectedSeriesFilter = null;
-            } else {
-                selectedSeriesFilter = s.id;
-            }
-            renderSeriesChips();
-            renderList();
-        });
-        
-        seriesList.appendChild(chip);
-    });
-}
-
-function openSeriesModal(id) {
-    if (id) {
-        const s = series.find(s => s.id === id);
-        if (!s) return;
-        seriesModalTitle.textContent = 'Edit Series';
-        seriesName.value = s.name;
-        seriesDescription.value = s.description || '';
-        seriesEditId.value = id;
-    } else {
-        seriesModalTitle.textContent = 'New Series';
-        seriesName.value = '';
-        seriesDescription.value = '';
-        seriesEditId.value = '';
-    }
-    seriesModal.style.display = 'flex';
-    setTimeout(() => seriesName.focus(), 100);
-}
-
-function closeSeriesModal() {
-    seriesModal.style.display = 'none';
-}
-
-function saveSeries() {
-    const name = seriesName.value.trim();
-    if (!name) {
-        showNotification('Series name is required', 'error');
-        return;
-    }
-    const id = seriesEditId.value || name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const existing = series.find(s => s.id === id && s.id !== seriesEditId.value);
-    if (existing) {
-        showNotification('A series with this name already exists', 'error');
-        return;
-    }
-    const data = {
-        id: id,
-        name: name,
-        description: seriesDescription.value.trim() || ''
-    };
-    if (seriesEditId.value) {
-        const idx = series.findIndex(s => s.id === seriesEditId.value);
-        if (idx !== -1) {
-            if (seriesEditId.value !== id) {
-                projects.forEach(p => {
-                    if (p.series_id === seriesEditId.value) {
-                        p.series_id = id;
-                    }
-                });
-            }
-            series[idx] = data;
-        }
-    } else {
-        series.push(data);
-    }
-    closeSeriesModal();
-    saveToServer();
-    renderSeriesDropdown();
-    renderSeriesChips();
-    renderList();
-    showNotification(`Series "${name}" saved`, 'success');
-}
-
-function confirmDeleteSeries(id) {
-    const s = series.find(s => s.id === id);
-    if (!s) return;
-    const count = projects.filter(p => p.series_id === id).length;
-    seriesDeleteMessage.textContent = `Delete "${s.name}"? ${count} article${count !== 1 ? 's are' : ' is'} in this series.`;
-    seriesDeleteModal.style.display = 'flex';
-    seriesDeleteConfirm.dataset.id = id;
-}
-
-function deleteSeries(id) {
-    projects.forEach(p => {
-        if (p.series_id === id) {
-            p.series_id = '';
-            p.part = undefined;
-        }
-    });
-    series = series.filter(s => s.id !== id);
-    if (selectedSeriesFilter === id) selectedSeriesFilter = null;
-    seriesDeleteModal.style.display = 'none';
-    saveToServer();
-    renderSeriesDropdown();
-    renderSeriesChips();
-    renderList();
-    showNotification('Series deleted', 'success');
-}
-
-// Series event listeners
-addSeriesBtn.addEventListener('click', () => openSeriesModal(null));
-seriesModalSave.addEventListener('click', saveSeries);
-seriesModalCancel.addEventListener('click', closeSeriesModal);
-seriesModalClose.addEventListener('click', closeSeriesModal);
-seriesModal.addEventListener('click', (e) => {
-    if (e.target === seriesModal) closeSeriesModal();
-});
-seriesName.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') saveSeries();
-});
-
-seriesDeleteConfirm.addEventListener('click', () => {
-    deleteSeries(seriesDeleteConfirm.dataset.id);
-});
-seriesDeleteCancel.addEventListener('click', () => {
-    seriesDeleteModal.style.display = 'none';
-});
-seriesDeleteClose.addEventListener('click', () => {
-    seriesDeleteModal.style.display = 'none';
-});
-seriesDeleteModal.addEventListener('click', (e) => {
-    if (e.target === seriesDeleteModal) seriesDeleteModal.style.display = 'none';
-});
-
-formSeries.addEventListener('change', function() {
-    if (this.value) {
-        const parts = projects.filter(p => p.series_id === this.value && p.id !== editId);
-        const nextPart = parts.length + 1;
-        formPart.value = nextPart;
-    } else {
-        formPart.value = '';
-    }
-});
-
-// ==========================================================================
 // Simplified Tag Manager
 // ==========================================================================
 
 function renderGenreTags() {
     const sorted = [...allGenres].sort();
     const pillsContainer = document.getElementById('genre-pills');
+    
     pillsContainer.innerHTML = '';
+    
     if (sorted.length === 0) {
         const empty = document.createElement('span');
         empty.style.cssText = 'color:var(--color-text-muted);font-size:0.75rem;padding:0.2rem 0.4rem;font-style:italic;';
@@ -408,10 +192,14 @@ function renderGenreTags() {
         sorted.forEach(genre => {
             const chip = document.createElement('span');
             chip.className = 'tag-chip';
-            if (selectedGenres.includes(genre)) chip.classList.add('active');
+            if (selectedGenres.includes(genre)) {
+                chip.classList.add('active');
+            }
+            
             const nameSpan = document.createElement('span');
             nameSpan.textContent = genre;
             chip.appendChild(nameSpan);
+            
             if (selectedGenres.includes(genre)) {
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-tag';
@@ -424,6 +212,7 @@ function renderGenreTags() {
                 });
                 chip.appendChild(removeBtn);
             }
+            
             chip.addEventListener('click', () => {
                 if (selectedGenres.includes(genre)) {
                     selectedGenres = selectedGenres.filter(g => g !== genre);
@@ -433,6 +222,7 @@ function renderGenreTags() {
                 renderGenreTags();
                 if (isEditing) debouncedAutoSave();
             });
+            
             pillsContainer.appendChild(chip);
         });
     }
@@ -441,7 +231,9 @@ function renderGenreTags() {
 function renderThemeTags() {
     const sorted = [...allThemes].sort();
     const pillsContainer = document.getElementById('theme-pills');
+    
     pillsContainer.innerHTML = '';
+    
     if (sorted.length === 0) {
         const empty = document.createElement('span');
         empty.style.cssText = 'color:var(--color-text-muted);font-size:0.75rem;padding:0.2rem 0.4rem;font-style:italic;';
@@ -451,10 +243,14 @@ function renderThemeTags() {
         sorted.forEach(theme => {
             const chip = document.createElement('span');
             chip.className = 'tag-chip';
-            if (selectedThemes.includes(theme)) chip.classList.add('active');
+            if (selectedThemes.includes(theme)) {
+                chip.classList.add('active');
+            }
+            
             const nameSpan = document.createElement('span');
             nameSpan.textContent = theme;
             chip.appendChild(nameSpan);
+            
             if (selectedThemes.includes(theme)) {
                 const removeBtn = document.createElement('button');
                 removeBtn.className = 'remove-tag';
@@ -467,6 +263,7 @@ function renderThemeTags() {
                 });
                 chip.appendChild(removeBtn);
             }
+            
             chip.addEventListener('click', () => {
                 if (selectedThemes.includes(theme)) {
                     selectedThemes = selectedThemes.filter(t => t !== theme);
@@ -476,6 +273,7 @@ function renderThemeTags() {
                 renderThemeTags();
                 if (isEditing) debouncedAutoSave();
             });
+            
             pillsContainer.appendChild(chip);
         });
     }
@@ -534,9 +332,8 @@ function getFormData() {
         mediaPath: formMedia.value.trim().replace(/\/+$/, ''),
         genres: [...selectedGenres],
         themes: [...selectedThemes],
-        published: formPublished.checked,
-        series_id: formSeries.value || '',
-        part: formPart.value ? parseInt(formPart.value) : undefined
+        htmlContent: formHtml.value,
+        published: formPublished.checked
     };
 }
 
@@ -548,9 +345,8 @@ function setFormData(data) {
     formMedia.value = data.mediaPath || '';
     selectedGenres = data.genres || [];
     selectedThemes = data.themes || [];
+    formHtml.value = data.htmlContent || '';
     formPublished.checked = data.published !== false;
-    formSeries.value = data.series_id || '';
-    formPart.value = data.part || '';
     renderGenreTags();
     renderThemeTags();
     updateUrlPreview();
@@ -570,8 +366,6 @@ function resetForm() {
     selectedThemes = [];
     formHtml.value = '';
     formPublished.checked = true;
-    formSeries.value = '';
-    formPart.value = '';
     submitBtn.style.display = 'block';
     downloadBtn.style.display = 'none';
     newPieceBtn.style.display = 'none';
@@ -597,15 +391,18 @@ function loadProject(id) {
     formHeading.textContent = `Editing: ${project.title}`;
     formEditId.value = id;
     
-    // Load content from file (not from project object)
-    loadContentFromFile(project).then(content => {
-        if (content) {
-            formHtml.value = content;
-        } else {
-            formHtml.value = '';
-        }
+    if (!project.htmlContent || project.htmlContent.trim() === '') {
+        loadContentFromFile(project).then(content => {
+            if (content) {
+                project.htmlContent = content;
+                saveToServer();
+                showNotification(`Loaded content from ${project.slug}.html`, 'success');
+            }
+            setFormData(project);
+        });
+    } else {
         setFormData(project);
-    });
+    }
     
     submitBtn.style.display = 'none';
     downloadBtn.style.display = 'block';
@@ -654,17 +451,10 @@ function updateOrders() {
 // ==========================================================================
 
 function saveToServer() {
-    // Remove htmlContent from projects before saving (it's stored in files)
-    const cleanProjects = projects.map(p => {
-        const { htmlContent, ...rest } = p;
-        return rest;
-    });
-    
     const data = {
-        projects: cleanProjects,
+        projects: projects,
         genres: allGenres,
-        themes: allThemes,
-        series: series
+        themes: allThemes
     };
     
     fetch('http://localhost:3000/api/save-projects', {
@@ -690,15 +480,15 @@ function loadFromServer() {
             projects = data.projects || [];
             allGenres = data.genres || ['sci-fi', 'ya', 'article', 'poetry', 'essay', 'guide'];
             allThemes = data.themes || ['technology', 'writing', 'post-apocalyptic', 'publishing', 'autobiographical'];
-            series = data.series || [];
+            
             checkForExistingPieces();
+            
             renderAll();
             showNotification(`Loaded ${projects.length} pieces`, 'success');
         })
         .catch(() => {
             showNotification('Could not load data. Server running?', 'error');
             projects = [];
-            series = [];
             renderAll();
         });
 }
@@ -721,8 +511,7 @@ function checkForExistingPieces() {
             themes: [],
             published: true,
             order: 0,
-            series_id: '',
-            part: null
+            htmlContent: ''
         },
         {
             id: 'written-formatted',
@@ -736,8 +525,7 @@ function checkForExistingPieces() {
             themes: ['technology', 'writing', 'publishing'],
             published: true,
             order: 1,
-            series_id: '',
-            part: null
+            htmlContent: ''
         }
     ];
     
@@ -745,20 +533,38 @@ function checkForExistingPieces() {
     let totalToAdd = knownPieces.filter(p => !projects.some(existing => existing.id === p.id)).length;
     
     if (totalToAdd === 0) {
+        // Still try to load content for existing pieces that have empty content
+        projects.forEach(project => {
+            if (!project.htmlContent || project.htmlContent.trim() === '') {
+                loadContentFromFile(project).then(content => {
+                    if (content) {
+                        project.htmlContent = content;
+                        saveToServer();
+                        console.log(`✅ Loaded content for: ${project.title}`);
+                    }
+                });
+            }
+        });
         return;
     }
     
     knownPieces.forEach(piece => {
         const exists = projects.some(p => p.id === piece.id);
         if (!exists) {
-            projects.push(piece);
-            addedCount++;
-            if (addedCount === totalToAdd) {
-                updateOrders();
-                saveToServer();
-                renderAll();
-                console.log(`✅ Auto-added ${addedCount} existing pieces`);
-            }
+            loadContentFromFile(piece).then(content => {
+                if (content) {
+                    piece.htmlContent = content;
+                    console.log(`✅ Loaded content for: ${piece.title}`);
+                }
+                projects.push(piece);
+                addedCount++;
+                if (addedCount === totalToAdd) {
+                    updateOrders();
+                    saveToServer();
+                    renderAll();
+                    console.log(`✅ Auto-added ${addedCount} existing pieces`);
+                }
+            });
         }
     });
 }
@@ -770,8 +576,6 @@ function checkForExistingPieces() {
 function renderAll() {
     renderGenreTags();
     renderThemeTags();
-    renderSeriesDropdown();
-    renderSeriesChips();
     renderList();
     updatePieceCount();
 }
@@ -829,16 +633,11 @@ function formatDate(dateStr) {
 
 function renderList() {
     const search = currentSearchTerm.toLowerCase();
-    
-    let filtered = projects.filter(p => 
+    const filtered = projects.filter(p => 
         p.title.toLowerCase().includes(search) ||
         p.slug.toLowerCase().includes(search) ||
         p.path.toLowerCase().includes(search)
     );
-    
-    if (selectedSeriesFilter) {
-        filtered = filtered.filter(p => p.series_id === selectedSeriesFilter);
-    }
     
     sortableList.innerHTML = '';
     
@@ -852,172 +651,157 @@ function renderList() {
         return;
     }
     
-    const seriesGroups = {};
-    const standalone = [];
-    
-    filtered.forEach(p => {
-        if (p.series_id && series.some(s => s.id === p.series_id)) {
-            if (!seriesGroups[p.series_id]) seriesGroups[p.series_id] = [];
-            seriesGroups[p.series_id].push(p);
-        } else {
-            standalone.push(p);
+    filtered.forEach(project => {
+        const li = document.createElement('li');
+        li.className = 'sort-item';
+        li.draggable = true;
+        li.dataset.id = project.id;
+        
+        if (editId === project.id) {
+            li.classList.add('editing');
+            li.style.borderColor = 'var(--color-accent)';
+            li.style.borderWidth = '2px';
+            li.style.borderStyle = 'solid';
+            li.style.boxShadow = '0 0 0 3px rgba(139, 90, 74, 0.15)';
+            li.style.backgroundColor = 'var(--color-bg-card)';
         }
-    });
-    
-    const sortedSeriesIds = Object.keys(seriesGroups).sort((a, b) => {
-        const sa = series.find(s => s.id === a);
-        const sb = series.find(s => s.id === b);
-        return (sa ? sa.name : a).localeCompare(sb ? sb.name : b);
-    });
-    
-    sortedSeriesIds.forEach(seriesId => {
-        const s = series.find(s => s.id === seriesId);
-        const groupItems = seriesGroups[seriesId].sort((a, b) => {
-            if (a.part !== undefined && b.part !== undefined) return a.part - b.part;
-            return (a.order || 0) - (b.order || 0);
-        });
         
-        const groupDiv = document.createElement('div');
-        groupDiv.className = 'sort-group';
+        const genreDisplay = project.genres && project.genres.length > 0 
+            ? project.genres.slice(0, 3).join(', ') + (project.genres.length > 3 ? '…' : '')
+            : 'No genres';
         
-        const header = document.createElement('div');
-        header.className = 'sort-group-header';
-        header.innerHTML = `
-            <span class="group-icon">📚</span>
-            <span>${s ? s.name : seriesId}</span>
-            <span class="group-count">${groupItems.length} part${groupItems.length !== 1 ? 's' : ''}</span>
+        const themeDisplay = project.themes && project.themes.length > 0
+            ? ' · ' + project.themes.slice(0, 2).join(', ') + (project.themes.length > 2 ? '…' : '')
+            : '';
+        
+        const publishedBadge = project.published === false 
+            ? ' <span style="font-size:0.55rem; background:var(--color-border); color:var(--color-text-muted); padding:0.05rem 0.4rem; border-radius:100px; font-family:Plus Jakarta Sans,sans-serif;">Draft</span>'
+            : '';
+                
+        li.innerHTML = `
+            <div class="sort-content" data-id="${project.id}">
+                <strong>${project.title}</strong>${publishedBadge}
+                <span class="sort-meta">${project.path}${project.slug}.html</span>
+                <span class="sort-meta">· ${project.dateDisplay || 'No date'}</span>
+                <span class="sort-meta" style="color:var(--color-accent);font-weight:500;">${genreDisplay}${themeDisplay}</span>
+            </div>
+            <div class="sort-actions">
+                <button class="row-btn move-top-btn" title="Move to top">⇈</button>
+                <button class="row-btn move-up-btn" title="Move up">↑</button>
+                <button class="row-btn move-down-btn" title="Move down">↓</button>
+                <button class="row-btn move-bottom-btn" title="Move to bottom">⇊</button>
+                <button class="row-btn delete-btn" data-id="${project.id}" title="Delete">✕</button>
+                <span class="sort-handle" title="Drag to reorder">☰</span>
+            </div>
         `;
-        groupDiv.appendChild(header);
         
-        groupItems.forEach(project => {
-            const li = createListItem(project, true);
-            groupDiv.appendChild(li);
+        li.querySelector('.sort-content').addEventListener('click', () => {
+            loadProject(project.id);
         });
         
-        sortableList.appendChild(groupDiv);
-    });
-    
-    if (standalone.length > 0) {
-        const groupDiv = document.createElement('div');
-        groupDiv.className = 'sort-group';
-        
-        const header = document.createElement('div');
-        header.className = 'sort-group-header';
-        header.innerHTML = `
-            <span class="group-icon">📄</span>
-            <span>Standalone</span>
-            <span class="group-count">${standalone.length} article${standalone.length !== 1 ? 's' : ''}</span>
-        `;
-        groupDiv.appendChild(header);
-        
-        standalone.sort((a, b) => (a.order || 0) - (b.order || 0));
-        standalone.forEach(project => {
-            const li = createListItem(project, false);
-            groupDiv.appendChild(li);
+        li.querySelector('.delete-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm(`Delete "${project.title}" permanently?`)) {
+                projects = projects.filter(p => p.id !== project.id);
+                if (editId === project.id) resetForm();
+                updateOrders();
+                saveToServer();
+                renderList();
+                updatePieceCount();
+                showNotification(`Deleted: ${project.title}`, 'success');
+            }
         });
         
-        sortableList.appendChild(groupDiv);
-    }
-}
-
-function createListItem(project, isSeries) {
-    const li = document.createElement('li');
-    li.className = 'sort-item';
-    if (isSeries) li.classList.add('series-item');
-    li.draggable = true;
-    li.dataset.id = project.id;
-    
-    if (editId === project.id) {
-        li.classList.add('editing');
-        li.style.borderColor = 'var(--color-accent)';
-        li.style.borderWidth = '2px';
-        li.style.borderStyle = 'solid';
-        li.style.boxShadow = '0 0 0 3px rgba(139, 90, 74, 0.15)';
-        li.style.backgroundColor = 'var(--color-bg-card)';
-    }
-    
-    const genreDisplay = project.genres && project.genres.length > 0 
-        ? project.genres.slice(0, 2).join(', ') + (project.genres.length > 2 ? '…' : '')
-        : '';
-    
-    const publishedBadge = project.published === false 
-        ? ' <span style="font-size:0.55rem; background:var(--color-border); color:var(--color-text-muted); padding:0.05rem 0.4rem; border-radius:100px; font-family:Plus Jakarta Sans,sans-serif;">Draft</span>'
-        : '';
-    
-    const partBadge = project.part 
-        ? `<span class="part-badge">Part ${project.part}</span>`
-        : '';
-    
-    li.innerHTML = `
-        <div class="sort-content" data-id="${project.id}">
-            ${partBadge}
-            <strong>${project.title}</strong>${publishedBadge}
-            <span class="sort-meta">${project.path}${project.slug}.html</span>
-            <span class="sort-meta">· ${project.dateDisplay || 'No date'}</span>
-            ${genreDisplay ? `<span class="sort-meta" style="color:var(--color-accent);font-weight:500;">${genreDisplay}</span>` : ''}
-        </div>
-        <div class="sort-actions">
-            <button class="row-btn move-up-btn" title="Move up">↑</button>
-            <button class="row-btn move-down-btn" title="Move down">↓</button>
-            <button class="row-btn delete-btn" data-id="${project.id}" title="Delete">✕</button>
-            <span class="sort-handle" title="Drag to reorder">☰</span>
-        </div>
-    `;
-    
-    li.querySelector('.sort-content').addEventListener('click', () => {
-        loadProject(project.id);
-    });
-    
-    li.querySelector('.delete-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (confirm(`Delete "${project.title}" permanently?`)) {
-            projects = projects.filter(p => p.id !== project.id);
-            if (editId === project.id) resetForm();
+        const moveProject = (fromId, direction) => {
+            const index = projects.findIndex(p => p.id === fromId);
+            if (index === -1) return;
+            let newIndex = index + direction;
+            if (newIndex < 0) newIndex = 0;
+            if (newIndex >= projects.length) newIndex = projects.length - 1;
+            if (newIndex === index) return;
+            const [item] = projects.splice(index, 1);
+            projects.splice(newIndex, 0, item);
             updateOrders();
             saveToServer();
             renderList();
-            updatePieceCount();
-            renderSeriesDropdown();
-            renderSeriesChips();
-            showNotification(`Deleted: ${project.title}`, 'success');
-        }
+        };
+        
+        li.querySelector('.move-top-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const index = projects.findIndex(p => p.id === project.id);
+            if (index <= 0) return;
+            const [item] = projects.splice(index, 1);
+            projects.unshift(item);
+            updateOrders();
+            saveToServer();
+            renderList();
+        });
+        
+        li.querySelector('.move-up-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            moveProject(project.id, -1);
+        });
+        
+        li.querySelector('.move-down-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            moveProject(project.id, 1);
+        });
+        
+        li.querySelector('.move-bottom-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            const index = projects.findIndex(p => p.id === project.id);
+            if (index >= projects.length - 1) return;
+            const [item] = projects.splice(index, 1);
+            projects.push(item);
+            updateOrders();
+            saveToServer();
+            renderList();
+        });
+        
+        li.addEventListener('dragstart', (e) => {
+            li.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', project.id);
+        });
+        
+        li.addEventListener('dragend', () => {
+            li.classList.remove('dragging');
+        });
+        
+        sortableList.appendChild(li);
     });
-    
-    const moveProject = (fromId, direction) => {
-        const index = projects.findIndex(p => p.id === fromId);
-        if (index === -1) return;
-        let newIndex = index + direction;
-        if (newIndex < 0) newIndex = 0;
-        if (newIndex >= projects.length) newIndex = projects.length - 1;
-        if (newIndex === index) return;
-        const [item] = projects.splice(index, 1);
-        projects.splice(newIndex, 0, item);
-        updateOrders();
-        saveToServer();
-        renderList();
-    };
-    
-    li.querySelector('.move-up-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        moveProject(project.id, -1);
-    });
-    
-    li.querySelector('.move-down-btn').addEventListener('click', (e) => {
-        e.stopPropagation();
-        moveProject(project.id, 1);
-    });
-    
-    li.addEventListener('dragstart', (e) => {
-        li.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', project.id);
-    });
-    
-    li.addEventListener('dragend', () => {
-        li.classList.remove('dragging');
-    });
-    
-    return li;
 }
+
+sortableList.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const dragging = document.querySelector('.sort-item.dragging');
+    if (!dragging) return;
+    const items = [...sortableList.querySelectorAll('.sort-item:not(.dragging)')];
+    const after = items.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = e.clientY - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset, element: child };
+        }
+        return closest;
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+    if (after) {
+        sortableList.insertBefore(dragging, after);
+    } else {
+        sortableList.appendChild(dragging);
+    }
+});
+
+sortableList.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    const items = [...sortableList.querySelectorAll('.sort-item')];
+    const newOrder = items.map(el => el.dataset.id);
+    projects.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+    updateOrders();
+    saveToServer();
+    renderList();
+    showNotification('Reordered', 'success');
+});
 
 // ==========================================================================
 // Search
@@ -1071,9 +855,8 @@ form.addEventListener('submit', (e) => {
         mediaPath: formMedia.value.trim().replace(/\/+$/, ''),
         genres: [...selectedGenres],
         themes: [...selectedThemes],
+        htmlContent: html,
         published: formPublished.checked,
-        series_id: formSeries.value || '',
-        part: formPart.value ? parseInt(formPart.value) : undefined,
         order: projects.length
     };
     
@@ -1097,13 +880,11 @@ form.addEventListener('submit', (e) => {
     resetForm();
     renderList();
     updatePieceCount();
-    renderSeriesDropdown();
-    renderSeriesChips();
     formTitle.focus();
 });
 
 // ==========================================================================
-// Download HTML - Uses content from file or cache
+// Download HTML - Save As dialog with full metadata
 // ==========================================================================
 
 downloadBtn.addEventListener('click', async () => {
@@ -1118,14 +899,8 @@ downloadBtn.addEventListener('click', async () => {
         return;
     }
     
-    // Get content from cache or load from file
-    let content = contentCache[`${project.path}${project.slug}`];
-    if (!content) {
-        content = await loadContentFromFile(project);
-    }
-    
-    if (!content || content.trim() === '') {
-        showNotification('No HTML content found. Please upload or paste content first.', 'error');
+    if (!project.htmlContent || project.htmlContent.trim() === '') {
+        showNotification('No HTML content to download. Please upload or paste content first.', 'error');
         return;
     }
     
@@ -1137,96 +912,63 @@ downloadBtn.addEventListener('click', async () => {
         }
         let template = await response.text();
         
+        // Build genre and theme pills
         const allTags = [...(project.genres || []), ...(project.themes || [])];
         const allPills = allTags.length > 0 
             ? allTags.map(t => `<span class="pill">${escapeHtml(t)}</span>`).join('\n                        ')
             : '';
         
         // ============================================
-        // Series Information
-        // ============================================
-        let seriesHtml = '';
-        let seriesNavHtml = '';
-        let seriesSubtitleHtml = '';
-        
-        if (project.series_id) {
-            const seriesInfo = series.find(s => s.id === project.series_id);
-            if (seriesInfo) {
-                const seriesParts = projects
-                    .filter(p => p.series_id === project.series_id && p.published !== false)
-                    .sort((a, b) => (a.part || 0) - (b.part || 0));
-                
-                const currentPart = project.part || 1;
-                const totalParts = seriesParts.length;
-                const partDisplay = `Part ${currentPart}${totalParts > 1 ? ` of ${totalParts}` : ''}`;
-                
-                seriesHtml = `
-                    <span class="meta-separator">&middot;</span>
-                    <span class="series-meta">
-                        <span class="series-badge">📚 ${escapeHtml(seriesInfo.name)}</span>
-                        <span class="series-part">${partDisplay}</span>
-                    </span>
-                `;
-                
-                seriesSubtitleHtml = `
-                    <p class="story-subtitle series-subtitle">
-                        <span class="series-label">Part of</span>
-                        <span class="series-name">${escapeHtml(seriesInfo.name)}</span>
-                        ${seriesInfo.description ? `<span class="series-desc">— ${escapeHtml(seriesInfo.description)}</span>` : ''}
-                    </p>
-                `;
-                
-                if (seriesParts.length > 1) {
-                    const currentIndex = seriesParts.findIndex(p => p.id === project.id);
-                    navLinks = `
-                        <div class="series-nav">
-                            <span class="series-nav-label">${escapeHtml(seriesInfo.name)}</span>
-                            <div class="series-nav-links">
-                                ${currentIndex > 0 ? `<a href="${seriesParts[currentIndex - 1].fullPath || '#'}" class="series-nav-prev">← Previous</a>` : '<span class="series-nav-disabled">← Previous</span>'}
-                                <span class="series-nav-current">${currentPart}${totalParts > 1 ? `/${totalParts}` : ''}</span>
-                                ${currentIndex < seriesParts.length - 1 ? `<a href="${seriesParts[currentIndex + 1].fullPath || '#'}" class="series-nav-next">Next →</a>` : '<span class="series-nav-disabled">Next →</span>'}
-                            </div>
-                        </div>
-                    `;
-                }
-                seriesNavHtml = navLinks;
-            }
-        }
-        
-        // ============================================
-        // Extract first image from content for OG image
+        // Extract first image from content
         // ============================================
         let ogImage = 'https://samoff.com/wbts_icon.png';
         let hasImage = false;
-        const imgPath = getFirstImageFromHtml(content);
-        if (imgPath) {
+        let imagePath = null;
+        
+        // Look for img tags in the content
+        const imgMatch = project.htmlContent.match(/<img[^>]+src=["']([^"']+)["']/i);
+        if (imgMatch && imgMatch[1]) {
+            imagePath = imgMatch[1];
             hasImage = true;
-            if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-                ogImage = imgPath;
-            } else if (imgPath.startsWith('/')) {
-                ogImage = `https://samoff.com${imgPath}`;
+            
+            // Handle different path types
+            if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+                ogImage = imagePath;
+            } else if (imagePath.startsWith('/')) {
+                ogImage = `https://samoff.com${imagePath}`;
             } else {
-                let cleanPath = imgPath.replace(/^\.\.?\//, '');
+                // Build path based on piece location
+                // Remove leading ./ or ../
+                let cleanPath = imagePath.replace(/^\.\.?\//, '');
+                
+                // Check if the path already contains the media folder
                 const mediaFolder = project.mediaPath || project.path.replace(/\/$/, '');
                 const folderName = mediaFolder.split('/').pop();
+                
                 if (cleanPath.includes(folderName)) {
+                    // Already has the folder, use as-is
                     ogImage = `https://samoff.com/written/writing/${project.path}${cleanPath}`;
                 } else {
+                    // Add the media folder
                     ogImage = `https://samoff.com/written/writing/${mediaFolder}/${cleanPath}`;
                 }
             }
         }
         
         // ============================================
-        // Title & Meta
+        // Title
         // ============================================
         const title = project.title || 'Untitled';
         const fullTitle = `${title} @ Written by Tim Samoff`;
         const metaDesc = project.title || '';
         
-        // Replace all placeholders
+        // Replace title placeholder in meta tags
         template = template.replace(/<!-- TITLE: .*? -->/g, `<!-- TITLE: ${title} -->`);
+        
+        // Replace title tag
         template = template.replace(/<title>.*?<\/title>/, `<title>${fullTitle}</title>`);
+        
+        // Replace all meta tags
         template = template.replace(/<meta name="description" content=".*?">/, `<meta name="description" content="${metaDesc}">`);
         template = template.replace(/<meta property="og:title" content=".*?">/, `<meta property="og:title" content="${fullTitle}">`);
         template = template.replace(/<meta property="og:description" content=".*?">/, `<meta property="og:description" content="${metaDesc}">`);
@@ -1235,24 +977,18 @@ downloadBtn.addEventListener('click', async () => {
         template = template.replace(/<meta name="twitter:description" content=".*?">/, `<meta name="twitter:description" content="${metaDesc}">`);
         template = template.replace(/<meta name="twitter:image" content=".*?">/, `<meta name="twitter:image" content="${ogImage}">`);
         
+        // Twitter card type
         const twitterCard = hasImage ? 'summary_large_image' : 'summary';
         template = template.replace(/<meta name="twitter:card" content=".*?">/, `<meta name="twitter:card" content="${twitterCard}">`);
         
         // Date
         template = template.replace(/<span class="date">.*?<\/span>/, `<span class="date">${project.dateDisplay || ''}</span>`);
         
-        // Title in header
+        // Title in header - replace the TITLE_PLACEHOLDER
         template = template.replace(/TITLE_PLACEHOLDER/g, title);
+        
+        // Also handle any leftover <!-- TITLE: --> in the h1
         template = template.replace(/<h1 class="story-title"[^>]*>.*?<\/h1>/, `<h1 class="story-title" id="story-title">${title}</h1>`);
-        
-        // Series subtitle
-        template = template.replace(/<!-- SERIES_SUBTITLE: Generated by admin -->/, seriesSubtitleHtml);
-        
-        // Series meta
-        template = template.replace(/<!-- SERIES_META: Generated by admin -->/, seriesHtml);
-        
-        // Series navigation
-        template = template.replace(/<!-- SERIES_NAV: Generated by admin -->/, seriesNavHtml);
         
         // Pills
         template = template.replace(/<div class="pill-container">[\s\S]*?<\/div>/, `<div class="pill-container">\n                        ${allPills}\n                    </div>`);
@@ -1260,9 +996,12 @@ downloadBtn.addEventListener('click', async () => {
         // ============================================
         // Clean and replace article content
         // ============================================
-        let cleanContent = content;
+        let cleanContent = project.htmlContent;
+        
+        // If the content has nested article tags, extract the inner one
         const nestedArticle = cleanContent.match(/<article[^>]*class="story-content[^>]*>([\s\S]*?)<\/article>/i);
         if (nestedArticle) {
+            // Check if there's another article inside
             const innerArticle = nestedArticle[1].match(/<article[^>]*>([\s\S]*?)<\/article>/i);
             if (innerArticle) {
                 cleanContent = innerArticle[0].trim();
@@ -1271,6 +1010,7 @@ downloadBtn.addEventListener('click', async () => {
             }
         }
         
+        // Replace the article in the template
         const articleMatch = template.match(/<article class="story-content ls-2">[\s\S]*?<\/article>/);
         if (articleMatch) {
             const articleTag = articleMatch[0];
@@ -1305,7 +1045,9 @@ downloadBtn.addEventListener('click', async () => {
                 showNotification(`Saved: ${project.slug || 'untitled'}.html`, 'success');
                 return;
             } catch (err) {
-                if (err.name === 'AbortError') return;
+                if (err.name === 'AbortError') {
+                    return;
+                }
                 console.warn('File System API failed, falling back to download:', err);
             }
         }
@@ -1338,10 +1080,12 @@ function showNotification(message, type = 'success') {
     const existing = document.querySelector('.admin-notification');
     if (existing) existing.remove();
     if (notificationTimeout) clearTimeout(notificationTimeout);
+    
     const div = document.createElement('div');
     div.className = `admin-notification ${type}`;
     div.textContent = message;
     document.body.appendChild(div);
+    
     notificationTimeout = setTimeout(() => {
         div.style.opacity = '0';
         div.style.transform = 'translateX(100%)';
