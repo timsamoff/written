@@ -6,13 +6,37 @@ const PORT = 3000;
 
 // Simple file paths
 const DATA_FILE = path.join(__dirname, 'data', 'projects.json');
+const WRITING_DIR = path.join(__dirname, 'writing');
 const BASE_DIR = __dirname;
 
 console.log('========================================');
 console.log('📁 Written Admin Server');
 console.log('========================================');
 console.log('📍 Data file:', DATA_FILE);
+console.log('📍 Writing directory:', WRITING_DIR);
 console.log('');
+
+// Ensure directories exist
+const dataDir = path.join(__dirname, 'data');
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+}
+
+if (!fs.existsSync(WRITING_DIR)) {
+    fs.mkdirSync(WRITING_DIR, { recursive: true });
+}
+
+// Initialize projects.json if it doesn't exist
+if (!fs.existsSync(DATA_FILE)) {
+    const defaultData = {
+        projects: [],
+        genres: ['sci-fi', 'ya', 'article', 'poetry', 'essay', 'guide'],
+        themes: ['technology', 'writing', 'post-apocalyptic', 'publishing', 'autobiographical'],
+        series: []
+    };
+    fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
+    console.log('✅ Created default projects.json');
+}
 
 // Create the server
 const server = http.createServer((req, res) => {
@@ -21,7 +45,18 @@ const server = http.createServer((req, res) => {
 
     console.log('📥', method, url);
 
-    // ========== API ==========
+    // ========== CORS ==========
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (method === 'OPTIONS') {
+        res.writeHead(200);
+        res.end();
+        return;
+    }
+
+    // ========== API: GET /api/projects ==========
     if (method === 'GET' && url === '/api/projects') {
         try {
             const data = fs.readFileSync(DATA_FILE, 'utf8');
@@ -36,6 +71,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ========== API: POST /api/save-projects ==========
     if (method === 'POST' && url === '/api/save-projects') {
         let body = '';
         req.on('data', chunk => { body += chunk; });
@@ -54,13 +90,50 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ========== API: POST /api/save-html ==========
+    if (method === 'POST' && url === '/api/save-html') {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', () => {
+            try {
+                const data = JSON.parse(body);
+                const { filePath, content } = data;
+                
+                if (!filePath || !content) {
+                    res.writeHead(400);
+                    res.end(JSON.stringify({ success: false, error: 'Missing filePath or content' }));
+                    return;
+                }
+                
+                // Build the full file path
+                const fullPath = path.join(BASE_DIR, filePath);
+                const dir = path.dirname(fullPath);
+                
+                // Ensure directory exists
+                if (!fs.existsSync(dir)) {
+                    fs.mkdirSync(dir, { recursive: true });
+                }
+                
+                // Write the file
+                fs.writeFileSync(fullPath, content, 'utf8');
+                console.log('✅ Saved HTML:', filePath);
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: true }));
+            } catch (err) {
+                console.log('❌ Error saving HTML:', err.message);
+                res.writeHead(500);
+                res.end(JSON.stringify({ error: err.message }));
+            }
+        });
+        return;
+    }
+
     // ========== Static Files ==========
     // Build the file path
     let filePath;
     if (url === '/') {
         filePath = path.join(BASE_DIR, 'index.html');
     } else {
-        // Remove leading slash
         let relativePath = url.substring(1);
         filePath = path.join(BASE_DIR, relativePath);
     }
@@ -122,6 +195,7 @@ server.listen(PORT, () => {
     console.log('========================================');
     console.log('🌐 Admin: http://localhost:' + PORT + '/admin/admin.html');
     console.log('📝 API: http://localhost:' + PORT + '/api/projects');
+    console.log('💾 Save HTML: POST /api/save-html');
     console.log('========================================');
     console.log('');
 });
