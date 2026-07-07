@@ -124,6 +124,24 @@ function extractArticleContent(html) {
 }
 
 // ==========================================================================
+// Check if HTML file exists
+// ==========================================================================
+
+async function htmlFileExists(project) {
+    if (!project || !project.path || !project.slug) return false;
+    const cacheKey = `${project.path}${project.slug}`;
+    if (contentCache[cacheKey]) return true;
+    
+    const filePath = `http://localhost:3000/writing/${project.path}${project.slug}.html`;
+    try {
+        const response = await fetch(filePath, { method: 'HEAD' });
+        return response.ok;
+    } catch {
+        return false;
+    }
+}
+
+// ==========================================================================
 // Load content from existing HTML file (cached in memory)
 // ==========================================================================
 
@@ -191,6 +209,10 @@ fileInput.addEventListener('change', function(e) {
         fileUploadText.textContent = file.name;
         fileUploadText.parentElement.classList.add('has-file');
         clearFileBtn.classList.add('visible');
+        // Clear the warning if it was showing
+        if (formHtml.dataset.hasWarning) {
+            formHtml.dataset.hasWarning = 'false';
+        }
         showNotification(`Loaded: ${file.name}`, 'success');
         if (isEditing) debouncedAutoSave();
     };
@@ -203,6 +225,9 @@ clearFileBtn.addEventListener('click', function() {
     fileUploadText.parentElement.classList.remove('has-file');
     this.classList.remove('visible');
     formHtml.value = '';
+    if (formHtml.dataset) {
+        formHtml.dataset.hasWarning = 'false';
+    }
     if (isEditing) debouncedAutoSave();
 });
 
@@ -211,6 +236,9 @@ formHtml.addEventListener('input', function() {
         fileUploadText.textContent = 'Manual entry';
         fileUploadText.parentElement.classList.add('has-file');
         clearFileBtn.classList.add('visible');
+        if (this.dataset) {
+            this.dataset.hasWarning = 'false';
+        }
     }
 });
 
@@ -602,6 +630,9 @@ function resetForm() {
     selectedGenres = [];
     selectedThemes = [];
     formHtml.value = '';
+    if (formHtml.dataset) {
+        formHtml.dataset.hasWarning = 'false';
+    }
     formPublished.checked = true;
     formSeries.value = '';
     formPart.value = '';
@@ -635,8 +666,17 @@ function loadProject(id) {
     loadContentFromFile(project).then(content => {
         if (content) {
             formHtml.value = content;
+            if (formHtml.dataset) {
+                formHtml.dataset.hasWarning = 'false';
+            }
         } else {
-            formHtml.value = '';
+            // Show warning message in textarea
+            const warningMsg = `⚠️ No HTML file found at writing/${project.path}${project.slug}.html\n\nTo add content:\n1. Upload an HTML file using the "Choose HTML file" button\n2. Or paste the <article> content directly into this textarea\n3. Click "Add Piece" (or "Update") to save both metadata and HTML`;
+            formHtml.value = warningMsg;
+            if (formHtml.dataset) {
+                formHtml.dataset.hasWarning = 'true';
+            }
+            showNotification('⚠️ No HTML content found. Upload or paste content to enable Preview and Download.', 'error');
         }
         setFormData(project);
     });
@@ -1222,6 +1262,31 @@ function buildAssembledHtml(project, content) {
 }
 
 // ==========================================================================
+// Get content for preview/download (with warning if missing)
+// ==========================================================================
+
+async function getContentForAction(project) {
+    // Get content from cache or load from file
+    let content = contentCache[`${project.path}${project.slug}`];
+    if (!content) {
+        content = await loadContentFromFile(project);
+    }
+    
+    // Check if the content is the warning message (from loadProject)
+    if (!content || content.trim() === '' || 
+        (content.includes('⚠️ No HTML file found') && formHtml.dataset && formHtml.dataset.hasWarning === 'true')) {
+        // Try to load from form if it has content and isn't the warning
+        const formContent = formHtml.value;
+        if (formContent && !formContent.includes('⚠️ No HTML file found')) {
+            return formContent;
+        }
+        return null;
+    }
+    
+    return content;
+}
+
+// ==========================================================================
 // Form Submit - Save metadata AND HTML file
 // ==========================================================================
 
@@ -1234,8 +1299,14 @@ form.addEventListener('submit', async (e) => {
     const date = formDate.value;
     const html = formHtml.value.trim();
     
-    if (!title || !path || !slug || !date || !html) {
+    if (!title || !path || !slug || !date) {
         showNotification('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Check if content is the warning message or empty
+    if (!html || html.includes('⚠️ No HTML file found')) {
+        showNotification('Please add HTML content before saving', 'error');
         return;
     }
     
@@ -1263,8 +1334,7 @@ form.addEventListener('submit', async (e) => {
     
     // Build the full HTML file
     try {
-        // Get content from form
-        const content = formHtml.value;
+        const content = html;
         
         // Build the assembled HTML using the template
         const assembledHtml = await buildAssembledHtml(data, content);
@@ -1276,12 +1346,16 @@ form.addEventListener('submit', async (e) => {
             return;
         }
         
+        // Update cache
+        const cacheKey = `${cleanPath}${slug}`;
+        contentCache[cacheKey] = content;
+        
         // Save or update project metadata
         if (isEditing && editId) {
             const index = projects.findIndex(p => p.id === editId);
             if (index !== -1) {
                 projects[index] = { ...projects[index], ...data };
-                showNotification(`Updated: ${title}`, 'success');
+                showNotification(`Updated: ${title} - HTML saved to ${fullPath}`, 'success');
             }
         } else {
             if (projects.find(p => p.id === id)) {
@@ -1323,13 +1397,21 @@ previewBtn.addEventListener('click', async () => {
         return;
     }
     
-    // Get content from cache or load from file
-    let content = contentCache[`${project.path}${project.slug}`];
-    if (!content) {
-        content = await loadContentFromFile(project);
+    // Get content (check form first, then cache, then file)
+    let content = null;
+    
+    // Check if form has content (and it's not the warning)
+    const formContent = formHtml.value;
+    if (formContent && !formContent.includes('⚠️ No HTML file found')) {
+        content = formContent;
     }
     
-    if (!content || content.trim() === '') {
+    // If not in form, try cache or file
+    if (!content) {
+        content = await getContentForAction(project);
+    }
+    
+    if (!content) {
         showNotification('No HTML content found. Please upload or paste content first.', 'error');
         return;
     }
@@ -1387,13 +1469,21 @@ downloadBtn.addEventListener('click', async () => {
         return;
     }
     
-    // Get content from cache or load from file
-    let content = contentCache[`${project.path}${project.slug}`];
-    if (!content) {
-        content = await loadContentFromFile(project);
+    // Get content (check form first, then cache, then file)
+    let content = null;
+    
+    // Check if form has content (and it's not the warning)
+    const formContent = formHtml.value;
+    if (formContent && !formContent.includes('⚠️ No HTML file found')) {
+        content = formContent;
     }
     
-    if (!content || content.trim() === '') {
+    // If not in form, try cache or file
+    if (!content) {
+        content = await getContentForAction(project);
+    }
+    
+    if (!content) {
         showNotification('No HTML content found. Please upload or paste content first.', 'error');
         return;
     }
