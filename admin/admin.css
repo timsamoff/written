@@ -33,7 +33,6 @@
     background: var(--color-accent);
 }
 
-/* Firefox scrollbar */
 .admin-panel,
 .admin-form,
 .sortable-list {
@@ -96,7 +95,7 @@
 }
 
 /* ============================================
-   ADMIN FORM - Proper spacing & fonts
+   ADMIN FORM
    ============================================ */
 
 .admin-form {
@@ -122,7 +121,23 @@
     margin: 0;
 }
 
-/* Form groups - normal spacing */
+/* New button */
+.new-btn {
+    font-size: 0.75rem !important;
+    padding: 0.3rem 0.8rem !important;
+    background: var(--color-bg) !important;
+    border: 1px solid var(--color-border) !important;
+    color: var(--color-text-muted) !important;
+    border-radius: 8px !important;
+    transition: all 0.2s !important;
+}
+
+.new-btn:hover {
+    background: var(--color-border) !important;
+    color: var(--color-text) !important;
+}
+
+/* Form groups */
 .admin-form .form-group {
     margin-bottom: 0.5rem;
 }
@@ -153,7 +168,8 @@
 }
 
 .admin-form .form-group input:focus,
-.admin-form .form-group textarea:focus {
+.admin-form .form-group textarea:focus,
+.admin-form .form-group select:focus {
     outline: none;
     border-color: var(--color-accent);
     box-shadow: 0 0 0 3px rgba(139, 90, 74, 0.12);
@@ -184,14 +200,13 @@
     font-size: 0.7rem;
 }
 
-/* Title - Full width, larger */
 #form-title {
     font-size: 1.15rem !important;
     font-weight: 500;
 }
 
 /* ============================================
-   PATH + SLUG - Two column layout
+   PATH + SLUG
    ============================================ */
 
 .form-row {
@@ -204,7 +219,6 @@
     min-width: 0;
 }
 
-/* Path input wrapper */
 .path-input-wrapper {
     display: flex;
     align-items: center;
@@ -270,12 +284,52 @@
     background: var(--color-bg);
     border-radius: 8px;
     border: 1px solid var(--color-border);
+    transition: all 0.2s;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.publish-toggle span {
+.publish-toggle:hover {
+    border-color: var(--color-accent);
+    background: var(--color-bg-card);
+}
+
+.publish-toggle input[type="checkbox"] {
+    display: none;
+}
+
+.publish-toggle .custom-checkbox-box {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--color-border);
+    border-radius: 4px;
+    display: inline-block;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    background: var(--color-bg);
+}
+
+.publish-toggle input:checked + .custom-checkbox-box {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    position: relative;
+}
+
+.publish-toggle input:checked + .custom-checkbox-box::after {
+    content: "✓";
+    color: var(--color-text-inverted, #fff);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+}
+
+.publish-toggle .toggle-label {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 0.8rem;
     font-weight: 500;
+    color: var(--color-text);
 }
 
 /* ============================================
@@ -336,7 +390,7 @@
 }
 
 /* ============================================
-   TAG MANAGER - Add field below pills, left aligned
+   TAG MANAGER
    ============================================ */
 
 .tag-manager {
@@ -442,64 +496,144 @@
 }
 
 /* ============================================
-   PUBLISH TOGGLE
+   FORM ACTIONS
    ============================================ */
 
-.publish-toggle {
+.form-actions {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    cursor: pointer;
-    padding: 0.5rem 0.7rem;
-    background: var(--color-bg);
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.form-actions .filter-btn {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
     border-radius: 8px;
     border: 1px solid var(--color-border);
-    transition: all 0.2s;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.publish-toggle:hover {
-    border-color: var(--color-accent);
-    background: var(--color-bg-card);
-}
-
-.publish-toggle input[type="checkbox"] {
-    display: none;
-}
-
-.publish-toggle .custom-checkbox-box {
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--color-border);
-    border-radius: 4px;
-    display: inline-block;
-    flex-shrink: 0;
-    transition: all 0.2s;
     background: var(--color-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
 }
 
-.publish-toggle input:checked + .custom-checkbox-box {
+.form-actions .filter-btn.active {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    position: relative;
-}
-
-.publish-toggle input:checked + .custom-checkbox-box::after {
-    content: "✓";
     color: var(--color-text-inverted, #fff);
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 12px;
 }
 
-.publish-toggle .toggle-label {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.8rem;
-    font-weight: 500;
+.form-actions .filter-btn.active:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+.form-actions .filter-btn.preview-btn {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
     color: var(--color-text);
+}
+
+.form-actions .filter-btn.preview-btn:hover {
+    background: var(--color-border);
+    border-color: var(--color-accent);
+}
+
+.form-actions .filter-btn.download-btn {
+    background: var(--color-bg-card);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+.form-actions .filter-btn.download-btn:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-inverted, #fff);
+}
+
+.form-actions .filter-btn:not(.active):not(.preview-btn):not(.download-btn):hover {
+    background: var(--color-border);
+    border-color: var(--color-accent);
+}
+
+/* ============================================
+   SERIES MANAGER
+   ============================================ */
+
+.series-manager {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+
+#add-series-btn {
+    align-self: flex-start;
+}
+
+.series-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 0.2rem 0;
+}
+
+.series-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.6rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 100px;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.series-chip:hover {
+    border-color: var(--color-accent);
+}
+
+.series-chip.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-inverted, #fff);
+}
+
+.series-chip .series-chip-count {
+    font-size: 0.55rem;
+    opacity: 0.7;
+    background: var(--color-border);
+    padding: 0.05rem 0.3rem;
+    border-radius: 100px;
+    color: var(--color-text-muted);
+}
+
+.series-chip.active .series-chip-count {
+    background: rgba(255,255,255,0.2);
+    color: var(--color-text-inverted, #fff);
+}
+
+.series-chip .series-chip-delete {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.5;
+    font-size: 0.7rem;
+    padding: 0 0.1rem;
+}
+
+.series-chip .series-chip-delete:hover {
+    opacity: 1;
 }
 
 /* ============================================
@@ -567,6 +701,36 @@
     overflow-y: auto;
 }
 
+/* Series group in sortable list */
+.sort-group {
+    margin-bottom: 0.3rem;
+}
+
+.sort-group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.2rem 0.4rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 0.2rem;
+    cursor: default;
+}
+
+.sort-group-header .group-icon {
+    font-size: 0.8rem;
+}
+
+.sort-group-header .group-count {
+    font-weight: 400;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    margin-left: auto;
+}
+
 .sort-item {
     display: flex;
     align-items: center;
@@ -588,6 +752,13 @@
     border-color: var(--color-accent);
     border-width: 2px;
     box-shadow: 0 0 0 2px rgba(139, 90, 74, 0.15);
+}
+
+.sort-item.series-item {
+    margin-left: 1.5rem;
+    border-left: 2px solid var(--color-border);
+    border-radius: 0 8px 8px 0;
+    padding-left: 0.5rem;
 }
 
 .sort-item .sort-content {
@@ -615,6 +786,17 @@
     gap: 0.1rem;
     align-items: center;
     flex-shrink: 0;
+}
+
+.sort-item.series-item .part-badge {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.55rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    background: var(--color-bg);
+    padding: 0.05rem 0.3rem;
+    border-radius: 4px;
+    margin-right: 0.3rem;
 }
 
 .row-btn {
@@ -665,6 +847,82 @@
     font-size: 1rem;
     font-style: italic;
     margin: 0;
+}
+
+/* ============================================
+   MODAL STYLES
+   ============================================ */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.modal-header h3 {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.2rem;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+}
+
+.modal-close:hover {
+    color: var(--color-accent);
+}
+
+.modal-body {
+    margin-bottom: 1rem;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.modal-footer .filter-btn {
+    padding: 0.4rem 1.2rem;
+    font-size: 0.8rem;
+}
+
+.modal-footer .filter-btn.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-inverted, #fff);
 }
 
 /* ============================================
@@ -759,264 +1017,4 @@
     .tag-add input {
         width: 60px;
     }
-}
-
-/* ============================================
-   FORM ACTIONS - Full width buttons
-   ============================================ */
-
-.form-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    margin-top: 0.25rem;
-}
-
-.form-actions .filter-btn {
-    width: 100%;
-    padding: 0.6rem 1rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    border-radius: 8px;
-    border: 1px solid var(--color-border);
-    background: var(--color-bg);
-    color: var(--color-text);
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: center;
-}
-
-.form-actions .filter-btn.active {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
-}
-
-.form-actions .filter-btn.active:hover {
-    opacity: 0.85;
-    transform: translateY(-1px);
-}
-
-.form-actions .filter-btn:not(.active):hover {
-    background: var(--color-border);
-    border-color: var(--color-accent);
-}
-
-.form-actions .filter-btn#download-btn {
-    background: var(--color-bg-card);
-    border-color: var(--color-border);
-}
-
-.form-actions .filter-btn#download-btn:hover {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
-}
-
-/* ============================================
-   MODAL STYLES
-   ============================================ */
-
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(4px);
-    z-index: 20000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content {
-    background: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    border-radius: 16px;
-    padding: 1.5rem;
-    max-width: 500px;
-    width: 90%;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.modal-header h3 {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.2rem;
-    color: var(--color-text);
-    margin: 0;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    padding: 0.2rem 0.5rem;
-}
-
-.modal-close:hover {
-    color: var(--color-accent);
-}
-
-.modal-body {
-    margin-bottom: 1rem;
-}
-
-.modal-footer {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: flex-end;
-}
-
-.modal-footer .filter-btn {
-    padding: 0.4rem 1.2rem;
-    font-size: 0.8rem;
-}
-
-.modal-footer .filter-btn.active {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
-}
-
-/* ============================================
-   SERIES MANAGER
-   ============================================ */
-
-.series-manager {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    margin-bottom: 0.5rem;
-    flex-shrink: 0;
-}
-
-#add-series-btn {
-    align-self: flex-start;
-}
-
-.series-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-    padding: 0.2rem 0;
-}
-
-.series-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.65rem;
-    padding: 0.15rem 0.6rem;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 100px;
-    color: var(--color-text);
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-
-.series-chip:hover {
-    border-color: var(--color-accent);
-}
-
-.series-chip.active {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
-}
-
-.series-chip .series-chip-count {
-    font-size: 0.55rem;
-    opacity: 0.7;
-    background: var(--color-border);
-    padding: 0.05rem 0.3rem;
-    border-radius: 100px;
-    color: var(--color-text-muted);
-}
-
-.series-chip.active .series-chip-count {
-    background: rgba(255,255,255,0.2);
-    color: var(--color-text-inverted, #fff);
-}
-
-.series-chip .series-chip-delete {
-    background: none;
-    border: none;
-    color: inherit;
-    cursor: pointer;
-    opacity: 0.5;
-    font-size: 0.7rem;
-    padding: 0 0.1rem;
-}
-
-.series-chip .series-chip-delete:hover {
-    opacity: 1;
-}
-
-/* ============================================
-   SERIES GROUP IN SORTABLE LIST
-   ============================================ */
-
-.sort-group {
-    margin-bottom: 0.3rem;
-}
-
-.sort-group-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.2rem 0.4rem;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--color-text-muted);
-    border-bottom: 1px solid var(--color-border);
-    margin-bottom: 0.2rem;
-    cursor: default;
-}
-
-.sort-group-header .group-icon {
-    font-size: 0.8rem;
-}
-
-.sort-group-header .group-count {
-    font-weight: 400;
-    font-size: 0.65rem;
-    color: var(--color-text-muted);
-    margin-left: auto;
-}
-
-.sort-item.series-item {
-    margin-left: 1.5rem;
-    border-left: 2px solid var(--color-border);
-    border-radius: 0 8px 8px 0;
-    padding-left: 0.5rem;
-}
-
-.sort-item.series-item .part-badge {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.55rem;
-    font-weight: 600;
-    color: var(--color-accent);
-    background: var(--color-bg);
-    padding: 0.05rem 0.3rem;
-    border-radius: 4px;
-    margin-right: 0.3rem;
-}
-
-.sort-item.series-item .sort-handle {
-    cursor: grab;
 }

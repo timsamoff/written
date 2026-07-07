@@ -35,6 +35,7 @@ const formSeries = document.getElementById('form-series');
 const formPart = document.getElementById('form-part');
 const submitBtn = document.getElementById('submit-btn');
 const downloadBtn = document.getElementById('download-btn');
+const previewBtn = document.getElementById('preview-btn');
 const newPieceBtn = document.getElementById('new-piece-btn');
 const sortableList = document.getElementById('sortable-list');
 const urlPreview = document.getElementById('url-preview');
@@ -55,6 +56,7 @@ const addThemeBtn = document.getElementById('add-theme-btn');
 // Series elements
 const seriesList = document.getElementById('series-list');
 const addSeriesBtn = document.getElementById('add-series-btn');
+const addSeriesInlineBtn = document.getElementById('add-series-inline-btn');
 
 // Series Modal
 const seriesModal = document.getElementById('series-modal');
@@ -72,6 +74,13 @@ const seriesDeleteMessage = document.getElementById('series-delete-message');
 const seriesDeleteConfirm = document.getElementById('series-delete-confirm');
 const seriesDeleteCancel = document.getElementById('series-delete-cancel');
 const seriesDeleteClose = document.getElementById('series-delete-close');
+
+// Preview Modal
+const previewModal = document.getElementById('preview-modal');
+const previewFrame = document.getElementById('preview-frame');
+const previewTitle = document.getElementById('preview-title');
+const previewModalCloseBtn = document.getElementById('preview-modal-close-btn');
+const previewModalClose = document.getElementById('preview-modal-close');
 
 // ==========================================================================
 // Helper Functions
@@ -137,6 +146,29 @@ async function loadContentFromFile(project) {
     } catch (err) {
         console.warn(`Could not load content for ${project.slug}:`, err);
         return '';
+    }
+}
+
+// ==========================================================================
+// Save HTML to server
+// ==========================================================================
+
+async function saveHtmlToServer(filePath, content) {
+    try {
+        const response = await fetch('http://localhost:3000/api/save-html', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filePath, content })
+        });
+        const result = await response.json();
+        if (!result.success) {
+            showNotification('Failed to save HTML: ' + (result.error || 'Unknown error'), 'error');
+            return false;
+        }
+        return true;
+    } catch (err) {
+        showNotification('Error saving HTML: ' + err.message, 'error');
+        return false;
     }
 }
 
@@ -358,6 +390,7 @@ function deleteSeries(id) {
 
 // Series event listeners
 addSeriesBtn.addEventListener('click', () => openSeriesModal(null));
+addSeriesInlineBtn.addEventListener('click', () => openSeriesModal(null));
 seriesModalSave.addEventListener('click', saveSeries);
 seriesModalCancel.addEventListener('click', closeSeriesModal);
 seriesModalClose.addEventListener('click', closeSeriesModal);
@@ -574,6 +607,7 @@ function resetForm() {
     formPart.value = '';
     submitBtn.style.display = 'block';
     downloadBtn.style.display = 'none';
+    previewBtn.style.display = 'none';
     newPieceBtn.style.display = 'none';
     renderGenreTags();
     renderThemeTags();
@@ -609,6 +643,7 @@ function loadProject(id) {
     
     submitBtn.style.display = 'none';
     downloadBtn.style.display = 'block';
+    previewBtn.style.display = 'block';
     newPieceBtn.style.display = 'inline-block';
     
     document.querySelectorAll('.sort-item.editing').forEach(el => {
@@ -635,6 +670,7 @@ function newProject() {
     formHeading.textContent = 'New Piece';
     submitBtn.style.display = 'block';
     downloadBtn.style.display = 'none';
+    previewBtn.style.display = 'none';
     newPieceBtn.style.display = 'none';
     formTitle.focus();
 }
@@ -1038,10 +1074,158 @@ adminSearchClear.addEventListener('click', () => {
 });
 
 // ==========================================================================
-// Form Submit
+// Build Assembled HTML
 // ==========================================================================
 
-form.addEventListener('submit', (e) => {
+function buildAssembledHtml(project, content) {
+    // Load template
+    return fetch('http://localhost:3000/templates/template.html')
+        .then(response => {
+            if (!response.ok) throw new Error('Could not load template.html');
+            return response.text();
+        })
+        .then(template => {
+            // Build genre and theme pills
+            const allTags = [...(project.genres || []), ...(project.themes || [])];
+            const allPills = allTags.length > 0 
+                ? allTags.map(t => `<span class="pill">${escapeHtml(t)}</span>`).join('\n                        ')
+                : '';
+            
+            // Series Information
+            let seriesHtml = '';
+            let seriesNavHtml = '';
+            let seriesSubtitleHtml = '';
+            
+            if (project.series_id) {
+                const seriesInfo = series.find(s => s.id === project.series_id);
+                if (seriesInfo) {
+                    const seriesParts = projects
+                        .filter(p => p.series_id === project.series_id && p.published !== false)
+                        .sort((a, b) => (a.part || 0) - (b.part || 0));
+                    
+                    const currentPart = project.part || 1;
+                    const totalParts = seriesParts.length;
+                    const partDisplay = `Part ${currentPart}${totalParts > 1 ? ` of ${totalParts}` : ''}`;
+                    
+                    seriesHtml = `
+                        <span class="meta-separator">&middot;</span>
+                        <span class="series-meta">
+                            <span class="series-badge">📚 ${escapeHtml(seriesInfo.name)}</span>
+                            <span class="series-part">${partDisplay}</span>
+                        </span>
+                    `;
+                    
+                    seriesSubtitleHtml = `
+                        <p class="story-subtitle series-subtitle">
+                            <span class="series-label">Part of</span>
+                            <span class="series-name">${escapeHtml(seriesInfo.name)}</span>
+                            ${seriesInfo.description ? `<span class="series-desc">— ${escapeHtml(seriesInfo.description)}</span>` : ''}
+                        </p>
+                    `;
+                    
+                    if (seriesParts.length > 1) {
+                        const currentIndex = seriesParts.findIndex(p => p.id === project.id);
+                        let navLinks = '';
+                        navLinks = `
+                            <div class="series-nav">
+                                <span class="series-nav-label">${escapeHtml(seriesInfo.name)}</span>
+                                <div class="series-nav-links">
+                                    ${currentIndex > 0 ? `<a href="${seriesParts[currentIndex - 1].fullPath || '#'}" class="series-nav-prev">← Previous</a>` : '<span class="series-nav-disabled">← Previous</span>'}
+                                    <span class="series-nav-current">${currentPart}${totalParts > 1 ? `/${totalParts}` : ''}</span>
+                                    ${currentIndex < seriesParts.length - 1 ? `<a href="${seriesParts[currentIndex + 1].fullPath || '#'}" class="series-nav-next">Next →</a>` : '<span class="series-nav-disabled">Next →</span>'}
+                                </div>
+                            </div>
+                        `;
+                        seriesNavHtml = navLinks;
+                    }
+                }
+            }
+            
+            // Extract first image for OG image
+            let ogImage = 'https://samoff.com/wbts_icon.png';
+            let hasImage = false;
+            const imgPath = getFirstImageFromHtml(content);
+            if (imgPath) {
+                hasImage = true;
+                if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+                    ogImage = imgPath;
+                } else if (imgPath.startsWith('/')) {
+                    ogImage = `https://samoff.com${imgPath}`;
+                } else {
+                    let cleanPath = imgPath.replace(/^\.\.?\//, '');
+                    const mediaFolder = project.mediaPath || project.path.replace(/\/$/, '');
+                    const folderName = mediaFolder.split('/').pop();
+                    if (cleanPath.includes(folderName)) {
+                        ogImage = `https://samoff.com/written/writing/${project.path}${cleanPath}`;
+                    } else {
+                        ogImage = `https://samoff.com/written/writing/${mediaFolder}/${cleanPath}`;
+                    }
+                }
+            }
+            
+            const title = project.title || 'Untitled';
+            const fullTitle = `${title} @ Written by Tim Samoff`;
+            const metaDesc = project.title || '';
+            
+            // Replace all placeholders
+            template = template.replace(/<!-- TITLE: .*? -->/g, `<!-- TITLE: ${title} -->`);
+            template = template.replace(/<title>.*?<\/title>/, `<title>${fullTitle}</title>`);
+            template = template.replace(/<meta name="description" content=".*?">/, `<meta name="description" content="${metaDesc}">`);
+            template = template.replace(/<meta property="og:title" content=".*?">/, `<meta property="og:title" content="${fullTitle}">`);
+            template = template.replace(/<meta property="og:description" content=".*?">/, `<meta property="og:description" content="${metaDesc}">`);
+            template = template.replace(/<meta property="og:image" content=".*?">/, `<meta property="og:image" content="${ogImage}">`);
+            template = template.replace(/<meta name="twitter:title" content=".*?">/, `<meta name="twitter:title" content="${fullTitle}">`);
+            template = template.replace(/<meta name="twitter:description" content=".*?">/, `<meta name="twitter:description" content="${metaDesc}">`);
+            template = template.replace(/<meta name="twitter:image" content=".*?">/, `<meta name="twitter:image" content="${ogImage}">`);
+            
+            const twitterCard = hasImage ? 'summary_large_image' : 'summary';
+            template = template.replace(/<meta name="twitter:card" content=".*?">/, `<meta name="twitter:card" content="${twitterCard}">`);
+            
+            template = template.replace(/<span class="date">.*?<\/span>/, `<span class="date">${project.dateDisplay || ''}</span>`);
+            template = template.replace(/TITLE_PLACEHOLDER/g, title);
+            template = template.replace(/<h1 class="story-title"[^>]*>.*?<\/h1>/, `<h1 class="story-title" id="story-title">${title}</h1>`);
+            template = template.replace(/<!-- SERIES_SUBTITLE: Generated by admin -->/, seriesSubtitleHtml);
+            template = template.replace(/<!-- SERIES_META: Generated by admin -->/, seriesHtml);
+            template = template.replace(/<!-- SERIES_NAV: Generated by admin -->/, seriesNavHtml);
+            template = template.replace(/<div class="pill-container">[\s\S]*?<\/div>/, `<div class="pill-container">\n                        ${allPills}\n                    </div>`);
+            
+            // Clean and replace article content
+            let cleanContent = content;
+            const nestedArticle = cleanContent.match(/<article[^>]*class="story-content[^>]*>([\s\S]*?)<\/article>/i);
+            if (nestedArticle) {
+                const innerArticle = nestedArticle[1].match(/<article[^>]*>([\s\S]*?)<\/article>/i);
+                if (innerArticle) {
+                    cleanContent = innerArticle[0].trim();
+                } else {
+                    cleanContent = nestedArticle[0].trim();
+                }
+            }
+            
+            const articleMatch = template.match(/<article class="story-content ls-2">[\s\S]*?<\/article>/);
+            if (articleMatch) {
+                const articleTag = articleMatch[0];
+                const newArticle = `<article class="story-content ls-2">\n${cleanContent}\n</article>`;
+                template = template.replace(articleTag, newArticle);
+            } else {
+                const genericArticle = template.match(/<article[^>]*>[\s\S]*?<\/article>/);
+                if (genericArticle) {
+                    const articleTag = genericArticle[0];
+                    const newArticle = `<article class="story-content ls-2">\n${cleanContent}\n</article>`;
+                    template = template.replace(articleTag, newArticle);
+                } else {
+                    template = template.replace(/<!-- REPLACED BY ADMIN -->/g, cleanContent);
+                }
+            }
+            
+            return template;
+        });
+}
+
+// ==========================================================================
+// Form Submit - Save metadata AND HTML file
+// ==========================================================================
+
+form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const title = formTitle.value.trim();
@@ -1077,33 +1261,118 @@ form.addEventListener('submit', (e) => {
         order: projects.length
     };
     
-    if (isEditing && editId) {
-        const index = projects.findIndex(p => p.id === editId);
-        if (index !== -1) {
-            projects[index] = { ...projects[index], ...data };
-            showNotification(`Updated: ${title}`, 'success');
-        }
-    } else {
-        if (projects.find(p => p.id === id)) {
-            showNotification('A piece with this slug already exists', 'error');
+    // Build the full HTML file
+    try {
+        // Get content from form
+        const content = formHtml.value;
+        
+        // Build the assembled HTML using the template
+        const assembledHtml = await buildAssembledHtml(data, content);
+        
+        // Save the HTML file to server
+        const saved = await saveHtmlToServer(fullPath, assembledHtml);
+        if (!saved) {
+            showNotification('HTML file could not be saved', 'error');
             return;
         }
-        projects.push(data);
-        updateOrders();
-        showNotification(`Added: ${title}`, 'success');
+        
+        // Save or update project metadata
+        if (isEditing && editId) {
+            const index = projects.findIndex(p => p.id === editId);
+            if (index !== -1) {
+                projects[index] = { ...projects[index], ...data };
+                showNotification(`Updated: ${title}`, 'success');
+            }
+        } else {
+            if (projects.find(p => p.id === id)) {
+                showNotification('A piece with this slug already exists', 'error');
+                return;
+            }
+            projects.push(data);
+            updateOrders();
+            showNotification(`Added: ${title} - HTML saved to ${fullPath}`, 'success');
+        }
+        
+        saveToServer();
+        resetForm();
+        renderList();
+        updatePieceCount();
+        renderSeriesDropdown();
+        renderSeriesChips();
+        formTitle.focus();
+        
+    } catch (err) {
+        console.error('Error saving piece:', err);
+        showNotification('Error: ' + err.message, 'error');
     }
-    
-    saveToServer();
-    resetForm();
-    renderList();
-    updatePieceCount();
-    renderSeriesDropdown();
-    renderSeriesChips();
-    formTitle.focus();
 });
 
 // ==========================================================================
-// Download HTML - Uses content from file or cache
+// Preview Button
+// ==========================================================================
+
+previewBtn.addEventListener('click', async () => {
+    if (!isEditing || !editId) {
+        showNotification('No piece loaded to preview', 'error');
+        return;
+    }
+    
+    const project = projects.find(p => p.id === editId);
+    if (!project) {
+        showNotification('Project not found', 'error');
+        return;
+    }
+    
+    // Get content from cache or load from file
+    let content = contentCache[`${project.path}${project.slug}`];
+    if (!content) {
+        content = await loadContentFromFile(project);
+    }
+    
+    if (!content || content.trim() === '') {
+        showNotification('No HTML content found. Please upload or paste content first.', 'error');
+        return;
+    }
+    
+    try {
+        // Get the updated form data in case user made changes
+        const formData = getFormData();
+        const mergedProject = { ...project, ...formData };
+        
+        // Build the assembled HTML
+        const assembledHtml = await buildAssembledHtml(mergedProject, content);
+        
+        // Show preview modal
+        previewTitle.textContent = `Preview: ${project.title}`;
+        previewFrame.srcdoc = assembledHtml;
+        previewModal.style.display = 'flex';
+        
+    } catch (err) {
+        console.error('Preview error:', err);
+        showNotification('Error generating preview: ' + err.message, 'error');
+    }
+});
+
+// Preview modal close handlers
+previewModalCloseBtn.addEventListener('click', () => {
+    previewModal.style.display = 'none';
+    previewFrame.srcdoc = '';
+});
+
+previewModalClose.addEventListener('click', () => {
+    previewModal.style.display = 'none';
+    previewFrame.srcdoc = '';
+});
+
+previewModal.addEventListener('click', (e) => {
+    if (e.target === previewModal) {
+        previewModal.style.display = 'none';
+        previewFrame.srcdoc = '';
+    }
+});
+
+// ==========================================================================
+// Download HTML
 // ==========================================================================
 
 downloadBtn.addEventListener('click', async () => {
@@ -1130,166 +1399,14 @@ downloadBtn.addEventListener('click', async () => {
     }
     
     try {
-        const response = await fetch('http://localhost:3000/templates/template.html');
-        if (!response.ok) {
-            showNotification('Could not load template.html', 'error');
-            return;
-        }
-        let template = await response.text();
+        // Get the updated form data in case user made changes
+        const formData = getFormData();
+        const mergedProject = { ...project, ...formData };
         
-        const allTags = [...(project.genres || []), ...(project.themes || [])];
-        const allPills = allTags.length > 0 
-            ? allTags.map(t => `<span class="pill">${escapeHtml(t)}</span>`).join('\n                        ')
-            : '';
+        // Build the assembled HTML
+        const assembledHtml = await buildAssembledHtml(mergedProject, content);
         
-        // ============================================
-        // Series Information
-        // ============================================
-        let seriesHtml = '';
-        let seriesNavHtml = '';
-        let seriesSubtitleHtml = '';
-        
-        if (project.series_id) {
-            const seriesInfo = series.find(s => s.id === project.series_id);
-            if (seriesInfo) {
-                const seriesParts = projects
-                    .filter(p => p.series_id === project.series_id && p.published !== false)
-                    .sort((a, b) => (a.part || 0) - (b.part || 0));
-                
-                const currentPart = project.part || 1;
-                const totalParts = seriesParts.length;
-                const partDisplay = `Part ${currentPart}${totalParts > 1 ? ` of ${totalParts}` : ''}`;
-                
-                seriesHtml = `
-                    <span class="meta-separator">&middot;</span>
-                    <span class="series-meta">
-                        <span class="series-badge">📚 ${escapeHtml(seriesInfo.name)}</span>
-                        <span class="series-part">${partDisplay}</span>
-                    </span>
-                `;
-                
-                seriesSubtitleHtml = `
-                    <p class="story-subtitle series-subtitle">
-                        <span class="series-label">Part of</span>
-                        <span class="series-name">${escapeHtml(seriesInfo.name)}</span>
-                        ${seriesInfo.description ? `<span class="series-desc">— ${escapeHtml(seriesInfo.description)}</span>` : ''}
-                    </p>
-                `;
-                
-                if (seriesParts.length > 1) {
-                    const currentIndex = seriesParts.findIndex(p => p.id === project.id);
-                    navLinks = `
-                        <div class="series-nav">
-                            <span class="series-nav-label">${escapeHtml(seriesInfo.name)}</span>
-                            <div class="series-nav-links">
-                                ${currentIndex > 0 ? `<a href="${seriesParts[currentIndex - 1].fullPath || '#'}" class="series-nav-prev">← Previous</a>` : '<span class="series-nav-disabled">← Previous</span>'}
-                                <span class="series-nav-current">${currentPart}${totalParts > 1 ? `/${totalParts}` : ''}</span>
-                                ${currentIndex < seriesParts.length - 1 ? `<a href="${seriesParts[currentIndex + 1].fullPath || '#'}" class="series-nav-next">Next →</a>` : '<span class="series-nav-disabled">Next →</span>'}
-                            </div>
-                        </div>
-                    `;
-                }
-                seriesNavHtml = navLinks;
-            }
-        }
-        
-        // ============================================
-        // Extract first image from content for OG image
-        // ============================================
-        let ogImage = 'https://samoff.com/wbts_icon.png';
-        let hasImage = false;
-        const imgPath = getFirstImageFromHtml(content);
-        if (imgPath) {
-            hasImage = true;
-            if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
-                ogImage = imgPath;
-            } else if (imgPath.startsWith('/')) {
-                ogImage = `https://samoff.com${imgPath}`;
-            } else {
-                let cleanPath = imgPath.replace(/^\.\.?\//, '');
-                const mediaFolder = project.mediaPath || project.path.replace(/\/$/, '');
-                const folderName = mediaFolder.split('/').pop();
-                if (cleanPath.includes(folderName)) {
-                    ogImage = `https://samoff.com/written/writing/${project.path}${cleanPath}`;
-                } else {
-                    ogImage = `https://samoff.com/written/writing/${mediaFolder}/${cleanPath}`;
-                }
-            }
-        }
-        
-        // ============================================
-        // Title & Meta
-        // ============================================
-        const title = project.title || 'Untitled';
-        const fullTitle = `${title} @ Written by Tim Samoff`;
-        const metaDesc = project.title || '';
-        
-        // Replace all placeholders
-        template = template.replace(/<!-- TITLE: .*? -->/g, `<!-- TITLE: ${title} -->`);
-        template = template.replace(/<title>.*?<\/title>/, `<title>${fullTitle}</title>`);
-        template = template.replace(/<meta name="description" content=".*?">/, `<meta name="description" content="${metaDesc}">`);
-        template = template.replace(/<meta property="og:title" content=".*?">/, `<meta property="og:title" content="${fullTitle}">`);
-        template = template.replace(/<meta property="og:description" content=".*?">/, `<meta property="og:description" content="${metaDesc}">`);
-        template = template.replace(/<meta property="og:image" content=".*?">/, `<meta property="og:image" content="${ogImage}">`);
-        template = template.replace(/<meta name="twitter:title" content=".*?">/, `<meta name="twitter:title" content="${fullTitle}">`);
-        template = template.replace(/<meta name="twitter:description" content=".*?">/, `<meta name="twitter:description" content="${metaDesc}">`);
-        template = template.replace(/<meta name="twitter:image" content=".*?">/, `<meta name="twitter:image" content="${ogImage}">`);
-        
-        const twitterCard = hasImage ? 'summary_large_image' : 'summary';
-        template = template.replace(/<meta name="twitter:card" content=".*?">/, `<meta name="twitter:card" content="${twitterCard}">`);
-        
-        // Date
-        template = template.replace(/<span class="date">.*?<\/span>/, `<span class="date">${project.dateDisplay || ''}</span>`);
-        
-        // Title in header
-        template = template.replace(/TITLE_PLACEHOLDER/g, title);
-        template = template.replace(/<h1 class="story-title"[^>]*>.*?<\/h1>/, `<h1 class="story-title" id="story-title">${title}</h1>`);
-        
-        // Series subtitle
-        template = template.replace(/<!-- SERIES_SUBTITLE: Generated by admin -->/, seriesSubtitleHtml);
-        
-        // Series meta
-        template = template.replace(/<!-- SERIES_META: Generated by admin -->/, seriesHtml);
-        
-        // Series navigation
-        template = template.replace(/<!-- SERIES_NAV: Generated by admin -->/, seriesNavHtml);
-        
-        // Pills
-        template = template.replace(/<div class="pill-container">[\s\S]*?<\/div>/, `<div class="pill-container">\n                        ${allPills}\n                    </div>`);
-        
-        // ============================================
-        // Clean and replace article content
-        // ============================================
-        let cleanContent = content;
-        const nestedArticle = cleanContent.match(/<article[^>]*class="story-content[^>]*>([\s\S]*?)<\/article>/i);
-        if (nestedArticle) {
-            const innerArticle = nestedArticle[1].match(/<article[^>]*>([\s\S]*?)<\/article>/i);
-            if (innerArticle) {
-                cleanContent = innerArticle[0].trim();
-            } else {
-                cleanContent = nestedArticle[0].trim();
-            }
-        }
-        
-        const articleMatch = template.match(/<article class="story-content ls-2">[\s\S]*?<\/article>/);
-        if (articleMatch) {
-            const articleTag = articleMatch[0];
-            const newArticle = `<article class="story-content ls-2">\n${cleanContent}\n</article>`;
-            template = template.replace(articleTag, newArticle);
-        } else {
-            const genericArticle = template.match(/<article[^>]*>[\s\S]*?<\/article>/);
-            if (genericArticle) {
-                const articleTag = genericArticle[0];
-                const newArticle = `<article class="story-content ls-2">\n${cleanContent}\n</article>`;
-                template = template.replace(articleTag, newArticle);
-            } else {
-                template = template.replace(/<!-- REPLACED BY ADMIN -->/g, cleanContent);
-            }
-        }
-        
-        // ============================================
         // Save As dialog
-        // ============================================
         if ('showSaveFilePicker' in window) {
             try {
                 const fileHandle = await window.showSaveFilePicker({
@@ -1300,7 +1417,7 @@ downloadBtn.addEventListener('click', async () => {
                     }]
                 });
                 const writable = await fileHandle.createWritable();
-                await writable.write(template);
+                await writable.write(assembledHtml);
                 await writable.close();
                 showNotification(`Saved: ${project.slug || 'untitled'}.html`, 'success');
                 return;
@@ -1311,7 +1428,7 @@ downloadBtn.addEventListener('click', async () => {
         }
         
         // Fallback download
-        const blob = new Blob([template], { type: 'text/html;charset=utf-8' });
+        const blob = new Blob([assembledHtml], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -1347,7 +1464,7 @@ function showNotification(message, type = 'success') {
         div.style.transform = 'translateX(100%)';
         div.style.transition = 'opacity 0.3s, transform 0.3s';
         setTimeout(() => div.remove(), 300);
-    }, 2500);
+    }, 3000);
 }
 
 // ==========================================================================
