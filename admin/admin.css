@@ -3,7 +3,7 @@
    ========================================================================== */
 
 /* ============================================
-   SCROLLBAR - Theme styles
+   SCROLLBAR - Consolidated
    ============================================ */
 
 .admin-panel::-webkit-scrollbar,
@@ -96,7 +96,7 @@
 }
 
 /* ============================================
-   ADMIN FORM - Scrollable content with fixed bottom actions
+   ADMIN FORM
    ============================================ */
 
 .admin-form-scroll {
@@ -105,24 +105,6 @@
     padding-right: 0.5rem;
     padding-bottom: 0.5rem;
     min-height: 0;
-}
-
-.admin-form-scroll::-webkit-scrollbar {
-    width: 6px;
-}
-
-.admin-form-scroll::-webkit-scrollbar-track {
-    background: var(--color-bg);
-    border-radius: 3px;
-}
-
-.admin-form-scroll::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 3px;
-}
-
-.admin-form-scroll::-webkit-scrollbar-thumb:hover {
-    background: var(--color-accent);
 }
 
 .admin-form {
@@ -207,8 +189,6 @@
     line-height: 1.5;
     min-height: 70px;
     resize: vertical;
-    width: 100%;
-    box-sizing: border-box;
 }
 
 .admin-form .form-group small {
@@ -522,7 +502,7 @@
 }
 
 /* ============================================
-   ADD SERIES BUTTON - Styled like Add Piece
+   ADD SERIES BUTTON
    ============================================ */
 
 .add-series-btn {
@@ -548,7 +528,7 @@
 }
 
 /* ============================================
-   FORM ACTIONS - Fixed at bottom
+   FORM ACTIONS
    ============================================ */
 
 .form-actions {
@@ -608,153 +588,6 @@
     background: var(--color-accent);
     border-color: var(--color-accent);
     color: var(--color-text-inverted, #fff);
-}
-
-/* ============================================
-   SORTABLE LIST - Title truncation
-   ============================================ */
-
-.sort-item .sort-content strong {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: 0.95rem;
-    color: var(--color-text);
-    display: inline-block;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    vertical-align: middle;
-}
-
-@media (max-width: 1024px) {
-    .sort-item .sort-content strong {
-        max-width: 150px;
-    }
-}
-
-@media (max-width: 640px) {
-    .sort-item .sort-content strong {
-        max-width: 100px;
-    }
-}
-
-/* ============================================
-   SERIES MANAGER
-   ============================================ */
-
-.series-manager {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    margin-bottom: 0.5rem;
-    flex-shrink: 0;
-}
-
-.series-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-    padding: 0.2rem 0;
-}
-
-.series-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.65rem;
-    padding: 0.15rem 0.6rem;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 100px;
-    color: var(--color-text);
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-
-.series-chip:hover {
-    border-color: var(--color-accent);
-}
-
-.series-chip.active {
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
-}
-
-.series-chip .series-chip-count {
-    font-size: 0.55rem;
-    opacity: 0.7;
-    background: var(--color-border);
-    padding: 0.05rem 0.3rem;
-    border-radius: 100px;
-    color: var(--color-text-muted);
-}
-
-.series-chip.active .series-chip-count {
-    background: rgba(255,255,255,0.2);
-    color: var(--color-text-inverted, #fff);
-}
-
-.series-chip .series-chip-delete {
-    background: none;
-    border: none;
-    color: inherit;
-    cursor: pointer;
-    opacity: 0.5;
-    font-size: 0.7rem;
-    padding: 0 0.1rem;
-}
-
-.series-chip .series-chip-delete:hover {
-    opacity: 1;
-}
-
-/* ============================================
-   SERIES MODAL
-   ============================================ */
-
-.modal-form-group {
-    margin-bottom: 1rem;
-}
-
-.modal-form-group label {
-    display: block;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--color-text-muted);
-    margin-bottom: 0.25rem;
-}
-
-.modal-form-group input,
-.modal-form-group textarea {
-    width: 100%;
-    padding: 0.5rem 0.7rem;
-    background: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    color: var(--color-text);
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1rem;
-    box-sizing: border-box;
-}
-
-.modal-form-group input:focus,
-.modal-form-group textarea:focus {
-    outline: none;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(139, 90, 74, 0.12);
-}
-
-.modal-form-group textarea {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: 0.95rem;
-    resize: vertical;
-    min-height: 60px;
 }
 
 /* ============================================
@@ -820,24 +653,6 @@
     gap: 0.25rem;
     flex: 1;
     overflow-y: auto;
-}
-
-.sortable-list::-webkit-scrollbar {
-    width: 6px;
-}
-
-.sortable-list::-webkit-scrollbar-track {
-    background: var(--color-bg);
-    border-radius: 3px;
-}
-
-.sortable-list::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 3px;
-}
-
-.sortable-list::-webkit-scrollbar-thumb:hover {
-    background: var(--color-accent);
 }
 
 .sort-group {
@@ -931,6 +746,18 @@
     margin-right: 0.25rem;
 }
 
+.sort-item .sort-content strong {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 0.95rem;
+    color: var(--color-text);
+    display: inline-block;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
 .row-btn {
     display: inline-flex;
     align-items: center;
@@ -961,7 +788,7 @@
     opacity: 0.4;
 }
 
-/* Empty state */
+/* Empty state - reuses .empty-state from style.css if it exists */
 .empty-state {
     text-align: center;
     padding: var(--space-xl) var(--space-md);
@@ -979,6 +806,79 @@
     font-size: 0.9rem;
     font-style: italic;
     margin: 0;
+}
+
+/* ============================================
+   SERIES MANAGER
+   ============================================ */
+
+.series-manager {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+}
+
+.series-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    padding: 0.2rem 0;
+}
+
+.series-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.6rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 100px;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.series-chip:hover {
+    border-color: var(--color-accent);
+}
+
+.series-chip.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-text-inverted, #fff);
+}
+
+.series-chip .series-chip-count {
+    font-size: 0.55rem;
+    opacity: 0.7;
+    background: var(--color-border);
+    padding: 0.05rem 0.3rem;
+    border-radius: 100px;
+    color: var(--color-text-muted);
+}
+
+.series-chip.active .series-chip-count {
+    background: rgba(255,255,255,0.2);
+    color: var(--color-text-inverted, #fff);
+}
+
+.series-chip .series-chip-delete {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.5;
+    font-size: 0.7rem;
+    padding: 0 0.1rem;
+}
+
+.series-chip .series-chip-delete:hover {
+    opacity: 1;
 }
 
 /* ============================================
@@ -1092,6 +992,52 @@
 }
 
 /* ============================================
+   MODAL FORM
+   ============================================ */
+
+.modal-form-group {
+    margin-bottom: 1rem;
+}
+
+.modal-form-group label {
+    display: block;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.modal-form-group input,
+.modal-form-group textarea {
+    width: 100%;
+    padding: 0.5rem 0.7rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    color: var(--color-text);
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.modal-form-group input:focus,
+.modal-form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(139, 90, 74, 0.12);
+}
+
+.modal-form-group textarea {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 0.95rem;
+    resize: vertical;
+    min-height: 60px;
+}
+
+/* ============================================
    RESPONSIVE
    ============================================ */
 
@@ -1125,6 +1071,10 @@
     .sortable-list {
         max-height: calc(50vh - 100px);
     }
+
+    .sort-item .sort-content strong {
+        max-width: 150px;
+    }
 }
 
 @media (max-width: 640px) {
@@ -1148,5 +1098,9 @@
     
     .tag-add input {
         width: 55px;
+    }
+
+    .sort-item .sort-content strong {
+        max-width: 100px;
     }
 }
