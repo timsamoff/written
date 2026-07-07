@@ -6,6 +6,7 @@ const PORT = 3000;
 
 // Simple file paths
 const DATA_FILE = path.join(__dirname, 'data', 'projects.json');
+const DATA_JS_FILE = path.join(__dirname, 'data.js');
 const WRITING_DIR = path.join(__dirname, 'writing');
 const BASE_DIR = __dirname;
 
@@ -13,6 +14,7 @@ console.log('========================================');
 console.log('📁 Written Admin Server');
 console.log('========================================');
 console.log('📍 Data file:', DATA_FILE);
+console.log('📍 Data JS file:', DATA_JS_FILE);
 console.log('📍 Writing directory:', WRITING_DIR);
 console.log('');
 
@@ -37,6 +39,23 @@ if (!fs.existsSync(DATA_FILE)) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
     console.log('✅ Created default projects.json');
 }
+
+// Function to generate data.js from projects.json
+function generateDataJs() {
+    try {
+        const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        const jsContent = `// Auto-generated from projects.json\n// Do not edit directly - changes will be overwritten\nwindow.__WRITTEN_DATA__ = ${JSON.stringify(data, null, 2)};`;
+        fs.writeFileSync(DATA_JS_FILE, jsContent, 'utf8');
+        console.log('✅ Generated data.js');
+        return true;
+    } catch (err) {
+        console.log('⚠️ Could not generate data.js:', err.message);
+        return false;
+    }
+}
+
+// Generate data.js on startup
+generateDataJs();
 
 // Create the server
 const server = http.createServer((req, res) => {
@@ -71,13 +90,32 @@ const server = http.createServer((req, res) => {
         return;
     }
 
+    // ========== API: GET /api/data-js ==========
+    if (method === 'GET' && url === '/api/data-js') {
+        try {
+            const data = fs.readFileSync(DATA_JS_FILE, 'utf8');
+            res.writeHead(200, { 'Content-Type': 'application/javascript' });
+            res.end(data);
+            console.log('✅ GET /api/data-js');
+        } catch (err) {
+            console.log('❌ Error:', err.message);
+            res.writeHead(500);
+            res.end('// Error loading data');
+        }
+        return;
+    }
+
     // ========== API: POST /api/save-projects ==========
     if (method === 'POST' && url === '/api/save-projects') {
         let body = '';
         req.on('data', chunk => { body += chunk; });
         req.on('end', () => {
             try {
-                fs.writeFileSync(DATA_FILE, body);
+                // Format the JSON nicely
+                const parsed = JSON.parse(body);
+                fs.writeFileSync(DATA_FILE, JSON.stringify(parsed, null, 2));
+                // Generate data.js
+                generateDataJs();
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: true }));
                 console.log('✅ POST /api/save-projects');
@@ -195,6 +233,7 @@ server.listen(PORT, () => {
     console.log('========================================');
     console.log('🌐 Admin: http://localhost:' + PORT + '/admin/admin.html');
     console.log('📝 API: http://localhost:' + PORT + '/api/projects');
+    console.log('📄 Data JS: http://localhost:' + PORT + '/data.js');
     console.log('💾 Save HTML: POST /api/save-html');
     console.log('========================================');
     console.log('');

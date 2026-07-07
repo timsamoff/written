@@ -1,4 +1,6 @@
-{
+// Auto-generated from projects.json
+// Do not edit directly - changes will be overwritten
+window.__WRITTEN_DATA__ = {
   "projects": [
     {
       "id": "threxil-pattern",
@@ -88,4 +90,4 @@
       "description": "A deep dive into creating a culturally relevant video game."
     }
   ]
-}
+};

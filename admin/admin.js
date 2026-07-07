@@ -1,6 +1,5 @@
 // ==========================================================================
 // Written Admin - Complete Admin Logic with Series Support
-// Content is stored in HTML files, not in JSON
 // ==========================================================================
 
 // State
@@ -55,7 +54,6 @@ const addThemeBtn = document.getElementById('add-theme-btn');
 
 // Series elements
 const seriesList = document.getElementById('series-list');
-const addSeriesBtn = document.getElementById('add-series-btn');
 const addSeriesInlineBtn = document.getElementById('add-series-inline-btn');
 
 // Series Modal
@@ -64,6 +62,7 @@ const seriesModalTitle = document.getElementById('series-modal-title');
 const seriesName = document.getElementById('series-name');
 const seriesDescription = document.getElementById('series-description');
 const seriesEditId = document.getElementById('series-edit-id');
+const seriesAutoSelect = document.getElementById('series-auto-select');
 const seriesModalSave = document.getElementById('series-modal-save');
 const seriesModalCancel = document.getElementById('series-modal-cancel');
 const seriesModalClose = document.getElementById('series-modal-close');
@@ -74,13 +73,6 @@ const seriesDeleteMessage = document.getElementById('series-delete-message');
 const seriesDeleteConfirm = document.getElementById('series-delete-confirm');
 const seriesDeleteCancel = document.getElementById('series-delete-cancel');
 const seriesDeleteClose = document.getElementById('series-delete-close');
-
-// Preview Modal
-const previewModal = document.getElementById('preview-modal');
-const previewFrame = document.getElementById('preview-frame');
-const previewTitle = document.getElementById('preview-title');
-const previewModalCloseBtn = document.getElementById('preview-modal-close-btn');
-const previewModalClose = document.getElementById('preview-modal-close');
 
 // ==========================================================================
 // Helper Functions
@@ -124,21 +116,46 @@ function extractArticleContent(html) {
 }
 
 // ==========================================================================
-// Check if HTML file exists
+// Fix image paths in HTML content
 // ==========================================================================
 
-async function htmlFileExists(project) {
-    if (!project || !project.path || !project.slug) return false;
-    const cacheKey = `${project.path}${project.slug}`;
-    if (contentCache[cacheKey]) return true;
+function fixImagePaths(html, project) {
+    if (!html || !project) return html;
     
-    const filePath = `http://localhost:3000/writing/${project.path}${project.slug}.html`;
-    try {
-        const response = await fetch(filePath, { method: 'HEAD' });
-        return response.ok;
-    } catch {
-        return false;
-    }
+    // Build the base media path
+    let mediaPath = project.mediaPath || project.path.replace(/\/$/, '');
+    // Remove trailing slash if present
+    mediaPath = mediaPath.replace(/\/$/, '');
+    
+    // Build the base URL path - start from root
+    const basePath = `/writing/${mediaPath}/`;
+    
+    console.log('🔧 fixImagePaths:', { mediaPath, basePath });
+    
+    // Replace relative image paths (not starting with http://, https://, /, or data:)
+    return html.replace(/<img([^>]+)src=["']([^"']+)["']/gi, function(match, attrs, src) {
+        // Skip if already absolute
+        if (src.startsWith('http://') || src.startsWith('https://') || 
+            src.startsWith('/') || src.startsWith('data:')) {
+            return match;
+        }
+        
+        // Skip if it's already a full path with writing/
+        if (src.includes('writing/')) {
+            return match;
+        }
+        
+        // Remove leading ./ or ../
+        const cleanSrc = src.replace(/^\.\.?\//, '');
+        
+        // Build the corrected path
+        const correctedSrc = `${basePath}${cleanSrc}`;
+        
+        console.log('🔄 Image path fixed:', src, '→', correctedSrc);
+        
+        // Replace the src attribute
+        return `<img${attrs}src="${correctedSrc}"`;
+    });
 }
 
 // ==========================================================================
@@ -159,8 +176,10 @@ async function loadContentFromFile(project) {
         if (!response.ok) return '';
         const html = await response.text();
         const content = extractArticleContent(html);
-        contentCache[cacheKey] = content;
-        return content;
+        // Fix image paths in the loaded content
+        const fixedContent = fixImagePaths(content, project);
+        contentCache[cacheKey] = fixedContent;
+        return fixedContent;
     } catch (err) {
         console.warn(`Could not load content for ${project.slug}:`, err);
         return '';
@@ -209,10 +228,8 @@ fileInput.addEventListener('change', function(e) {
         fileUploadText.textContent = file.name;
         fileUploadText.parentElement.classList.add('has-file');
         clearFileBtn.classList.add('visible');
-        // Clear the warning if it was showing
-        if (formHtml.dataset.hasWarning) {
-            formHtml.dataset.hasWarning = 'false';
-        }
+        // Remove placeholder styling
+        formHtml.classList.remove('placeholder-warning');
         showNotification(`Loaded: ${file.name}`, 'success');
         if (isEditing) debouncedAutoSave();
     };
@@ -225,9 +242,7 @@ clearFileBtn.addEventListener('click', function() {
     fileUploadText.parentElement.classList.remove('has-file');
     this.classList.remove('visible');
     formHtml.value = '';
-    if (formHtml.dataset) {
-        formHtml.dataset.hasWarning = 'false';
-    }
+    formHtml.classList.remove('placeholder-warning');
     if (isEditing) debouncedAutoSave();
 });
 
@@ -236,9 +251,7 @@ formHtml.addEventListener('input', function() {
         fileUploadText.textContent = 'Manual entry';
         fileUploadText.parentElement.classList.add('has-file');
         clearFileBtn.classList.add('visible');
-        if (this.dataset) {
-            this.dataset.hasWarning = 'false';
-        }
+        this.classList.remove('placeholder-warning');
     }
 });
 
@@ -336,11 +349,13 @@ function openSeriesModal(id) {
         seriesName.value = s.name;
         seriesDescription.value = s.description || '';
         seriesEditId.value = id;
+        seriesAutoSelect.value = 'false';
     } else {
         seriesModalTitle.textContent = 'New Series';
         seriesName.value = '';
         seriesDescription.value = '';
         seriesEditId.value = '';
+        seriesAutoSelect.value = 'true';
     }
     seriesModal.style.display = 'flex';
     setTimeout(() => seriesName.focus(), 100);
@@ -387,7 +402,20 @@ function saveSeries() {
     renderSeriesDropdown();
     renderSeriesChips();
     renderList();
-    showNotification(`Series "${name}" saved`, 'success');
+    
+    // Auto-select the series if it was a new series created from the dropdown
+    if (seriesAutoSelect.value === 'true' && isEditing && editId) {
+        formSeries.value = id;
+        // Auto-fill part number
+        const parts = projects.filter(p => p.series_id === id && p.id !== editId);
+        const nextPart = parts.length + 1;
+        formPart.value = nextPart;
+        // Auto-save the piece with the new series
+        autoSave();
+        showNotification(`Series "${name}" created and assigned to current piece`, 'success');
+    } else {
+        showNotification(`Series "${name}" saved`, 'success');
+    }
 }
 
 function confirmDeleteSeries(id) {
@@ -417,7 +445,6 @@ function deleteSeries(id) {
 }
 
 // Series event listeners
-addSeriesBtn.addEventListener('click', () => openSeriesModal(null));
 addSeriesInlineBtn.addEventListener('click', () => openSeriesModal(null));
 seriesModalSave.addEventListener('click', saveSeries);
 seriesModalCancel.addEventListener('click', closeSeriesModal);
@@ -442,6 +469,7 @@ seriesDeleteModal.addEventListener('click', (e) => {
     if (e.target === seriesDeleteModal) seriesDeleteModal.style.display = 'none';
 });
 
+// Series dropdown change - auto-save
 formSeries.addEventListener('change', function() {
     if (this.value) {
         const parts = projects.filter(p => p.series_id === this.value && p.id !== editId);
@@ -449,6 +477,10 @@ formSeries.addEventListener('change', function() {
         formPart.value = nextPart;
     } else {
         formPart.value = '';
+    }
+    // Auto-save if editing
+    if (isEditing && editId) {
+        debouncedAutoSave();
     }
 });
 
@@ -630,9 +662,7 @@ function resetForm() {
     selectedGenres = [];
     selectedThemes = [];
     formHtml.value = '';
-    if (formHtml.dataset) {
-        formHtml.dataset.hasWarning = 'false';
-    }
+    formHtml.classList.remove('placeholder-warning');
     formPublished.checked = true;
     formSeries.value = '';
     formPart.value = '';
@@ -662,20 +692,16 @@ function loadProject(id) {
     formHeading.textContent = `Editing: ${project.title}`;
     formEditId.value = id;
     
-    // Load content from file (not from project object)
+    // Load content from file
     loadContentFromFile(project).then(content => {
         if (content) {
             formHtml.value = content;
-            if (formHtml.dataset) {
-                formHtml.dataset.hasWarning = 'false';
-            }
+            formHtml.classList.remove('placeholder-warning');
         } else {
-            // Show warning message in textarea
-            const warningMsg = `⚠️ No HTML file found at writing/${project.path}${project.slug}.html\n\nTo add content:\n1. Upload an HTML file using the "Choose HTML file" button\n2. Or paste the <article> content directly into this textarea\n3. Click "Add Piece" (or "Update") to save both metadata and HTML`;
-            formHtml.value = warningMsg;
-            if (formHtml.dataset) {
-                formHtml.dataset.hasWarning = 'true';
-            }
+            // Show hint in textarea (as placeholder-like text, not actual value)
+            formHtml.value = '';
+            formHtml.placeholder = `⚠️ No HTML file found at writing/${project.path}${project.slug}.html\n\nTo add content:\n1. Upload an HTML file using the "Choose HTML file" button\n2. Or paste the <article> content directly into this textarea\n3. Click "Add Piece" (or "Update") to save both metadata and HTML`;
+            formHtml.classList.add('placeholder-warning');
             showNotification('⚠️ No HTML content found. Upload or paste content to enable Preview and Download.', 'error');
         }
         setFormData(project);
@@ -730,7 +756,6 @@ function updateOrders() {
 // ==========================================================================
 
 function saveToServer() {
-    // Remove htmlContent from projects before saving (it's stored in files)
     const cleanProjects = projects.map(p => {
         const { htmlContent, ...rest } = p;
         return rest;
@@ -1114,24 +1139,24 @@ adminSearchClear.addEventListener('click', () => {
 });
 
 // ==========================================================================
-// Build Assembled HTML
+// Build Assembled HTML with image path fixing
 // ==========================================================================
 
 function buildAssembledHtml(project, content) {
-    // Load template
+    // Fix image paths in the content
+    const fixedContent = fixImagePaths(content, project);
+    
     return fetch('http://localhost:3000/templates/template.html')
         .then(response => {
             if (!response.ok) throw new Error('Could not load template.html');
             return response.text();
         })
         .then(template => {
-            // Build genre and theme pills
             const allTags = [...(project.genres || []), ...(project.themes || [])];
             const allPills = allTags.length > 0 
                 ? allTags.map(t => `<span class="pill">${escapeHtml(t)}</span>`).join('\n                        ')
                 : '';
             
-            // Series Information
             let seriesHtml = '';
             let seriesNavHtml = '';
             let seriesSubtitleHtml = '';
@@ -1181,10 +1206,9 @@ function buildAssembledHtml(project, content) {
                 }
             }
             
-            // Extract first image for OG image
             let ogImage = 'https://samoff.com/wbts_icon.png';
             let hasImage = false;
-            const imgPath = getFirstImageFromHtml(content);
+            const imgPath = getFirstImageFromHtml(fixedContent);
             if (imgPath) {
                 hasImage = true;
                 if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
@@ -1192,14 +1216,8 @@ function buildAssembledHtml(project, content) {
                 } else if (imgPath.startsWith('/')) {
                     ogImage = `https://samoff.com${imgPath}`;
                 } else {
-                    let cleanPath = imgPath.replace(/^\.\.?\//, '');
-                    const mediaFolder = project.mediaPath || project.path.replace(/\/$/, '');
-                    const folderName = mediaFolder.split('/').pop();
-                    if (cleanPath.includes(folderName)) {
-                        ogImage = `https://samoff.com/written/writing/${project.path}${cleanPath}`;
-                    } else {
-                        ogImage = `https://samoff.com/written/writing/${mediaFolder}/${cleanPath}`;
-                    }
+                    // Image path should already be fixed, but just in case
+                    ogImage = `https://samoff.com${imgPath}`;
                 }
             }
             
@@ -1207,7 +1225,6 @@ function buildAssembledHtml(project, content) {
             const fullTitle = `${title} @ Written by Tim Samoff`;
             const metaDesc = project.title || '';
             
-            // Replace all placeholders
             template = template.replace(/<!-- TITLE: .*? -->/g, `<!-- TITLE: ${title} -->`);
             template = template.replace(/<title>.*?<\/title>/, `<title>${fullTitle}</title>`);
             template = template.replace(/<meta name="description" content=".*?">/, `<meta name="description" content="${metaDesc}">`);
@@ -1229,8 +1246,7 @@ function buildAssembledHtml(project, content) {
             template = template.replace(/<!-- SERIES_NAV: Generated by admin -->/, seriesNavHtml);
             template = template.replace(/<div class="pill-container">[\s\S]*?<\/div>/, `<div class="pill-container">\n                        ${allPills}\n                    </div>`);
             
-            // Clean and replace article content
-            let cleanContent = content;
+            let cleanContent = fixedContent;
             const nestedArticle = cleanContent.match(/<article[^>]*class="story-content[^>]*>([\s\S]*?)<\/article>/i);
             if (nestedArticle) {
                 const innerArticle = nestedArticle[1].match(/<article[^>]*>([\s\S]*?)<\/article>/i);
@@ -1262,27 +1278,14 @@ function buildAssembledHtml(project, content) {
 }
 
 // ==========================================================================
-// Get content for preview/download (with warning if missing)
+// Get content for preview/download
 // ==========================================================================
 
 async function getContentForAction(project) {
-    // Get content from cache or load from file
     let content = contentCache[`${project.path}${project.slug}`];
     if (!content) {
         content = await loadContentFromFile(project);
     }
-    
-    // Check if the content is the warning message (from loadProject)
-    if (!content || content.trim() === '' || 
-        (content.includes('⚠️ No HTML file found') && formHtml.dataset && formHtml.dataset.hasWarning === 'true')) {
-        // Try to load from form if it has content and isn't the warning
-        const formContent = formHtml.value;
-        if (formContent && !formContent.includes('⚠️ No HTML file found')) {
-            return formContent;
-        }
-        return null;
-    }
-    
     return content;
 }
 
@@ -1304,8 +1307,8 @@ form.addEventListener('submit', async (e) => {
         return;
     }
     
-    // Check if content is the warning message or empty
-    if (!html || html.includes('⚠️ No HTML file found')) {
+    // Check if content is empty
+    if (!html) {
         showNotification('Please add HTML content before saving', 'error');
         return;
     }
@@ -1332,25 +1335,21 @@ form.addEventListener('submit', async (e) => {
         order: projects.length
     };
     
-    // Build the full HTML file
     try {
         const content = html;
+        // Fix image paths before saving to HTML file
+        const fixedContent = fixImagePaths(content, data);
+        const assembledHtml = await buildAssembledHtml(data, fixedContent);
         
-        // Build the assembled HTML using the template
-        const assembledHtml = await buildAssembledHtml(data, content);
-        
-        // Save the HTML file to server
         const saved = await saveHtmlToServer(fullPath, assembledHtml);
         if (!saved) {
             showNotification('HTML file could not be saved', 'error');
             return;
         }
         
-        // Update cache
         const cacheKey = `${cleanPath}${slug}`;
-        contentCache[cacheKey] = content;
+        contentCache[cacheKey] = fixedContent;
         
-        // Save or update project metadata
         if (isEditing && editId) {
             const index = projects.findIndex(p => p.id === editId);
             if (index !== -1) {
@@ -1382,7 +1381,7 @@ form.addEventListener('submit', async (e) => {
 });
 
 // ==========================================================================
-// Preview Button
+// Preview Button - Opens in new tab with fixed image paths
 // ==========================================================================
 
 previewBtn.addEventListener('click', async () => {
@@ -1397,18 +1396,12 @@ previewBtn.addEventListener('click', async () => {
         return;
     }
     
-    // Get content (check form first, then cache, then file)
-    let content = null;
+    let content = await getContentForAction(project);
     
-    // Check if form has content (and it's not the warning)
+    // Check if form has content (user might have added it)
     const formContent = formHtml.value;
     if (formContent && !formContent.includes('⚠️ No HTML file found')) {
         content = formContent;
-    }
-    
-    // If not in form, try cache or file
-    if (!content) {
-        content = await getContentForAction(project);
     }
     
     if (!content) {
@@ -1417,39 +1410,30 @@ previewBtn.addEventListener('click', async () => {
     }
     
     try {
-        // Get the updated form data in case user made changes
         const formData = getFormData();
         const mergedProject = { ...project, ...formData };
         
-        // Build the assembled HTML
-        const assembledHtml = await buildAssembledHtml(mergedProject, content);
+        // DEBUG: Log the project data
+        console.log('📋 Preview Project:', mergedProject);
+        console.log('📋 Media Path:', mergedProject.mediaPath);
         
-        // Show preview modal
-        previewTitle.textContent = `Preview: ${project.title}`;
-        previewFrame.srcdoc = assembledHtml;
-        previewModal.style.display = 'flex';
+        // Fix image paths
+        const fixedContent = fixImagePaths(content, mergedProject);
+        
+        const assembledHtml = await buildAssembledHtml(mergedProject, fixedContent);
+        
+        // Open in new tab
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+            newWindow.document.write(assembledHtml);
+            newWindow.document.close();
+        } else {
+            showNotification('Popup blocked. Please allow popups for this site.', 'error');
+        }
         
     } catch (err) {
         console.error('Preview error:', err);
         showNotification('Error generating preview: ' + err.message, 'error');
-    }
-});
-
-// Preview modal close handlers
-previewModalCloseBtn.addEventListener('click', () => {
-    previewModal.style.display = 'none';
-    previewFrame.srcdoc = '';
-});
-
-previewModalClose.addEventListener('click', () => {
-    previewModal.style.display = 'none';
-    previewFrame.srcdoc = '';
-});
-
-previewModal.addEventListener('click', (e) => {
-    if (e.target === previewModal) {
-        previewModal.style.display = 'none';
-        previewFrame.srcdoc = '';
     }
 });
 
@@ -1469,18 +1453,12 @@ downloadBtn.addEventListener('click', async () => {
         return;
     }
     
-    // Get content (check form first, then cache, then file)
-    let content = null;
+    let content = await getContentForAction(project);
     
-    // Check if form has content (and it's not the warning)
+    // Check if form has content (user might have added it)
     const formContent = formHtml.value;
     if (formContent && !formContent.includes('⚠️ No HTML file found')) {
         content = formContent;
-    }
-    
-    // If not in form, try cache or file
-    if (!content) {
-        content = await getContentForAction(project);
     }
     
     if (!content) {
@@ -1489,14 +1467,12 @@ downloadBtn.addEventListener('click', async () => {
     }
     
     try {
-        // Get the updated form data in case user made changes
         const formData = getFormData();
         const mergedProject = { ...project, ...formData };
+        // Fix image paths before download
+        const fixedContent = fixImagePaths(content, mergedProject);
+        const assembledHtml = await buildAssembledHtml(mergedProject, fixedContent);
         
-        // Build the assembled HTML
-        const assembledHtml = await buildAssembledHtml(mergedProject, content);
-        
-        // Save As dialog
         if ('showSaveFilePicker' in window) {
             try {
                 const fileHandle = await window.showSaveFilePicker({
@@ -1517,7 +1493,6 @@ downloadBtn.addEventListener('click', async () => {
             }
         }
         
-        // Fallback download
         const blob = new Blob([assembledHtml], { type: 'text/html;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');

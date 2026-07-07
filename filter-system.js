@@ -12,8 +12,8 @@ function initFilterSystem() {
     const clearFiltersBtn = document.getElementById('clear-filters');
     const tbody = document.getElementById('toc-body');
     
-    // Get all rows
-    const rows = Array.from(tbody.querySelectorAll('tr'));
+    // Get all rows (excluding series headers)
+    const rows = Array.from(tbody.querySelectorAll('tr:not(.series-header-row)'));
     
     // State
     let activeGenres = new Set(['all']);
@@ -82,8 +82,30 @@ function initFilterSystem() {
     
     function updateDisplay() {
         let visibleCount = 0;
+        let totalCount = 0;
         
-        rows.forEach(row => {
+        // Process all rows including series headers
+        const allRows = tbody.querySelectorAll('tr');
+        allRows.forEach(row => {
+            if (row.classList.contains('series-header-row')) {
+                // Check if any child rows are visible
+                let childVisible = false;
+                let next = row.nextElementSibling;
+                while (next && !next.classList.contains('series-header-row')) {
+                    if (!next.classList.contains('filter-hidden')) {
+                        childVisible = true;
+                    }
+                    next = next.nextElementSibling;
+                }
+                if (childVisible) {
+                    row.classList.remove('filter-hidden');
+                } else {
+                    row.classList.add('filter-hidden');
+                }
+                return;
+            }
+            
+            totalCount++;
             const isVisible = matchesFilters(row);
             if (isVisible) {
                 row.classList.remove('filter-hidden');
@@ -93,7 +115,6 @@ function initFilterSystem() {
             }
         });
         
-        const totalCount = rows.length;
         if (visibleCount === totalCount && activeGenres.has('all') && activeThemes.has('all')) {
             filterCountSpan.textContent = `Showing all ${totalCount} ${totalCount === 1 ? 'piece' : 'pieces'}`;
         } else {
@@ -193,25 +214,35 @@ function initFilterSystem() {
     // Attach Event Listeners to Filter Buttons
     // ============================================
     
-    // Genre filters - rebuild with fresh listeners
-    const genreButtons = genreFilterContainer.querySelectorAll('.filter-chip');
-    genreButtons.forEach(btn => {
-        const clone = btn.cloneNode(true);
-        btn.parentNode.replaceChild(clone, btn);
-        clone.addEventListener('click', function() {
-            handleFilterClick(this, 'genre', this.dataset.filter);
+    // Clear existing listeners by cloning all buttons
+    function rebuildButtonListeners() {
+        // Genre filters
+        const genreButtons = genreFilterContainer.querySelectorAll('.filter-chip');
+        genreButtons.forEach(btn => {
+            const clone = btn.cloneNode(true);
+            btn.parentNode.replaceChild(clone, btn);
+            clone.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleFilterClick(this, 'genre', this.dataset.filter);
+            });
         });
-    });
+        
+        // Theme filters
+        const themeButtons = themeFilterContainer.querySelectorAll('.filter-chip');
+        themeButtons.forEach(btn => {
+            const clone = btn.cloneNode(true);
+            btn.parentNode.replaceChild(clone, btn);
+            clone.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                handleFilterClick(this, 'theme', this.dataset.filter);
+            });
+        });
+    }
     
-    // Theme filters - rebuild with fresh listeners
-    const themeButtons = themeFilterContainer.querySelectorAll('.filter-chip');
-    themeButtons.forEach(btn => {
-        const clone = btn.cloneNode(true);
-        btn.parentNode.replaceChild(clone, btn);
-        clone.addEventListener('click', function() {
-            handleFilterClick(this, 'theme', this.dataset.filter);
-        });
-    });
+    // Rebuild listeners
+    rebuildButtonListeners();
     
     // Clear filters button
     if (clearFiltersBtn) {
