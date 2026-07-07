@@ -51,9 +51,10 @@ window.__WRITTEN_DATA__ = {
       "fullPath": "writing/articles/ni_p1.html",
       "date": "2025-12-15",
       "dateDisplay": "December 15, 2025",
-      "mediaPath": "articles/ni",
+      "mediaPath": "ni",
       "genres": [
-        "article"
+        "article",
+        "sci-fi"
       ],
       "themes": [
         "game-design",
@@ -64,6 +65,29 @@ window.__WRITTEN_DATA__ = {
       "series_id": "new-improved-",
       "part": 1,
       "order": 2
+    },
+    {
+      "id": "ni_p2",
+      "title": "Progress Isn’t Power: Designing Systems That Measure Impact, Not Dominance",
+      "path": "articles/",
+      "slug": "ni_p2",
+      "fullPath": "writing/articles/ni_p2.html",
+      "date": "2026-12-22",
+      "dateDisplay": "December 22, 2026",
+      "mediaPath": "ni",
+      "genres": [
+        "article",
+        "sci-fi"
+      ],
+      "themes": [
+        "culture",
+        "game-design",
+        "dystopia"
+      ],
+      "published": true,
+      "series_id": "new-improved-",
+      "part": 2,
+      "order": 3
     }
   ],
   "genres": [

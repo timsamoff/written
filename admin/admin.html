@@ -89,12 +89,12 @@
 
                         <!-- Media Path -->
                         <div class="form-group">
-                            <label for="form-media">Media Path</label>
+                            <label for="form-media">Media Folder</label>
                             <div class="path-input-wrapper">
-                                <span class="path-prefix">writing/</span>
-                                <input type="text" id="form-media" placeholder="shorts/story" />
+                                <span class="path-prefix">writing/[path]/</span>
+                                <input type="text" id="form-media" placeholder="folder-name" />
                             </div>
-                            <small>Optional: folder for images/videos</small>
+                            <small>Optional: folder name for images/videos (e.g., <code>ni</code>). Leave blank for no media.</small>
                         </div>
 
                         <!-- Series -->
@@ -178,7 +178,7 @@
 
                 <!-- Fixed bottom actions -->
                 <div class="form-actions">
-                    <button type="submit" id="submit-btn" class="filter-btn active">
+                    <button type="button" id="submit-btn" class="filter-btn active">
                         + Add Piece
                     </button>
                     <button type="button" id="preview-btn" class="filter-btn preview-btn" style="display:none;">

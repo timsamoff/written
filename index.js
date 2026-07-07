@@ -161,7 +161,7 @@ function renderTable(projects, series) {
                 <td colspan="3" class="series-header standalone-header">
                     <span class="series-icon">📄</span>
                     <span class="series-name">Standalone</span>
-                    <span class="series-count">(${standalone.length} article${standalone.length !== 1 ? 's' : ''})</span>
+                    <span class="series-count">(${standalone.length} piece${standalone.length !== 1 ? 's' : ''})</span>
                 </td>
             </tr>
         `;
