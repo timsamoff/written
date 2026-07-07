@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Written & Formatted @ Written by Tim Samoff</title>
-    <meta name="description" content="Written & Formatted">
+    <title>Written &amp; Formatted @ Written by Tim Samoff</title>
+    <meta name="description" content="How a Portfolio Website Led to a Publishing Tool">
 
     <!-- Open Graph -->
     <meta property="og:type" content="article">
-    <meta property="og:title" content="Written & Formatted @ Written by Tim Samoff">
-    <meta property="og:description" content="Written & Formatted">
+    <meta property="og:title" content="Written &amp; Formatted @ Written by Tim Samoff">
+    <meta property="og:description" content="How a Portfolio Website Led to a Publishing Tool">
     <meta property="og:site_name" content="Written by Tim Samoff">
     <meta property="og:image" content="https://samoff.com/written/writing/articles/wf/wf_ui.png">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Written & Formatted @ Written by Tim Samoff">
-    <meta name="twitter:description" content="Written & Formatted">
+    <meta name="twitter:title" content="Written &amp; Formatted @ Written by Tim Samoff">
+    <meta name="twitter:description" content="How a Portfolio Website Led to a Publishing Tool">
     <meta name="twitter:image" content="https://samoff.com/written/writing/articles/wf/wf_ui.png">
     
     <link rel="icon" href="../../favicon.ico" sizes="any">
@@ -68,20 +68,18 @@
                     <div class="card-meta">
                         <span class="author">By Tim Samoff</span>
                         <span class="meta-separator">&middot;</span>
-                        <span class="date">June 4, 2026</span>
+                        <span class="date">Published June 4, 2026</span>
                     </div>
-                    <h1 class="story-title" id="story-title">Written & Formatted</h1>
+                    <h1 class="story-title">Written &amp; Formatted</h1>
+                    <p class="story-subtitle">How a Portfolio Website Led to a Publishing Tool</p>
                     <div class="pill-container">
-                        <span class="pill">article</span>
-                        <span class="pill">technology</span>
-                        <span class="pill">writing</span>
-                        <span class="pill">publishing</span>
+                        <span class="pill">Article</span>
+                        <span class="pill">Software Development</span>
+                        <span class="pill">Writing</span>
                     </div>
                 </header>
 
-                <!-- ARTICLE CONTENT: Replaced by admin -->
-                <article class="story-content ls-2">
-<article class="story-content ls-1">
+                <article class="story-content ls-1">
                     <p class="no-indent">I’m struck by how often a side project reveals a different project hiding within. You know, those projects you start and then find out you don't have the right tool…?</p>
                     <p class="no-indent">I ran into that while building <a href="https://samoff.com/written" target="_blank" rel="noopener">Written</a>, a portfolio site for my essays, fiction, articles, and other written work. Designing the actual portfolio site was pretty straightforward. The unexpected part was preparing content for it.</p>
                     <p class="no-indent">After beginning the formatting process for one of my short fiction pieces, The <em>Threxil Pattern</em> (read it <a href="https://samoff.com/written/writing/shorts/threxil.html" target="_blank" rel="noopener">here</a>!), I noticed I was performing the same tasks every time. I was wrapping paragraphs in HTML, inserting structural elements, trying to format some of the included monospaced elements, creating section breaks, and so on. None of it was difficult, but this story is 28 pages long! While it's not difficult to tackle a couple of short pieces like this, several dozen, each requiring the same kind of work, would be horrible.</p>
@@ -159,16 +157,19 @@
 
                     <hr class="fleuron-end" aria-hidden="true">
                 </article>
-</article>
+
+                <div class="wf-credit" aria-label="Formatted by Written &amp; Formatted">
+                    <p>Page formatted by <a href="https://samoff.com/written/app" target="_blank" rel="noopener">Written &amp; Formatted</a>. &copy; Tim Samoff.</p>
+                </div>
             </article>
         </main>
     </div>
 
     <footer class="site-footer">
         <div class="container footer-container">
-            <p>&copy; <span id="current-year-story"></span> Written by Tim Samoff.</p>
+            <p>&copy; <span id="current-year-guide"></span> Written by Tim Samoff.</p>
             <script>
-                document.getElementById('current-year-story').textContent = new Date().getFullYear();
+                document.getElementById('current-year-guide').textContent = new Date().getFullYear();
             </script>
         </div>
     </footer>
