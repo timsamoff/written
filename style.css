@@ -1175,3 +1175,106 @@ footer.wf-credit a:hover, div.wf-credit a:hover {
         padding: 0.2rem 0.6rem;
     }
 }
+
+/* ==========================================================================
+   Series Styles for Index Page
+   ========================================================================== */
+
+/* Series header row */
+.series-header-row td {
+    padding: 0.8rem 0.5rem 0.3rem 0.5rem !important;
+    border-bottom: none !important;
+    background: transparent;
+}
+
+.series-header {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+    padding-bottom: 0.25rem !important;
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+.series-header .series-icon {
+    margin-right: 0.4rem;
+    font-size: 0.9rem;
+}
+
+.series-header .series-name {
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.series-header .series-count {
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-left: 0.3rem;
+}
+
+.series-header .series-description {
+    font-weight: 400;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-left: 0.5rem;
+    font-style: italic;
+}
+
+.series-header.standalone-header {
+    margin-top: 0.5rem;
+}
+
+/* Series article rows - slightly indented */
+.series-article td:first-child {
+    padding-left: 1.8rem !important;
+}
+
+/* Part badge on index */
+.part-badge {
+    display: inline-block;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    background: var(--color-bg-card);
+    padding: 0.05rem 0.4rem;
+    border-radius: 4px;
+    margin-right: 0.3rem;
+    border: 1px solid var(--color-border);
+}
+
+/* Series header row visibility with filters */
+.series-header-row.filter-hidden {
+    display: none;
+}
+
+/* Responsive adjustments for series */
+@media (max-width: 768px) {
+    .series-header {
+        font-size: 0.75rem;
+    }
+    .series-header .series-description {
+        display: block;
+        margin-left: 1.5rem;
+        font-size: 0.7rem;
+    }
+    .series-article td:first-child {
+        padding-left: 1rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .series-header {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.3rem 0.2rem 0.3rem !important;
+    }
+    .series-header .series-description {
+        margin-left: 0.5rem;
+        font-size: 0.65rem;
+    }
+    .series-article td:first-child {
+        padding-left: 0.8rem !important;
+    }
+}

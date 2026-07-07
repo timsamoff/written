@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Written Admin | Tim Samoff</title>
+    <link rel="icon" href="../favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <link rel="stylesheet" href="../style.css" />
+    <link rel="stylesheet" href="admin.css" />
+    <script src="../theme.js" defer></script>
+    <script src="admin.js" defer></script>
+</head>
+<body>
+    <header class="site-header admin-header-full">
+        <div class="header-container-full">
+            <div class="branding-group">
+                <img src="../wbts_icon.png" alt="Written by Tim Samoff Logo" class="site-branding-icon" />
+                <div class="branding-text">
+                    <a href="../index.html" class="site-logo">Written by <span class="logo-amp">Tim</span> Samoff</a>
+                    <span class="site-tagline">Admin Panel</span>
+                </div>
+            </div>
+            <div class="header-btn-group" role="group" aria-label="Site controls">
+                <a href="../index.html" target="_blank" class="header-circle-btn" aria-label="View live site" title="Live Site">
+                    <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                </a>
+                <button id="theme-toggle" class="header-circle-btn theme-btn" aria-label="Toggle theme">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN LAYOUT: 50/50 split -->
+    <div class="admin-container">
+
+        <!-- LEFT PANEL: Form -->
+        <div class="admin-panel admin-panel-left">
+            <div class="admin-panel-inner">
+                <form id="piece-form" class="admin-form">
+                    <div class="form-header">
+                        <h3 id="form-title-heading">New Piece</h3>
+                        <button type="button" id="new-piece-btn" class="filter-btn" style="display:none;">✨ New</button>
+                    </div>
+                    <input type="hidden" id="form-edit-id" value="" />
+
+                    <!-- Title -->
+                    <div class="form-group">
+                        <label for="form-title">Title <span class="required">*</span></label>
+                        <input type="text" id="form-title" required placeholder="e.g., The Story Title" />
+                    </div>
+
+                    <!-- Path + Slug -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1;">
+                            <label for="form-path">Path <span class="required">*</span></label>
+                            <div class="path-input-wrapper">
+                                <span class="path-prefix">writing/</span>
+                                <input type="text" id="form-path" required placeholder="shorts/" />
+                                <span class="path-suffix">/</span>
+                            </div>
+                            <small>Folder (e.g., <code>shorts/</code>)</small>
+                        </div>
+                        <div class="form-group" style="flex:0.7;">
+                            <label for="form-slug">Slug <span class="required">*</span></label>
+                            <input type="text" id="form-slug" required placeholder="title-of-piece" />
+                            <small>URL: <code id="url-preview">writing/shorts/title.html</code></small>
+                        </div>
+                    </div>
+
+                    <!-- Date -->
+                    <div class="form-group">
+                        <label for="form-date">Date <span class="required">*</span></label>
+                        <input type="date" id="form-date" required />
+                    </div>
+
+                    <!-- Media Path -->
+                    <div class="form-group">
+                        <label for="form-media">Media Path</label>
+                        <div class="path-input-wrapper">
+                            <span class="path-prefix">writing/</span>
+                            <input type="text" id="form-media" placeholder="shorts/story" />
+                        </div>
+                        <small>Optional: folder for images/videos</small>
+                    </div>
+
+                    <!-- Series -->
+                    <div class="form-row">
+                        <div class="form-group" style="flex:1;">
+                            <label for="form-series">Series</label>
+                            <select id="form-series">
+                                <option value="">None (Standalone)</option>
+                                <!-- Series options generated by JS -->
+                            </select>
+                            <small>Assign to a series, or leave as standalone</small>
+                        </div>
+                        <div class="form-group" style="flex:0.3;">
+                            <label for="form-part">Part</label>
+                            <input type="number" id="form-part" placeholder="#" min="1" />
+                            <small>Auto-filled if series selected</small>
+                        </div>
+                    </div>
+
+                    <!-- Publish Toggle -->
+                    <div class="form-group">
+                        <label class="publish-toggle">
+                            <input type="checkbox" id="form-published" checked />
+                            <span class="custom-checkbox-box"></span>
+                            <span class="toggle-label">📢 Published (visible on index page)</span>
+                        </label>
+                        <small style="color:var(--color-text-muted); display:block; margin-top:0.2rem; padding-left:0.2rem;">
+                            Uncheck to hide this piece from the index page.
+                        </small>
+                    </div>
+
+                    <!-- Genres -->
+                    <div class="form-group">
+                        <label>Genres</label>
+                        <div class="tag-manager" id="genre-tag-manager">
+                            <div class="tag-pills" id="genre-pills">
+                                <!-- Generated by JS -->
+                            </div>
+                            <div class="tag-add">
+                                <input type="text" id="new-genre-input" placeholder="Add genre..." />
+                                <button type="button" id="add-genre-btn" class="filter-btn">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Themes -->
+                    <div class="form-group">
+                        <label>Themes</label>
+                        <div class="tag-manager" id="theme-tag-manager">
+                            <div class="tag-pills" id="theme-pills">
+                                <!-- Generated by JS -->
+                            </div>
+                            <div class="tag-add">
+                                <input type="text" id="new-theme-input" placeholder="Add theme..." />
+                                <button type="button" id="add-theme-btn" class="filter-btn">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- HTML Upload -->
+                    <div class="form-group">
+                        <label for="form-html-file">HTML Content <span class="required">*</span></label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="form-html-file" accept=".html,.htm" />
+                            <label for="form-html-file" class="file-upload-label">
+                                <i class="fa-solid fa-cloud-upload-alt"></i>
+                                <span id="file-upload-text">Choose HTML file...</span>
+                            </label>
+                            <button type="button" id="clear-file-btn" class="clear-file-btn" title="Clear file">✕</button>
+                        </div>
+                        <textarea id="form-html" rows="10" placeholder="Or paste HTML here..."></textarea>
+                        <small>Upload an HTML file or paste the <code>&lt;article&gt;</code> block directly.</small>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="form-actions">
+                        <button type="submit" id="submit-btn" class="filter-btn active">
+                            + Add Piece
+                        </button>
+                        <button type="button" id="download-btn" class="filter-btn" style="display:none;">
+                            ⬇️ Download HTML
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Series Outline View -->
+        <div class="admin-panel admin-panel-right">
+            <div class="admin-panel-inner">
+                <div class="sorting-zone">
+                    <div class="sorting-header">
+                        <h3>Series &amp; Articles</h3>
+                        <span id="piece-count">0 pieces</span>
+                    </div>
+
+                    <!-- Series Manager -->
+                    <div class="series-manager">
+                        <button type="button" id="add-series-btn" class="filter-btn" style="font-size:0.75rem; padding:0.3rem 0.8rem;">
+                            <i class="fa-solid fa-plus"></i> New Series
+                        </button>
+                        <div id="series-list" class="series-list">
+                            <!-- Series list generated by JS -->
+                        </div>
+                    </div>
+
+                    <div class="admin-search">
+                        <div style="position:relative; display:flex; align-items:center;">
+                            <input type="text" id="admin-search" placeholder="🔍 Filter pieces..." class="admin-search-input" />
+                            <button type="button" id="admin-search-clear" title="Clear search"
+                                style="display:none; position:absolute; right:0.5rem; width:1.5rem; height:1.5rem; background:none; border:none; cursor:pointer; color:var(--color-text-muted); font-size:1rem; border-radius:50%;">×</button>
+                        </div>
+                    </div>
+
+                    <ul id="sortable-list" class="sortable-list">
+                        <!-- Generated by JS - hierarchical series view -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Series Modal -->
+    <div id="series-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="series-modal-title">New Series</h3>
+                <button type="button" id="series-modal-close" class="modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="series-name">Series Name <span class="required">*</span></label>
+                    <input type="text" id="series-name" placeholder="e.g., The Pattern Chronicles" />
+                </div>
+                <div class="form-group">
+                    <label for="series-description">Description</label>
+                    <textarea id="series-description" rows="2" placeholder="Optional description..."></textarea>
+                </div>
+                <input type="hidden" id="series-edit-id" value="" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="series-modal-cancel" class="filter-btn">Cancel</button>
+                <button type="button" id="series-modal-save" class="filter-btn active">Save Series</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Series Delete Confirmation Modal -->
+    <div id="series-delete-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-content" style="max-width:400px;">
+            <div class="modal-header">
+                <h3>Delete Series?</h3>
+                <button type="button" id="series-delete-close" class="modal-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p id="series-delete-message">Are you sure you want to delete this series?</p>
+                <p style="font-size:0.85rem; color:var(--color-text-muted);">Articles in this series will become standalone pieces.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="series-delete-cancel" class="filter-btn">Cancel</button>
+                <button type="button" id="series-delete-confirm" class="filter-btn" style="background:var(--color-error, #ef4444); color:#fff; border-color:var(--color-error, #ef4444);">Delete Series</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="container footer-container">
+            <p>&copy; <span id="current-year"></span> Written by Tim Samoff. Admin Panel.</p>
+        </div>
+    </footer>
+
+    <style>
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 20000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: var(--color-bg-card);
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .modal-header h3 {
+            font-family: 'EB Garamond', Georgia, serif;
+            font-size: 1.2rem;
+            color: var(--color-text);
+            margin: 0;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            padding: 0.2rem 0.5rem;
+        }
+        .modal-close:hover {
+            color: var(--color-accent);
+        }
+        .modal-body {
+            margin-bottom: 1rem;
+        }
+        .modal-footer {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+        .modal-footer .filter-btn {
+            padding: 0.4rem 1.2rem;
+            font-size: 0.8rem;
+        }
+        .modal-footer .filter-btn.active {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+            color: var(--color-text-inverted, #fff);
+        }
+
+        /* Series list in right panel */
+        .series-manager {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            margin-bottom: 0.5rem;
+            flex-shrink: 0;
+        }
+        .series-manager-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #add-series-btn {
+            align-self: flex-start;
+        }
+        .series-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            padding: 0.2rem 0;
+        }
+        .series-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.65rem;
+            padding: 0.15rem 0.6rem;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 100px;
+            color: var(--color-text);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .series-chip:hover {
+            border-color: var(--color-accent);
+        }
+        .series-chip.active {
+            background: var(--color-accent);
+            border-color: var(--color-accent);
+            color: var(--color-text-inverted, #fff);
+        }
+        .series-chip .series-chip-count {
+            font-size: 0.55rem;
+            opacity: 0.7;
+            background: var(--color-border);
+            padding: 0.05rem 0.3rem;
+            border-radius: 100px;
+            color: var(--color-text-muted);
+        }
+        .series-chip.active .series-chip-count {
+            background: rgba(255,255,255,0.2);
+            color: var(--color-text-inverted, #fff);
+        }
+
+        /* Series group in sortable list */
+        .sort-group {
+            margin-bottom: 0.3rem;
+        }
+        .sort-group-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.2rem 0.4rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--color-text-muted);
+            border-bottom: 1px solid var(--color-border);
+            margin-bottom: 0.2rem;
+            cursor: default;
+        }
+        .sort-group-header .group-icon {
+            font-size: 0.8rem;
+        }
+        .sort-group-header .group-count {
+            font-weight: 400;
+            font-size: 0.65rem;
+            color: var(--color-text-muted);
+            margin-left: auto;
+        }
+        .sort-item.series-item {
+            margin-left: 1.5rem;
+            border-left: 2px solid var(--color-border);
+            border-radius: 0 8px 8px 0;
+            padding-left: 0.5rem;
+        }
+        .sort-item.series-item .part-badge {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.55rem;
+            font-weight: 600;
+            color: var(--color-accent);
+            background: var(--color-bg);
+            padding: 0.05rem 0.3rem;
+            border-radius: 4px;
+            margin-right: 0.3rem;
+        }
+    </style>
+
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
