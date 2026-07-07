@@ -204,9 +204,6 @@ body {
     outline: none;
 }
 
-/* theme-btn inherits circle shape */
-.theme-btn {}
-
 @media (prefers-reduced-motion: reduce) {
     .header-circle-btn {
         transition: none;
@@ -220,7 +217,7 @@ body {
    Layout Structure
    ========================================================================== */
 .layout-wrapper-index {
-    margin-top: var(--space-xl);
+    margin-top: var(--space-md) !important;
 }
 
 .layout-wrapper-post {
@@ -258,20 +255,300 @@ body {
     gap: var(--space-lg);
 }
 
-.card-meta {
+/* ==========================================================================
+   Progress Bar
+   ========================================================================== */
+#scroll-progress {
+    position: fixed;
+    top: 0; 
+    left: 0;
+    width: 0%;
+    height: 4px;
+    background: var(--color-accent);
+    z-index: 1001;
+    transition: width 0.1s ease-out;
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.site-footer {
+    margin-top: var(--space-xl);
+    padding: var(--space-lg) 0;
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-bg);
+}
+
+.footer-container {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+/* ==========================================================================
+   Table of Contents
+   ========================================================================== */
+.toc-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.toc-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.toc-table th {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    padding: var(--space-sm) 0;
+    border-bottom: 2px solid var(--color-border);
+}
+
+.toc-table td {
+    padding: var(--space-md) 0;
+    border-bottom: 1px solid var(--color-border);
+    vertical-align: middle;
+}
+
+.toc-date {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    padding-right: var(--space-sm) !important;
+    width: 20%;
+    /* min-width: 130px; */
+}
+
+.toc-title {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.45rem;
+    font-weight: 500;
+    padding-right: var(--space-sm) !important;
+    width: 54%;
+}
+
+.toc-title a {
+    color: var(--color-text);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.toc-title a:hover {
+    color: var(--color-accent);
+}
+
+.toc-tags {
+    width: 30%;
+}
+
+.toc-table tbody tr.filter-hidden {
+    display: none;
+}
+
+/* ==========================================================================
+   Series Styles for Index Page
+   ========================================================================== */
+
+/* Series title wrapper */
+.series-title-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem 0.5rem;
+}
+
+.series-name {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.45rem;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.series-count {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+}
+
+.series-description {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+    width: 100%;
+    margin-top: 0.1rem;
+    opacity: 0.7;
+}
+
+/* Date range on two lines */
+.date-range {
+    display: inline-flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.date-line {
+    display: block;
+    white-space: nowrap;
+}
+
+/* Toggle icon */
+.toggle-icon {
+    display: inline-block;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    margin-right: 0.3rem;
+    width: 1rem;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+/* Series header row */
+.series-header-row {
+    cursor: pointer;
+    user-select: none;
+}
+
+.series-header-row td {
+    padding: var(--space-md) 0 !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    vertical-align: middle;
+}
+
+/* Series article rows - no indentation, same as standalone */
+.series-article-row.collapsed {
+    display: none;
+}
+
+/* Part badge on index */
+.part-badge {
+    display: inline-block;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    background: var(--color-bg-card);
+    padding: 0.05rem 0.4rem;
+    border-radius: 4px;
+    margin-left: 0.3rem;
+    border: 1px solid var(--color-border);
+}
+
+/* ==========================================================================
+   Section Headers (Series / Standalone)
+   ========================================================================== */
+.section-header-row td {
+    padding: 0.8rem 0.5rem 0.3rem 0.5rem !important;
+    border-bottom: none !important;
+    background: transparent;
+}
+
+.section-header {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+    padding-bottom: 0.25rem !important;
+    border-bottom: 1px solid var(--color-border) !important;
+}
+
+.section-header .section-icon {
+    margin-right: 0.4rem;
+    font-size: 0.9rem;
+}
+
+.section-header .section-name {
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.section-header .section-count {
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-left: 0.3rem;
+}
+
+/* ==========================================================================
+   Filter System - Ensure toggle works
+   ========================================================================== */
+.filter-toggle-btn {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
+    width: 100%;
+    padding: 0.6rem var(--space-md);
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--color-text-muted);
-    margin-bottom: var(--space-xs);
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: var(--space-sm);
 }
 
-.meta-separator {
+.filter-toggle-btn:hover {
+    background-color: var(--color-border);
+    transform: translateY(-1px);
+}
+
+.filter-toggle-btn i:first-child {
     color: var(--color-accent);
-    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.filter-toggle-btn span {
+    flex: 1;
+    text-align: left;
+}
+
+.filter-chevron {
+    transition: transform 0.3s ease;
+}
+
+.filter-toggle-btn.active .filter-chevron {
+    transform: rotate(180deg);
+}
+
+.filter-section {
+    background-color: var(--color-bg-card);
+    border-radius: 20px;
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: var(--space-lg);
+}
+
+.filter-section.collapsed {
+    max-height: 0;
+    padding: 0 var(--space-md);
+    margin-bottom: 0;
+    border-width: 0;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.filter-section:not(.collapsed) {
+    max-height: 800px;
+    padding: var(--space-md);
+    margin-bottom: var(--space-lg);
+    opacity: 1;
+    visibility: visible;
 }
 
 /* ==========================================================================
@@ -317,63 +594,339 @@ body {
 }
 
 /* ==========================================================================
-   Table of Contents
+   Section Headers (Series / Standalone)
    ========================================================================== */
-.toc-wrapper {
-    width: 100%;
-    overflow-x: auto;
+.section-header-row td {
+    padding: 0.8rem 0.5rem 0.3rem 0.5rem !important;
+    border-bottom: none !important;
+    background: transparent;
 }
 
-.toc-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
+.section-header {
     font-family: 'Plus Jakarta Sans', sans-serif;
-}
-
-.toc-table th {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 0.85rem;
+    font-weight: 600;
     color: var(--color-text-muted);
-    padding: var(--space-sm) 0;
-    border-bottom: 2px solid var(--color-border);
+    letter-spacing: 0.02em;
+    padding-bottom: 0.25rem !important;
+    border-bottom: 1px solid var(--color-border) !important;
 }
 
-.toc-table td {
-    padding: var(--space-md) 0;
-    border-bottom: 1px solid var(--color-border);
-    vertical-align: middle;
-}
-
-.toc-date {
+.section-header .section-icon {
+    margin-right: 0.4rem;
     font-size: 0.9rem;
-    color: var(--color-text-muted);
-    white-space: nowrap;
-    padding-right: var(--space-sm) !important;
-    width: 15%;
 }
 
-.toc-title {
+.section-header .section-name {
+    color: var(--color-text);
+    font-weight: 700;
+}
+
+.section-header .section-count {
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-left: 0.3rem;
+}
+
+/* ==========================================================================
+   Series Styles for Index Page - FIXED
+   ========================================================================== */
+
+/* Series title wrapper */
+.series-title-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem 0.5rem;
+}
+
+.series-name {
     font-family: 'EB Garamond', Georgia, serif;
     font-size: 1.45rem;
     font-weight: 500;
-    padding-right: var(--space-sm) !important;
-    width: 55%;
-}
-
-.toc-title a {
     color: var(--color-text);
-    text-decoration: none;
-    transition: color 0.2s ease;
 }
 
-.toc-title a:hover {
+.series-count {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+}
+
+.series-description {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+    width: 100%;
+    margin-top: 0.1rem;
+    opacity: 0.7;
+}
+
+/* Date range on two lines */
+.date-range {
+    display: inline-flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.date-line {
+    display: block;
+    white-space: nowrap;
+}
+
+/* Toggle icon */
+.toggle-icon {
+    display: inline-block;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+    margin-right: 0.3rem;
+    width: 1rem;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+/* Series header row */
+.series-header-row {
+    cursor: pointer;
+    user-select: none;
+}
+
+.series-header-row td {
+    padding: var(--space-md) 0 !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    vertical-align: middle;
+}
+
+/* Series article rows - no indentation, same as standalone */
+.series-article-row.collapsed {
+    display: none;
+}
+
+/* Part badge on index */
+.part-badge {
+    display: inline-block;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--color-accent);
+    background: var(--color-bg-card);
+    padding: 0.05rem 0.4rem;
+    border-radius: 4px;
+    margin-left: 0.3rem;
+    border: 1px solid var(--color-border);
+}
+
+/* ==========================================================================
+   Filter System Styles
+   ========================================================================== */
+.filter-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    width: 100%;
+    padding: 0.6rem var(--space-md);
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: var(--space-sm);
+}
+
+.filter-toggle-btn:hover {
+    background-color: var(--color-border);
+    transform: translateY(-1px);
+}
+
+.filter-toggle-btn i:first-child {
+    color: var(--color-accent);
+    font-size: 0.9rem;
+}
+
+.filter-toggle-btn span {
+    flex: 1;
+    text-align: left;
+}
+
+.filter-chevron {
+    transition: transform 0.3s ease;
+}
+
+.filter-toggle-btn.active .filter-chevron {
+    transform: rotate(180deg);
+}
+
+.filter-section {
+    background-color: var(--color-bg-card);
+    border-radius: 20px;
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    margin-bottom: var(--space-lg);
+}
+
+.filter-section.collapsed {
+    max-height: 0;
+    padding: 0 var(--space-md);
+    margin-bottom: 0;
+    border-width: 0;
+    opacity: 0;
+    visibility: hidden;
+}
+
+.filter-section:not(.collapsed) {
+    max-height: 800px;
+    padding: var(--space-md);
+    margin-bottom: var(--space-lg);
+    opacity: 1;
+    visibility: visible;
+}
+
+.filter-group {
+    margin-bottom: var(--space-sm);
+}
+
+.filter-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.filter-label {
+    display: block;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filter-chip {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.35rem 0.9rem;
+    border-radius: 100px;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1.3;
+}
+
+.filter-chip:hover {
+    background-color: var(--color-border);
+    color: var(--color-text);
+    transform: translateY(-1px);
+}
+
+.filter-chip.active {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #ffffff;
+}
+
+.filter-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--space-sm);
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--color-border);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+}
+
+#filter-count {
+    font-weight: 600;
     color: var(--color-accent);
 }
 
-.toc-tags {
-    width: 30%;
+.clear-btn {
+    background: none;
+    border: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    transition: color 0.2s ease;
+}
+
+.clear-btn:hover {
+    color: var(--color-accent);
+}
+
+/* Empty state message */
+.no-results {
+    text-align: center;
+    padding: var(--space-xl) var(--space-md);
+}
+
+.no-results td {
+    padding: var(--space-xl) var(--space-md) !important;
+}
+
+.no-results i {
+    font-size: 2rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-sm);
+    display: inline-block;
+}
+
+.no-results p {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.2rem;
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin: 0;
+}
+
+/* ==========================================================================
+   Expand/Collapse Control
+   ========================================================================== */
+.expand-control {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--space-sm);
+}
+
+.expand-btn {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.2rem 0.8rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 100px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.expand-btn:hover {
+    background: var(--color-border);
+    color: var(--color-text);
 }
 
 /* ==========================================================================
@@ -418,10 +971,31 @@ hr.fleuron-end + p {
     margin-bottom: var(--space-sm) !important;
 }
 
+/* ==========================================================================
+   Card Meta
+   ========================================================================== */
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    margin-bottom: var(--space-xs);
+}
+
+.meta-separator {
+    color: var(--color-accent);
+    font-weight: bold;
+}
+
+/* ==========================================================================
+   Story Content
+   ========================================================================== */
 .story-content {
     font-family: 'EB Garamond', Georgia, serif;
     font-size: 1.35rem;
-    /* line-height: 1.65; */
 }
 
 .story-content p {
@@ -452,10 +1026,6 @@ hr.fleuron-end + p {
 .story-content.ls-2 p {
   line-height: 2.1;
 }
-
-/* ==========================================================================
-   Professional / Article Content Styles
-   ========================================================================== */
 
 /* Links within story content */
 .story-content a {
@@ -502,13 +1072,11 @@ hr.fleuron-end + p {
     text-indent: 0;
 }
 
-/* Ensure consistent paragraph spacing for professional content */
 .story-content p.no-indent + h2.section-heading,
 .story-content p.no-indent + h3.subsection-heading {
     margin-top: var(--space-xl);
 }
 
-/* First paragraph after heading spacing */
 .story-content h2.section-heading + p.no-indent,
 .story-content h3.subsection-heading + p.no-indent {
     margin-top: var(--space-sm);
@@ -530,9 +1098,207 @@ hr.fleuron-end + p {
   font-family: 'EB Garamond', serif;
 }
 
+/* Section Break (<hr>) */
+hr.fleuron-break {
+  border: none;
+  height: 1px;
+  background: var(--color-border);
+  width: 80%;
+  margin: var(--space-lg) auto;
+  position: relative;
+  overflow: visible;
+  color: var(--color-border);
+}
+
+hr.fleuron-break::after {
+  content: "✦";
+  font-size: 0.65rem;
+  color: var(--color-accent);
+  background-color: var(--color-bg);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 var(--space-sm);
+}
+
+hr.fleuron-end {
+  border: none;
+  height: 1px;
+  background: var(--color-border);
+  width: 10%;
+  margin: var(--space-xl) auto;
+  position: relative;
+  overflow: visible;
+  color: var(--color-border);
+}
+
+hr.fleuron-end::after {
+  content: "✦ ✦ ✦";
+  font-size: 0.65rem;
+  letter-spacing: 0.5em;
+  color: var(--color-accent);
+  background-color: var(--color-bg);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 var(--space-sm);
+  white-space: nowrap;
+}
+
+/* Pull-Quotes */
+blockquote.pull-quote {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-style: italic;
+    font-size: 1.6rem;
+    line-height: 1.5;
+    color: var(--color-text);
+    text-align: center;
+    max-width: 80%;
+    margin: var(--space-lg) auto;
+    padding: 0;
+    border: none;
+}
+
+/* Monospaced Blocks */
+.story-content pre {
+    font-family: 'Source Code Pro', Consolas, Monaco, monospace !important;
+    font-size: 1.05rem !important;
+    line-height: 1.5 !important;
+    background-color: var(--reversed-code-bg) !important;
+    border: 1px solid var(--reversed-code-border) !important;
+    color: var(--reversed-code-text) !important;
+    border-radius: 8px !important;
+    padding: var(--space-sm) var(--space-md) !important;
+    margin: var(--space-md) 0 !important;
+    overflow-x: auto !important;
+    white-space: pre !important;
+    text-indent: 0 !important;
+    display: block !important;
+}
+
+.story-content div.literary-mono {
+    margin: var(--space-md) 0 !important;
+    margin-left: 2rem !important;
+}
+
+.story-content .literary-mono p.mono-line {
+    font-family: 'Source Code Pro', Consolas, Monaco, monospace !important;
+    font-size: 1.1rem !important;
+    line-height: 1.6 !important;
+    color: var(--color-text) !important;
+    margin: 0 !important;
+    text-indent: 0 !important;
+    white-space: pre-wrap !important;
+    display: block !important;
+}
+
+/* Story end */
+.story-content p.story-end {
+  text-align: center;
+  font-style: italic;
+  color: var(--color-text-muted);
+  margin: var(--space-lg) 0;
+  text-indent: 0 !important;
+}
+
+.story-content hr.fleuron-end {
+  border: none;
+  height: 1px;
+  background: var(--color-border);
+  width: 10%;
+  margin: var(--space-xl) auto;
+  position: relative;
+  overflow: visible;
+}
+
+.story-content hr.fleuron-end::after {
+  content: "✦ ✦ ✦";
+  font-size: 0.6rem;
+  letter-spacing: 0.5em;
+  color: var(--color-accent);
+  background-color: var(--color-bg);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 var(--space-sm);
+  white-space: nowrap;
+}
+
 /* ==========================================================================
-   Callouts, Figures & Captions
+   Written & Formatted — Integrated Embed Support Rules
    ========================================================================== */
+.story-content .story-subtitle {
+    font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+    font-size: 1.25rem;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin-top: calc(var(--space-xs) * -1);
+    margin-bottom: var(--space-xl);
+}
+
+.story-content .story-byline {
+    font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+.story-content .epigraph {
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--color-text-muted);
+    max-width: 80%;
+    margin: var(--space-xl) auto;
+    padding-left: var(--space-md);
+    border-left: 2px solid var(--color-border);
+}
+
+.story-content .epigraph p {
+    text-indent: 0 !important;
+    margin-bottom: 0.5em;
+}
+
+.story-content .pullquote {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    line-height: 1.4;
+    color: var(--color-accent);
+    width: 45%;
+    float: right;
+    margin: var(--space-sm) 0 var(--space-md) var(--space-lg);
+    padding: var(--space-sm) 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.story-content .pullquote p {
+    text-indent: 0 !important;
+}
+
+.story-content .editorial-aside {
+    font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: var(--space-md);
+    margin: var(--space-md) 0;
+}
+
+.story-content .editorial-aside p {
+    text-indent: 0 !important;
+}
+
+/* Callouts, Figures & Captions */
 .callout {
     background-color: var(--color-bg-card);
     border-left: 4px solid var(--color-accent);
@@ -591,210 +1357,14 @@ hr.fleuron-end + p {
     color: var(--color-accent);
 }
 
-/* ==========================================================================
-   Section Break (<hr>)
-   ========================================================================== */
-hr.fleuron-break {
-  border: none;
-  height: 1px;
-  background: var(--color-border);
-  width: 80%;
-  margin: var(--space-lg) auto;
-  position: relative;
-  overflow: visible;
-  color: var(--color-border);
-}
-
-hr.fleuron-break::after {
-  content: "✦";
-  font-size: 0.65rem;
-  color: var(--color-accent);
-  background-color: var(--color-bg);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 0 var(--space-sm);
-}
-
-hr.fleuron-end {
-  border: none;
-  height: 1px;
-  background: var(--color-border);
-  width: 10%;
-  margin: var(--space-xl) auto;
-  position: relative;
-  overflow: visible;
-  color: var(--color-border);
-}
-
-hr.fleuron-end::after {
-  content: "✦ ✦ ✦";
-  font-size: 0.65rem;
-  letter-spacing: 0.5em;
-  color: var(--color-accent);
-  background-color: var(--color-bg);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 0 var(--space-sm);
-  white-space: nowrap;
-}
-
-/* ==========================================================================
-   Progress Bar & Pull-Quotes
-   ========================================================================== */
-#scroll-progress {
-    position: fixed;
-    top: 0; 
-    left: 0;
-    width: 0%;
-    height: 4px;
-    background: var(--color-accent);
-    z-index: 1001;
-    transition: width 0.1s ease-out;
-}
-
-blockquote.pull-quote {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-style: italic;
-    font-size: 1.6rem;
-    line-height: 1.5;
-    color: var(--color-text);
-    text-align: center;
-    max-width: 80%;
-    margin: var(--space-lg) auto;
-    padding: 0;
-    border: none;
-}
-
-/* ==========================================================================
-   Monospaced Blocks
-   ========================================================================== */
-.story-content pre {
-    font-family: 'Source Code Pro', Consolas, Monaco, monospace !important;
-    font-size: 1.05rem !important;
-    line-height: 1.5 !important;
-    background-color: var(--reversed-code-bg) !important;
-    border: 1px solid var(--reversed-code-border) !important;
-    color: var(--reversed-code-text) !important;
-    border-radius: 8px !important;
-    padding: var(--space-sm) var(--space-md) !important;
-    margin: var(--space-md) 0 !important;
-    overflow-x: auto !important;
-    white-space: pre !important;
-    text-indent: 0 !important;
-    display: block !important;
-}
-
-/* Container block configuration */
-.story-content div.literary-mono {
-    margin: var(--space-md) 0 !important;
-    margin-left: 2rem !important;
-}
-
-.story-content .literary-mono p.mono-line {
-    font-family: 'Source Code Pro', Consolas, Monaco, monospace !important;
-    font-size: 1.1rem !important;
-    line-height: 1.6 !important;
-    color: var(--color-text) !important;
-    margin: 0 !important;
-    text-indent: 0 !important;
-    white-space: pre-wrap !important;
-    display: block !important;
-}
-
-/* ==========================================================================
-   Footer
-   ========================================================================== */
-.site-footer {
-    margin-top: var(--space-xl);
-    padding: var(--space-lg) 0;
-    border-top: 1px solid var(--color-border);
-    background-color: var(--color-bg);
-}
-
-.footer-container {
-    display: flex;
-    justify-content: center;
-    text-align: center;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.85rem;
-    color: var(--color-text-muted);
-}
-
-/* ==========================================================================
-   Written & Formatted — Integrated Embed Support Rules
-   ========================================================================== */
-
-/* Structure & Typography alignment rules */
-.story-content .story-subtitle {
-    font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
-    font-size: 1.25rem;
-    color: var(--color-text-muted);
-    text-align: center;
-    margin-top: calc(var(--space-xs) * -1);
-    margin-bottom: var(--space-xl);
-}
-
-.story-content .story-byline {
-    font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--color-text-muted);
-    text-align: center;
-    margin-bottom: var(--space-xl);
-}
-
-/* Editorial Block Elements */
-.story-content .epigraph {
-    font-style: italic;
-    font-size: 1.05rem;
-    color: var(--color-text-muted);
-    max-width: 80%;
-    margin: var(--space-xl) auto;
-    padding-left: var(--space-md);
-    border-left: 2px solid var(--color-border);
-}
-.story-content .epigraph p { text-indent: 0 !important; margin-bottom: 0.5em; }
-
-.story-content .pullquote {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.5rem;
-    font-style: italic;
-    line-height: 1.4;
-    color: var(--color-accent);
-    width: 45%;
-    float: right;
-    margin: var(--space-sm) 0 var(--space-md) var(--space-lg);
-    padding: var(--space-sm) 0;
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
-}
-.story-content .pullquote p { text-indent: 0 !important; }
-
-.story-content .editorial-aside {
-    font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
-    font-size: 0.9rem;
-    line-height: 1.5;
-    background-color: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: var(--space-md);
-    margin: var(--space-md) 0;
-}
-.story-content .editorial-aside p { text-indent: 0 !important; }
-
-/* Footnote System References & Anchor Alignment */
+/* Footnote System */
 .story-content .fn-anchor {
     display: block;
     position: relative;
-    top: -40px; /* Offset to scroll cleanly above target view */
+    top: -40px;
     visibility: hidden;
 }
+
 .story-content .fn-ref {
     font-weight: 600;
     font-size: 0.8em;
@@ -802,14 +1372,17 @@ blockquote.pull-quote {
     text-decoration: none;
     padding: 0 2px;
 }
-.story-content .fn-ref:hover { text-decoration: underline; }
 
-/* Footnotes Container & Citations Block Footer */
+.story-content .fn-ref:hover {
+    text-decoration: underline;
+}
+
 .story-content .citations-block {
     margin-top: var(--space-xl);
     padding-top: var(--space-md);
     border-top: 1px solid var(--color-border);
 }
+
 .story-content .citations-title {
     font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
     font-size: 0.8rem;
@@ -819,54 +1392,33 @@ blockquote.pull-quote {
     color: var(--color-text-muted);
     margin-bottom: var(--space-md);
 }
-.story-content .citations-list { padding-left: 1.25rem; margin: 0; }
+
+.story-content .citations-list {
+    padding-left: 1.25rem;
+    margin: 0;
+}
+
 .story-content .citation-entry {
     font-size: 0.95rem;
     color: var(--color-text);
     margin-bottom: 0.5em;
     line-height: 1.5;
 }
+
 .story-content .fn-return {
     font-size: 0.8rem;
     color: var(--color-accent);
     text-decoration: none;
     margin-left: 6px;
 }
-.story-content .fn-return:hover { text-decoration: underline; }
 
-.story-content p.story-end {
-  text-align: center;
-  font-style: italic;
-  color: var(--color-text-muted);
-  margin: var(--space-lg) 0;
-  text-indent: 0 !important;
-}
-
-.story-content hr.fleuron-end {
-  border: none;
-  height: 1px;
-  background: var(--color-border);
-  width: 10%;
-  margin: var(--space-xl) auto;
-  position: relative;
-  overflow: visible;
-}
-.story-content hr.fleuron-end::after {
-  content: "✦ ✦ ✦";
-  font-size: 0.6rem;
-  letter-spacing: 0.5em;
-  color: var(--color-accent);
-  background-color: var(--color-bg);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  padding: 0 var(--space-sm);
-  white-space: nowrap;
+.story-content .fn-return:hover {
+    text-decoration: underline;
 }
 
 /* Embed Footer */
-footer.wf-credit, div.wf-credit {
+footer.wf-credit,
+div.wf-credit {
   max-width: 660px;
   margin: 3rem auto 0 auto;
   padding: 1rem 20px 2rem 20px;
@@ -876,18 +1428,30 @@ footer.wf-credit, div.wf-credit {
   color: var(--color-text-muted);
   text-align: left;
 }
-footer.wf-credit p, div.wf-credit p {
-  margin: 0; text-indent: 0 !important;
+
+footer.wf-credit p,
+div.wf-credit p {
+  margin: 0;
+  text-indent: 0 !important;
 }
-footer.wf-credit a, div.wf-credit a {
-  color: var(--color-accent) !important; text-decoration: none;
+
+footer.wf-credit a,
+div.wf-credit a {
+  color: var(--color-accent) !important;
+  text-decoration: none;
 }
-footer.wf-credit a:hover, div.wf-credit a:hover {
-  color: var(--color-accent) !important; text-decoration: underline;
+
+footer.wf-credit a:hover,
+div.wf-credit a:hover {
+  color: var(--color-accent) !important;
+  text-decoration: underline;
 }
 
 /* Universal Helper Adjustments */
-.story-content .block-spacer { height: 1.5rem; margin: 0; }
+.story-content .block-spacer {
+    height: 1.5rem;
+    margin: 0;
+}
 
 /* Accessibility Utility */
 .visually-hidden {
@@ -903,217 +1467,36 @@ footer.wf-credit a:hover, div.wf-credit a:hover {
 }
 
 /* ==========================================================================
-   Filter System Styles
+   Responsive
    ========================================================================== */
-
-/* Reduce spacing between header and filters */
-.layout-wrapper-index {
-    margin-top: var(--space-md) !important; /* Reduced from var(--space-xl) */
-}
-
-/* Filter Toggle Button */
-.filter-toggle-btn {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    width: 100%;
-    padding: 0.6rem var(--space-md);
-    background-color: var(--color-bg-card);
-    border: 1px solid var(--color-border);
-    border-radius: 16px;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--color-text);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-bottom: var(--space-sm);
-}
-
-.filter-toggle-btn:hover {
-    background-color: var(--color-border);
-    transform: translateY(-1px);
-}
-
-.filter-toggle-btn i:first-child {
-    color: var(--color-accent);
-    font-size: 0.9rem;
-}
-
-.filter-toggle-btn span {
-    flex: 1;
-    text-align: left;
-}
-
-.filter-chevron {
-    transition: transform 0.3s ease;
-}
-
-.filter-toggle-btn.active .filter-chevron {
-    transform: rotate(180deg);
-}
-
-/* Collapsible Filter Section */
-.filter-section {
-    background-color: var(--color-bg-card);
-    border-radius: 20px;
-    border: 1px solid var(--color-border);
-    overflow: hidden;
-    transition: all 0.3s ease;
-    margin-bottom: var(--space-lg);
-}
-
-.filter-section.collapsed {
-    max-height: 0;
-    padding: 0 var(--space-md);
-    margin-bottom: 0;
-    border-width: 0;
-    opacity: 0;
-    visibility: hidden;
-}
-
-.filter-section:not(.collapsed) {
-    max-height: 800px; /* Large enough for content */
-    padding: var(--space-md);
-    margin-bottom: var(--space-lg);
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Tighter vertical spacing inside filter section */
-.filter-group {
-    margin-bottom: var(--space-sm); /* Reduced from var(--space-md) */
-}
-
-.filter-group:last-of-type {
-    margin-bottom: 0;
-}
-
-.filter-label {
-    display: block;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--color-text-muted);
-    margin-bottom: 0.5rem; /* Fixed smaller spacing */
-}
-
-.filter-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.filter-chip {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 0.35rem 0.9rem; /* Slightly smaller padding */
-    border-radius: 100px;
-    background-color: var(--color-bg);
-    border: 1px solid var(--color-border);
-    color: var(--color-text-muted);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    line-height: 1.3;
-}
-
-.filter-chip:hover {
-    background-color: var(--color-border);
-    color: var(--color-text);
-    transform: translateY(-1px);
-}
-
-.filter-chip.active {
-    background-color: var(--color-accent);
-    border-color: var(--color-accent);
-    color: #ffffff;
-}
-
-.filter-status {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: var(--space-sm); /* Reduced from var(--space-md) */
-    padding-top: 0.6rem; /* Reduced from var(--space-sm) */
-    border-top: 1px solid var(--color-border);
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-}
-
-#filter-count {
-    font-weight: 600;
-    color: var(--color-accent);
-}
-
-.clear-btn {
-    background: none;
-    border: none;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-muted);
-    cursor: pointer;
-    padding: 0.25rem 0.5rem;
-    transition: color 0.2s ease;
-}
-
-.clear-btn:hover {
-    color: var(--color-accent);
-}
-
-/* Row visibility transitions */
-.toc-table tbody tr {
-    transition: opacity 0.2s ease, background-color 0.2s ease;
-}
-
-.toc-table tbody tr.filter-hidden {
-    display: none;
-}
-
-/* Empty state message */
-.no-results {
-    text-align: center;
-    padding: var(--space-xl) var(--space-md);
-}
-
-.no-results td {
-    padding: var(--space-xl) var(--space-md) !important;
-}
-
-.no-results i {
-    font-size: 2rem;
-    color: var(--color-text-muted);
-    margin-bottom: var(--space-sm);
-    display: inline-block;
-}
-
-.no-results p {
-    font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.2rem;
-    color: var(--color-text-muted);
-    font-style: italic;
-    margin: 0;
-}
-
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .filter-section:not(.collapsed) {
-        padding: var(--space-sm); /* Reduced padding on tablet */
+        padding: var(--space-sm);
     }
     
     .filter-buttons {
-        gap: 0.4rem; /* Slightly tighter on tablet */
+        gap: 0.4rem;
     }
     
     .filter-chip {
         font-size: 0.7rem;
         padding: 0.3rem 0.8rem;
+    }
+    
+    .series-header-row .series-name {
+        font-size: 1.1rem;
+    }
+    
+    .series-header-row .series-description {
+        font-size: 0.7rem;
+    }
+    
+    .series-header-row .series-date {
+        font-size: 0.7rem;
+    }
+    
+    .section-header {
+        font-size: 0.75rem;
     }
 }
 
@@ -1124,20 +1507,20 @@ footer.wf-credit a:hover, div.wf-credit a:hover {
     }
     
     .filter-section:not(.collapsed) {
-        padding: 0.8rem; /* Even tighter on mobile */
+        padding: 0.8rem;
     }
     
     .filter-group {
-        margin-bottom: 0.8rem; /* Reduced for mobile */
+        margin-bottom: 0.8rem;
     }
     
     .filter-label {
-        margin-bottom: 0.4rem; /* Tighter label spacing on mobile */
+        margin-bottom: 0.4rem;
         font-size: 0.65rem;
     }
     
     .filter-buttons {
-        gap: 0.35rem; /* Tighter gap on mobile */
+        gap: 0.35rem;
     }
     
     .filter-chip {
@@ -1154,9 +1537,20 @@ footer.wf-credit a:hover, div.wf-credit a:hover {
     .clear-btn {
         font-size: 0.65rem;
     }
+    
+    .series-header-row .series-name {
+        font-size: 1.1rem;
+    }
+    
+    .series-header-row .series-description {
+        font-size: 0.7rem;
+    }
+    
+    .series-header-row .series-date {
+        font-size: 0.7rem;
+    }
 }
 
-/* Extra small devices */
 @media (max-width: 480px) {
     .filter-section:not(.collapsed) {
         padding: 0.6rem;
@@ -1174,141 +1568,16 @@ footer.wf-credit a:hover, div.wf-credit a:hover {
         font-size: 0.65rem;
         padding: 0.2rem 0.6rem;
     }
-}
-
-/* ==========================================================================
-   Series Styles for Index Page
-   ========================================================================== */
-
-/* Series header row */
-.series-header-row td {
-    padding: 0.8rem 0.5rem 0.3rem 0.5rem !important;
-    border-bottom: none !important;
-    background: transparent;
-}
-
-.series-header {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--color-text-muted);
-    letter-spacing: 0.02em;
-    padding-bottom: 0.25rem !important;
-    border-bottom: 1px solid var(--color-border) !important;
-}
-
-.series-header .series-icon {
-    margin-right: 0.4rem;
-    font-size: 0.9rem;
-}
-
-.series-header .series-name {
-    color: var(--color-text);
-    font-weight: 700;
-}
-
-.series-header .series-count {
-    font-weight: 400;
-    font-size: 0.75rem;
-    color: var(--color-text-muted);
-    margin-left: 0.3rem;
-}
-
-.series-header .series-description {
-    font-weight: 400;
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-    margin-left: 0.5rem;
-    font-style: italic;
-}
-
-.series-header.standalone-header {
-    margin-top: 0.5rem;
-}
-
-/* Series article rows - slightly indented */
-.series-article td:first-child {
-    padding-left: 1.8rem !important;
-}
-
-/* Part badge on index */
-.part-badge {
-    display: inline-block;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.6rem;
-    font-weight: 600;
-    color: var(--color-accent);
-    background: var(--color-bg-card);
-    padding: 0.05rem 0.4rem;
-    border-radius: 4px;
-    margin-right: 0.3rem;
-    border: 1px solid var(--color-border);
-}
-
-/* Series header row visibility with filters */
-.series-header-row.filter-hidden {
-    display: none;
-}
-
-/* Responsive adjustments for series */
-@media (max-width: 768px) {
-    .series-header {
-        font-size: 0.75rem;
+    
+    .series-header-row .series-name {
+        font-size: 0.95rem;
     }
-    .series-header .series-description {
-        display: block;
-        margin-left: 1.5rem;
-        font-size: 0.7rem;
-    }
-    .series-article td:first-child {
-        padding-left: 1rem !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .series-header {
-        font-size: 0.7rem;
-        padding: 0.4rem 0.3rem 0.2rem 0.3rem !important;
-    }
-    .series-header .series-description {
-        margin-left: 0.5rem;
+    
+    .series-header-row .series-description {
         font-size: 0.65rem;
     }
-    .series-article td:first-child {
-        padding-left: 0.8rem !important;
-    }
-}
-
-/* ==========================================================================
-   Series Pills on Index Page
-   ========================================================================== */
-
-.series-pills {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 0.2rem;
-    margin-left: 0.5rem;
-}
-
-.series-pills .pill {
-    font-size: 0.5rem;
-    padding: 0.05rem 0.35rem;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .series-pills {
-        display: block;
-        margin-left: 1.5rem;
-        margin-top: 0.2rem;
-    }
-    .series-pills .pill {
-        font-size: 0.45rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .series-pills {
-        margin-left: 0.5rem;
+    
+    .series-header-row .series-date {
+        font-size: 0.65rem;
     }
 }

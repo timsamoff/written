@@ -3,302 +3,541 @@
  * Handles dynamic loading of projects and filter system
  */
 
-// Check if data is available from data.js or fetch
-let projectsData = null;
-let seriesData = null;
-let genresData = [];
-let themesData = [];
+// Use a unique namespace to avoid conflicts
+var WrittenApp = WrittenApp || {};
 
-function loadData() {
-    return new Promise((resolve, reject) => {
-        // First check if data was loaded from data.js
-        if (typeof window.__WRITTEN_DATA__ !== 'undefined' && window.__WRITTEN_DATA__) {
-            const data = window.__WRITTEN_DATA__;
-            projectsData = data.projects || [];
-            seriesData = data.series || [];
-            genresData = data.genres || [];
-            themesData = data.themes || [];
-            resolve(data);
-            return;
-        }
-        
-        // Fallback: fetch from server
-        fetch('/data/projects.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Could not load projects.json');
-                }
-                return response.json();
-            })
-            .then(data => {
+(function() {
+    'use strict';
+    
+    // Check if data is available from data.js or fetch
+    var projectsData = null;
+    var seriesData = null;
+    var genresData = [];
+    var themesData = [];
+    var seriesState = {};
+    
+    function loadData() {
+        return new Promise(function(resolve, reject) {
+            // First check if data was loaded from data.js
+            if (typeof window.__WRITTEN_DATA__ !== 'undefined' && window.__WRITTEN_DATA__) {
+                var data = window.__WRITTEN_DATA__;
                 projectsData = data.projects || [];
                 seriesData = data.series || [];
                 genresData = data.genres || [];
                 themesData = data.themes || [];
                 resolve(data);
-            })
-            .catch(reject);
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const tbody = document.getElementById('toc-body');
+                return;
+            }
+            
+            // Fallback: fetch from server
+            fetch('/data/projects.json')
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Could not load projects.json');
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    projectsData = data.projects || [];
+                    seriesData = data.series || [];
+                    genresData = data.genres || [];
+                    themesData = data.themes || [];
+                    resolve(data);
+                })
+                .catch(reject);
+        });
+    }
     
-    loadData()
-        .then(() => {
-            renderTable(projectsData, seriesData);
-            // Re-initialize filters after rendering
-            setTimeout(() => {
-                // Update filter buttons first
-                updateFilterButtons();
-                // Then initialize the filter system
-                initFilterSystem();
-            }, 50);
-        })
-        .catch(error => {
-            console.error('Error loading projects:', error);
+    document.addEventListener('DOMContentLoaded', function() {
+        var tbody = document.getElementById('toc-body');
+        
+        loadData()
+            .then(function() {
+                renderTable(projectsData, seriesData);
+                // Initialize filter system after rendering
+                setTimeout(function() {
+                    updateFilterButtons();
+                    // Call initFilterSystem from filter-system.js
+                    if (typeof window.initFilterSystem === 'function') {
+                        window.initFilterSystem();
+                    } else {
+                        console.error('initFilterSystem not found');
+                    }
+                    restoreSeriesState();
+                    applyDefaultSeriesState();
+                }, 100);
+            })
+            .catch(function(error) {
+                console.error('Error loading projects:', error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align:center; padding:2rem; color:var(--color-text-muted);">
+                            <p>Could not load projects. Please make sure the server is running.</p>
+                            <p style="font-size:0.8rem; margin-top:0.5rem;">Error: ${error.message}</p>
+                        </td>
+                    </tr>
+                `;
+            });
+    });
+    
+    function renderTable(projects, series) {
+        var tbody = document.getElementById('toc-body');
+
+        // Filter: only show published pieces
+        var publishedProjects = projects.filter(function(p) { return p.published !== false; });
+        
+        if (!publishedProjects || publishedProjects.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="3" style="text-align:center; padding:2rem; color:var(--color-text-muted);">
-                        <p>Could not load projects. Please make sure the server is running.</p>
-                        <p style="font-size:0.8rem; margin-top:0.5rem;">Error: ${error.message}</p>
+                        <p>No published pieces yet. Check back soon!</p>
                     </td>
                 </tr>
             `;
-        });
-});
-
-function renderTable(projects, series) {
-    const tbody = document.getElementById('toc-body');
-
-    // Filter: only show published pieces
-    const publishedProjects = projects.filter(p => p.published !== false);
-    
-    if (!publishedProjects || publishedProjects.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="3" style="text-align:center; padding:2rem; color:var(--color-text-muted);">
-                    <p>No published pieces yet. Check back soon!</p>
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    // Group by series
-    const seriesMap = {};
-    const standalone = [];
-    
-    publishedProjects.forEach(p => {
-        if (p.series_id && series && series.some(s => s.id === p.series_id)) {
-            if (!seriesMap[p.series_id]) seriesMap[p.series_id] = [];
-            seriesMap[p.series_id].push(p);
-        } else {
-            standalone.push(p);
+            return;
         }
-    });
 
-    // Sort series by name
-    const sortedSeriesIds = Object.keys(seriesMap).sort((a, b) => {
-        const sa = series.find(s => s.id === a);
-        const sb = series.find(s => s.id === b);
-        return (sa ? sa.name : a).localeCompare(sb ? sb.name : b);
-    });
-
-    let html = '';
-    let rowCount = 0;
-
-    // Render series groups
-    sortedSeriesIds.forEach(seriesId => {
-        const s = series.find(s => s.id === seriesId);
-        const groupItems = seriesMap[seriesId].sort((a, b) => {
-            if (a.part !== undefined && b.part !== undefined) return a.part - b.part;
-            return (a.order || 0) - (b.order || 0);
-        });
-
-        // Collect all unique genres and themes from the series
-        const allGenres = new Set();
-        const allThemes = new Set();
-        groupItems.forEach(p => {
-            (p.genres || []).forEach(g => allGenres.add(g));
-            (p.themes || []).forEach(t => allThemes.add(t));
-        });
+        // Group by series
+        var seriesMap = {};
+        var standalone = [];
         
-        // Build series-level pills
-        const seriesTags = [];
-        allGenres.forEach(g => seriesTags.push(g));
-        allThemes.forEach(t => seriesTags.push(t));
-        const seriesPills = seriesTags.map(tag => 
-            `<span class="pill">${escapeHtml(tag)}</span>`
-        ).join(' ');
-
-        // Series header row with tags
-        html += `
-            <tr class="series-header-row" data-genres='${JSON.stringify(Array.from(allGenres))}' data-themes='${JSON.stringify(Array.from(allThemes))}'>
-                <td colspan="3" class="series-header">
-                    <span class="series-icon">📚</span>
-                    <span class="series-name">${s ? escapeHtml(s.name) : escapeHtml(seriesId)}</span>
-                    <span class="series-count">(${groupItems.length} part${groupItems.length !== 1 ? 's' : ''})</span>
-                    ${s && s.description ? `<span class="series-description">— ${escapeHtml(s.description)}</span>` : ''}
-                    <div class="series-pills">
-                        ${seriesPills}
-                    </div>
-                </td>
-            </tr>
-        `;
-
-        // Individual pieces in the series - NO tags (they're on the header)
-        groupItems.forEach(project => {
-            html += createRow(project, true);
-            rowCount++;
+        publishedProjects.forEach(function(p) {
+            if (p.series_id && series && series.some(function(s) { return s.id === p.series_id; })) {
+                if (!seriesMap[p.series_id]) seriesMap[p.series_id] = [];
+                seriesMap[p.series_id].push(p);
+            } else {
+                standalone.push(p);
+            }
         });
-    });
 
-    // Render standalone - header has NO tags
-    if (standalone.length > 0) {
-        html += `
-            <tr class="series-header-row standalone-header">
-                <td colspan="3" class="series-header standalone-header">
-                    <span class="series-icon">📄</span>
-                    <span class="series-name">Standalone</span>
-                    <span class="series-count">(${standalone.length} piece${standalone.length !== 1 ? 's' : ''})</span>
-                </td>
-            </tr>
-        `;
-        standalone.forEach(project => {
-            html += createRow(project, false);
-            rowCount++;
+        // Sort series by name
+        var sortedSeriesIds = Object.keys(seriesMap).sort(function(a, b) {
+            var sa = series.find(function(s) { return s.id === a; });
+            var sb = series.find(function(s) { return s.id === b; });
+            return (sa ? sa.name : a).localeCompare(sb ? sb.name : b);
+        });
+
+        var html = '';
+        var rowCount = 0;
+
+        // Series section header
+        if (sortedSeriesIds.length > 0) {
+            html += `
+                <tr class="section-header-row">
+                    <td colspan="3" class="section-header">
+                        <span class="section-icon">📚</span>
+                        <span class="section-name">Series</span>
+                        <span class="section-count">(${sortedSeriesIds.length} series)</span>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Render series groups
+        sortedSeriesIds.forEach(function(seriesId) {
+            var s = series.find(function(s) { return s.id === seriesId; });
+            var groupItems = seriesMap[seriesId].sort(function(a, b) {
+                if (a.part !== undefined && b.part !== undefined) return a.part - b.part;
+                return (a.order || 0) - (b.order || 0);
+            });
+
+            // Collect all unique genres and themes from the series
+            var allGenres = new Set();
+            var allThemes = new Set();
+            groupItems.forEach(function(p) {
+                (p.genres || []).forEach(function(g) { allGenres.add(g); });
+                (p.themes || []).forEach(function(t) { allThemes.add(t); });
+            });
+            
+            // Convert to arrays for JSON serialization
+            var seriesGenres = Array.from(allGenres);
+            var seriesThemes = Array.from(allThemes);
+            
+            // Build series-level pills
+            var seriesTags = [];
+            seriesGenres.forEach(function(g) { seriesTags.push(g); });
+            seriesThemes.forEach(function(t) { seriesTags.push(t); });
+            var seriesPills = seriesTags.map(function(tag) {
+                return `<span class="pill">${escapeHtml(tag)}</span>`;
+            }).join('\n                                ');
+
+            // Get date range for the series
+            var dates = groupItems.map(function(p) { return p.date; }).filter(function(d) { return d; }).sort();
+            var dateDisplay = 'Multiple';
+            if (dates.length === 1) {
+                dateDisplay = formatDate(dates[0]);
+            } else if (dates.length > 1) {
+                var firstDate = formatDate(dates[0]);
+                var lastDate = formatDate(dates[dates.length - 1]);
+                var firstYear = dates[0].split('-')[0];
+                var lastYear = dates[dates.length - 1].split('-')[0];
+                if (firstYear === lastYear) {
+                    var firstMonthDay = formatDate(dates[0]).replace(/, \d{4}$/, '');
+                    var lastFull = formatDate(dates[dates.length - 1]);
+                    dateDisplay = `<span class="date-line">${firstMonthDay} –</span><span class="date-line">${lastFull}</span>`;
+                } else {
+                    dateDisplay = `<span class="date-line">${formatDate(dates[0])} –</span><span class="date-line">${formatDate(dates[dates.length - 1])}</span>`;
+                }
+            }
+
+            // Get saved state for this series - default to false (collapsed)
+            var isExpanded = seriesState[seriesId] === true;
+            var toggleIcon = isExpanded ? '▼' : '▶';
+
+            // Series header row
+            var descriptionHtml = s && s.description ? `<div class="series-description">${escapeHtml(s.description)}</div>` : '';
+            
+            html += `
+                <tr class="series-header-row" data-series-id="${seriesId}" data-expanded="${isExpanded}">
+                    <td class="toc-date series-date">
+                        <span class="toggle-icon">${toggleIcon}</span>
+                        <span class="date-range">${dateDisplay}</span>
+                    </td>
+                    <td class="toc-title series-title-cell">
+                        <div class="series-title-wrapper">
+                            <span class="series-name">${s ? escapeHtml(s.name) : escapeHtml(seriesId)}</span>
+                            <span class="series-count">(${groupItems.length} part${groupItems.length !== 1 ? 's' : ''})</span>
+                            ${descriptionHtml}
+                        </div>
+                    </td>
+                    <td class="toc-tags series-tags-cell">
+                        <div class="pill-container series-pills">
+                            ${seriesPills}
+                        </div>
+                    </td>
+                </tr>
+            `;
+
+            // Individual pieces in the series - now with inherited genres and themes
+            groupItems.forEach(function(project) {
+                // Each article inherits the series genres and themes for filtering
+                html += createRow(project, true, isExpanded, seriesGenres, seriesThemes);
+                rowCount++;
+            });
+        });
+
+        // Standalone section header
+        if (standalone.length > 0) {
+            html += `
+                <tr class="section-header-row">
+                    <td colspan="3" class="section-header">
+                        <span class="section-icon">📄</span>
+                        <span class="section-name">Standalone</span>
+                        <span class="section-count">(${standalone.length} piece${standalone.length !== 1 ? 's' : ''})</span>
+                    </td>
+                </tr>
+            `;
+            standalone.forEach(function(project) {
+                html += createRow(project, false);
+                rowCount++;
+            });
+        }
+
+        if (rowCount === 0) {
+            html = `
+                <tr>
+                    <td colspan="3" style="text-align:center; padding:2rem; color:var(--color-text-muted);">
+                        <p>No published pieces yet. Check back soon!</p>
+                    </td>
+                </tr>
+            `;
+        }
+
+        tbody.innerHTML = html;
+
+        // Add click handlers for series headers
+        document.querySelectorAll('.series-header-row').forEach(function(header) {
+            header.addEventListener('click', function(e) {
+                if (e.target.closest('a')) return;
+                var seriesId = this.dataset.seriesId;
+                if (!seriesId) return;
+                toggleSeries(seriesId);
+            });
+        });
+
+        // Setup Expand All / Collapse All buttons
+        setupExpandButtons(series);
+    }
+    
+    function createRow(project, isSeries, isExpanded, seriesGenres, seriesThemes) {
+        if (isExpanded === undefined) isExpanded = true;
+        var fullPath = project.fullPath || 'writing/' + project.path + project.slug + '.html';
+        
+        var partBadge = project.part ? ' <span class="part-badge">Part ' + project.part + '</span>' : '';
+        
+        if (isSeries) {
+            var dateDisplay = project.dateDisplay || formatDate(project.date);
+            var collapsedClass = isExpanded ? '' : 'collapsed';
+            
+            // Use the series genres and themes for filtering
+            var genres = seriesGenres || [];
+            var themes = seriesThemes || [];
+            
+            return `
+                <tr data-genres='${JSON.stringify(genres)}' data-themes='${JSON.stringify(themes)}' class="series-article-row ${collapsedClass}">
+                    <td class="toc-date">${dateDisplay}</td>
+                    <td class="toc-title">
+                        <a href="${fullPath}">${escapeHtml(project.title)}</a>${partBadge}
+                    </td>
+                    <td class="toc-tags"></td>
+                </tr>
+            `;
+        } else {
+            var dateDisplay = project.dateDisplay || formatDate(project.date);
+            var genres = project.genres || [];
+            var themes = project.themes || [];
+            var allTags = genres.concat(themes);
+            
+            var pills = allTags.map(function(tag) {
+                return `<span class="pill">${escapeHtml(tag)}</span>`;
+            }).join('\n                                ');
+            
+            return `
+                <tr data-genres='${JSON.stringify(genres)}' data-themes='${JSON.stringify(themes)}'>
+                    <td class="toc-date">${dateDisplay}</td>
+                    <td class="toc-title">
+                        <a href="${fullPath}">${escapeHtml(project.title)}</a>
+                    </td>
+                    <td class="toc-tags">
+                        <div class="pill-container">
+                            ${pills}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        var d = new Date(dateStr + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+    
+    // ==========================================================================
+    // Series Toggle Functions
+    // ==========================================================================
+    
+    function toggleSeries(seriesId) {
+        var header = document.querySelector('.series-header-row[data-series-id="' + seriesId + '"]');
+        if (!header) return;
+        
+        var isExpanded = header.dataset.expanded === 'true';
+        var newState = !isExpanded;
+        
+        header.dataset.expanded = newState;
+        
+        var icon = header.querySelector('.toggle-icon');
+        if (icon) {
+            icon.textContent = newState ? '▼' : '▶';
+        }
+        
+        var next = header.nextElementSibling;
+        while (next && !next.classList.contains('series-header-row') && !next.classList.contains('section-header-row')) {
+            if (next.classList.contains('series-article-row')) {
+                next.classList.toggle('collapsed', !newState);
+            }
+            next = next.nextElementSibling;
+        }
+        
+        seriesState[seriesId] = newState;
+        saveSeriesState();
+        updateExpandAllButton();
+    }
+    
+    function expandAllSeries() {
+        var headers = document.querySelectorAll('.series-header-row[data-series-id]');
+        headers.forEach(function(header) {
+            var seriesId = header.dataset.seriesId;
+            if (header.dataset.expanded === 'false') {
+                toggleSeries(seriesId);
+            }
         });
     }
-
-    if (rowCount === 0) {
-        html = `
-            <tr>
-                <td colspan="3" style="text-align:center; padding:2rem; color:var(--color-text-muted);">
-                    <p>No published pieces yet. Check back soon!</p>
-                </td>
-            </tr>
-        `;
+    
+    function collapseAllSeries() {
+        var headers = document.querySelectorAll('.series-header-row[data-series-id]');
+        headers.forEach(function(header) {
+            var seriesId = header.dataset.seriesId;
+            if (header.dataset.expanded === 'true') {
+                toggleSeries(seriesId);
+            }
+        });
     }
-
-    tbody.innerHTML = html;
-}
-
-function createRow(project, isSeries) {
-    const dateDisplay = project.dateDisplay || formatDate(project.date);
-    const fullPath = project.fullPath || `writing/${project.path}${project.slug}.html`;
     
-    // Part badge comes AFTER the title
-    const partBadge = project.part 
-        ? ` <span class="part-badge">Part ${project.part}</span>`
-        : '';
-    
-    if (isSeries) {
-        // Series pieces: no tags displayed (tags are on the series header)
-        return `
-            <tr data-genres='[]' data-themes='[]' class="series-article">
-                <td class="toc-date">${dateDisplay}</td>
-                <td class="toc-title">
-                    <a href="${fullPath}">${escapeHtml(project.title)}</a>${partBadge}
-                </td>
-                <td class="toc-tags"></td>
-            </tr>
-        `;
-    } else {
-        // Standalone pieces: show their own tags
-        const genres = project.genres || [];
-        const themes = project.themes || [];
-        const allTags = [...genres, ...themes];
-        
-        const pills = allTags.map(tag => 
-            `<span class="pill">${escapeHtml(tag)}</span>`
-        ).join('\n                                ');
-        
-        return `
-            <tr data-genres='${JSON.stringify(genres)}' data-themes='${JSON.stringify(themes)}'>
-                <td class="toc-date">${dateDisplay}</td>
-                <td class="toc-title">
-                    <a href="${fullPath}">${escapeHtml(project.title)}</a>
-                </td>
-                <td class="toc-tags">
-                    <div class="pill-container">
-                        ${pills}
-                    </div>
-                </td>
-            </tr>
-        `;
+    function applyDefaultSeriesState() {
+        var headers = document.querySelectorAll('.series-header-row[data-series-id]');
+        headers.forEach(function(header) {
+            var seriesId = header.dataset.seriesId;
+            if (seriesState[seriesId] === undefined) {
+                seriesState[seriesId] = false;
+                header.dataset.expanded = 'false';
+                var icon = header.querySelector('.toggle-icon');
+                if (icon) {
+                    icon.textContent = '▶';
+                }
+                var next = header.nextElementSibling;
+                while (next && !next.classList.contains('series-header-row') && !next.classList.contains('section-header-row')) {
+                    if (next.classList.contains('series-article-row')) {
+                        next.classList.add('collapsed');
+                    }
+                    next = next.nextElementSibling;
+                }
+            }
+        });
+        saveSeriesState();
+        updateExpandAllButton();
     }
-}
-
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function formatDate(dateStr) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-}
-
-// ==========================================================================
-// Update filter buttons dynamically from themes and genres
-// ==========================================================================
-
-function updateFilterButtons() {
-    // Update genre filters
-    const genreContainer = document.getElementById('genre-filters');
-    const themeContainer = document.getElementById('theme-filters');
     
-    // Get current active filters by checking existing buttons
-    const existingGenreActive = genreContainer.querySelector('.filter-chip.active');
-    const existingThemeActive = themeContainer.querySelector('.filter-chip.active');
-    const activeGenreValue = existingGenreActive ? existingGenreActive.dataset.filter : 'all';
-    const activeThemeValue = existingThemeActive ? existingThemeActive.dataset.filter : 'all';
+    function setupExpandButtons(series) {
+        var existingBtn = document.querySelector('.expand-btn');
+        if (existingBtn) existingBtn.remove();
+        
+        if (!series || series.length === 0) return;
+        
+        var container = document.querySelector('.expand-control');
+        if (!container) return;
+        
+        var btn = document.createElement('button');
+        btn.className = 'expand-btn';
+        btn.id = 'expand-all-btn';
+        btn.textContent = 'Expand All';
+        btn.addEventListener('click', function() {
+            if (this.textContent === 'Expand All') {
+                expandAllSeries();
+            } else {
+                collapseAllSeries();
+            }
+        });
+        container.appendChild(btn);
+        
+        updateExpandAllButton();
+    }
     
-    // Rebuild genre buttons
-    if (genresData && genresData.length > 0) {
+    function updateExpandAllButton() {
+        var btn = document.getElementById('expand-all-btn');
+        if (!btn) return;
+        
+        var headers = document.querySelectorAll('.series-header-row[data-series-id]');
+        if (headers.length === 0) {
+            btn.style.display = 'none';
+            return;
+        }
+        
+        btn.style.display = 'inline-block';
+        
+        var allExpanded = true;
+        var allCollapsed = true;
+        headers.forEach(function(header) {
+            if (header.dataset.expanded === 'true') {
+                allCollapsed = false;
+            } else {
+                allExpanded = false;
+            }
+        });
+        
+        if (allExpanded) {
+            btn.textContent = 'Collapse All';
+        } else if (allCollapsed) {
+            btn.textContent = 'Expand All';
+        } else {
+            btn.textContent = 'Expand All';
+        }
+    }
+    
+    // ==========================================================================
+    // Series State Persistence (localStorage)
+    // ==========================================================================
+    
+    function saveSeriesState() {
+        try {
+            localStorage.setItem('written_series_state', JSON.stringify(seriesState));
+        } catch (e) {
+            // localStorage not available or full
+        }
+    }
+    
+    function restoreSeriesState() {
+        try {
+            var saved = localStorage.getItem('written_series_state');
+            if (saved) {
+                var parsed = JSON.parse(saved);
+                seriesState = parsed;
+            }
+        } catch (e) {
+            // Ignore
+        }
+    }
+    
+    // ==========================================================================
+    // Update filter buttons dynamically from themes and genres
+    // ==========================================================================
+    
+    function updateFilterButtons() {
+        console.log('updateFilterButtons called');
+        
+        var genreContainer = document.getElementById('genre-filters');
+        var themeContainer = document.getElementById('theme-filters');
+        
+        if (!genreContainer || !themeContainer) {
+            console.error('Filter containers not found');
+            return;
+        }
+        
         genreContainer.innerHTML = '';
-        
-        // Add "All" button
-        const allBtn = document.createElement('button');
-        allBtn.className = 'filter-chip' + (activeGenreValue === 'all' ? ' active' : '');
-        allBtn.dataset.filter = 'all';
-        allBtn.textContent = 'All';
-        genreContainer.appendChild(allBtn);
-        
-        // Add genre buttons
-        const sortedGenres = [...genresData].sort();
-        sortedGenres.forEach(genre => {
-            const btn = document.createElement('button');
-            btn.className = 'filter-chip' + (activeGenreValue === genre ? ' active' : '');
-            btn.dataset.filter = genre;
-            btn.textContent = genre;
-            genreContainer.appendChild(btn);
-        });
-    }
-    
-    // Rebuild theme buttons
-    if (themesData && themesData.length > 0) {
         themeContainer.innerHTML = '';
         
-        // Add "All" button
-        const allBtn = document.createElement('button');
-        allBtn.className = 'filter-chip' + (activeThemeValue === 'all' ? ' active' : '');
-        allBtn.dataset.filter = 'all';
-        allBtn.textContent = 'All';
-        themeContainer.appendChild(allBtn);
+        var allGenreBtn = document.createElement('button');
+        allGenreBtn.className = 'filter-chip active';
+        allGenreBtn.dataset.filter = 'all';
+        allGenreBtn.textContent = 'All';
+        genreContainer.appendChild(allGenreBtn);
         
-        // Add theme buttons
-        const sortedThemes = [...themesData].sort();
-        sortedThemes.forEach(theme => {
-            const btn = document.createElement('button');
-            btn.className = 'filter-chip' + (activeThemeValue === theme ? ' active' : '');
-            btn.dataset.filter = theme;
-            btn.textContent = theme;
-            themeContainer.appendChild(btn);
-        });
+        if (genresData && genresData.length > 0) {
+            var sortedGenres = genresData.slice().sort();
+            sortedGenres.forEach(function(genre) {
+                var btn = document.createElement('button');
+                btn.className = 'filter-chip';
+                btn.dataset.filter = genre;
+                btn.textContent = genre;
+                genreContainer.appendChild(btn);
+            });
+        }
+        
+        var allThemeBtn = document.createElement('button');
+        allThemeBtn.className = 'filter-chip active';
+        allThemeBtn.dataset.filter = 'all';
+        allThemeBtn.textContent = 'All';
+        themeContainer.appendChild(allThemeBtn);
+        
+        if (themesData && themesData.length > 0) {
+            var sortedThemes = themesData.slice().sort();
+            sortedThemes.forEach(function(theme) {
+                var btn = document.createElement('button');
+                btn.className = 'filter-chip';
+                btn.dataset.filter = theme;
+                btn.textContent = theme;
+                themeContainer.appendChild(btn);
+            });
+        }
+        
+        console.log('Filter buttons updated:', genreContainer.children.length, 'genre buttons,', themeContainer.children.length, 'theme buttons');
     }
-}
+    
+    // Expose functions that need to be called from elsewhere
+    window.toggleSeries = toggleSeries;
+    window.expandAllSeries = expandAllSeries;
+    window.collapseAllSeries = collapseAllSeries;
+    window.applyDefaultSeriesState = applyDefaultSeriesState;
+    window.restoreSeriesState = restoreSeriesState;
+    window.updateFilterButtons = updateFilterButtons;
+    window.seriesState = seriesState;
+    
+})();

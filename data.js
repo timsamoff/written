@@ -15,7 +15,9 @@ window.__WRITTEN_DATA__ = {
         "sci-fi",
         "ya"
       ],
-      "themes": [],
+      "themes": [
+        "short-fiction"
+      ],
       "published": true,
       "order": 0,
       "series_id": "",
@@ -106,7 +108,8 @@ window.__WRITTEN_DATA__ = {
     "autobiographical",
     "game-design",
     "culture",
-    "dystopia"
+    "dystopia",
+    "short-fiction"
   ],
   "series": [
     {
