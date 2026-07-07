@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Designing a Game About Cultural Resistance: What Happens When Mechanics Take a Stance @ Written by Tim Samoff</title>
+    <meta name="description" content="Designing a Game About Cultural Resistance: What Happens When Mechanics Take a Stance">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Designing a Game About Cultural Resistance: What Happens When Mechanics Take a Stance @ Written by Tim Samoff">
+    <meta property="og:description" content="Designing a Game About Cultural Resistance: What Happens When Mechanics Take a Stance">
+    <meta property="og:site_name" content="Written by Tim Samoff">
+    <meta property="og:image" content="https://samoff.com/writing/articles/ni/ni_001.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Designing a Game About Cultural Resistance: What Happens When Mechanics Take a Stance @ Written by Tim Samoff">
+    <meta name="twitter:description" content="Designing a Game About Cultural Resistance: What Happens When Mechanics Take a Stance">
+    <meta name="twitter:image" content="https://samoff.com/writing/articles/ni/ni_001.png">
+    
+    <link rel="icon" href="../../favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../../style.css">
+    <script src="../../theme.js" defer></script>
+</head>
+<body>
+    <div id="scroll-progress"></div>
+
+    <header class="site-header">
+        <div class="container header-container">
+            <div class="branding-group">
+                <img src="../../wbts_icon.png" alt="Written by Tim Samoff Logo" class="site-branding-icon">
+                <div class="branding-text">
+                    <a href="../../index.html" class="site-logo">Written by <span class="logo-amp">Tim</span> Samoff</a>
+                    <span class="site-tagline">A collection of stories, essays, poetry, articles, and how-tos.</span>
+                </div>
+            </div>
+            <div class="header-btn-group" role="group" aria-label="Site controls">
+                <a href="mailto:samoff@gmail.com" class="header-circle-btn" id="contactBtn" aria-label="Contact Tim by email" title="Contact"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
+                <button id="theme-toggle" class="header-circle-btn theme-btn" aria-label="Toggle theme">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container layout-wrapper-post">
+        <aside class="sidebar-post-nav">
+            <div class="sticky-sidebar-content">
+                <a href="../../index.html" class="back-link">
+                    <i class="fa-solid fa-arrow-left-long"></i> Index
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <article class="reading-body">
+                <header class="reading-header">
+                    <div class="card-meta">
+                        <span class="author">By Tim Samoff</span>
+                        <span class="meta-separator">&middot;</span>
+                        <span class="date">December 15, 2025</span>
+                    </div>
+                    <h1 class="story-title" id="story-title">Designing a Game About Cultural Resistance: What Happens When Mechanics Take a Stance</h1>
+                    <div class="pill-container">
+                        <span class="pill">article</span>
+                        <span class="pill">game-design</span>
+                        <span class="pill">culture</span>
+                        <span class="pill">post-apocalyptic</span>
+                    </div>
+                </header>
+
+                <!-- ARTICLE CONTENT: Replaced by admin -->
+                <article class="story-content ls-2">
+<article class="story-content ls-2">
+  <main class="story-body">
+  <figure class="editorial-figure">
+    <img src="/writing/articles/ni/ni_001.png" alt="New & Improved™ Key Art" class="editorial-image" />
+    <figcaption class="editorial-caption">New &amp; Improved™ Key Art</figcaption>
+  </figure>
+  <h2 class="section-heading">Introduction</h2>
+  <p class="no-indent">Game development is often reduced to code, engines, and systems. But before a variable is declared or a pixel is drawn on the screen, there’s the messy and sometimes grueling work of ideation. Worlds take shape in sketches, half-finished notes, restaurant napkins, and word processing documents that are often filled with more questions than answers. Even in today’s “prototype first” game dev culture, documentation remains essential. It’s the space where creative vision forms, and where developers ask not just <em>what can we build?</em> but <em>what should we build?</em></p>
+  <p class="no-indent">This article kicks off a new crossover Mondev series, effectively merging my usual Wednesday <em>games-and-culture</em> articles with my Monday development logs. This is my first attempt at blending those two strands of writing, part design journal, part cultural critique. Over the coming weeks, I’ll be unpacking the ideation process behind <em>New &amp; Improved™</em>, a 2D pixel-art side-scroller about subversion, resistance, and culture as action.</p>
+  <h2 class="section-heading">Why Make This Game at All?</h2>
+  <p class="no-indent"><em>New &amp; Improved™</em> started with a feeling more than a feature list. I may have even had the initial idea years ago. It might have even been a dream that I woke myself up to jot down my thoughts. I wanted to make something that felt culturally present. I wanted to make something that acknowledged the world games exist in, rather than pretending it doesn’t. Not a lecture. Not a manifesto, per se, but a game that had something to say.</p>
+  <p class="no-indent">The challenge was obvious from the start. How do you make a game that’s politically and culturally meaningful without sacrificing playfulness? How do you keep it engaging, even joyful, while still letting it carry real weight?</p>
+  <p class="no-indent">That tension between fun and meaning has guided nearly every decision I’ve made during the ideation process so far. When something feels too safe, too abstract, or too eager to sand off its edges, it usually gets cut. When something feels risky but honest, it’s probably worth exploring.</p>
+  <p class="no-indent"><strong>Design Note</strong></p>
+  <p class="no-indent"><em>If the game doesn’t occasionally feel uncomfortable to design, it probably isn’t saying anything new.</em></p>
+  <h2 class="section-heading">Rethinking Action Games</h2>
+  <p class="no-indent">I began by asking a simple question: Does the core loop of an action game have to be collecting, killing, and surviving? If we look at the general landscape of game design, the answer seems to be “yes.” Collect resources. Kill enemies. Survive. Even games claiming thoughtfulness often default to these verbs. Violence becomes the universal language, with accumulation being the universal reward.</p>
+  <p class="no-indent"><em>New &amp; Improved™</em> asks a different question: What if the action isn’t about dominance, but about culture? What if the core verbs are <em>influence</em>, <em>subvert</em>, and <em>resist</em>? This is a game where the mechanics themselves take a stance.</p>
+  <h3 class="subsection-heading">Enter Capitalis</h3>
+  <p class="no-indent">Capitalis is a near-future, corporate-saturated city. Your avatar is an unnamed nonbinary activist armed with zines, stickers, graffiti, and hacked hardware. The game’s side-scrolling perspective lets players traverse streets, rooftops, alleys, and subways, emphasizing verticality and layered city spaces while keeping gameplay tight and readable.</p>
+  <p class="no-indent">Locals communicate through emojis – 😨 fear, ✊ solidarity, 😡 hostility – rather than legible text.</p>
+  <p class="no-indent">And your objective isn’t to defeat the city, it’s to chip away at corporate control, subtly shifting consciousness. Wheat-paste posters over ads, slip zines into newsstands, hack ATMs, tag billboards. Every act nudges the city toward rebellion.</p>
+  <p class="no-indent"><strong>Design Note</strong></p>
+  <p class="no-indent"><em>Pixel-art visuals and a side-scrolling perspective make the city legible at a glance while giving layers for vertical exploration. Combined with emoji-only NPC dialogue, this approach foregrounds action and atmosphere over literal exposition.</em></p>
+  <h3 class="subsection-heading">Mechanics as Manifesto</h3>
+  <p class="no-indent">Progression flows through two intertwined systems. Street Cred is earned through subversive acts and spent on supplies or ally support. The Subversion Meter tracks cultural influence and changes the city’s behavior:</p>
+    <ul>
+    <li><strong>Low Subversion:</strong> locals are fearful, patrols are quick to respond</li>
+    <li><strong>Mid Subversion:</strong> hesitant locals, minor allyship</li>
+    <li><strong>High Subversion:</strong> NPCs shield you, graffiti spreads organically</li>
+    <li><strong>Maximum:</strong> crowds block authorities, the city moves in subtle solidarity</li>
+  </ul>
+  <p class="no-indent">Friction is intentional. Timing graffiti runs, coordinating flashmobs, and hacking ATMs aren’t instantaneous. Risk and delay mirror real-world resistance.</p>
+  <p class="no-indent"><strong>Design Note</strong></p>
+  <p class="no-indent"><em>Failure isn’t a setback. It’s part of the message. Losing everything on capture reinforces the cost of dissent and makes subversion meaningful.</em></p>
+  <h3 class="subsection-heading">Districts as Ideological Space</h3>
+  <p class="no-indent">Every district represents a different claim on the city. But here, I’m only highlighting a selection to give a sense of how design communicates ideology:</p>
+    <ul>
+    <li><strong>Midtown:</strong> contested public space, local mom and pop shops, mixed verticality</li>
+    <li><strong>Downtown:</strong> corporate surveillance, horizontal sprawl</li>
+    <li><strong>Subway (CART - Capitalis Area Rapid Transit):</strong> infrastructure, moving obstacles, timing-based stealth</li>
+    <li><strong>Industrial Sector:</strong> labor and production, unfinished walls as canvases</li>
+    <li><strong>Broadcast Tower:</strong> narrative control, the final hack</li>
+  </ul>
+  <p class="no-indent">The city itself is a puzzle of power, visibility, and influence. Future articles will dive deep into all districts, unpacking how each communicates control, opportunity, and resistance through layout and mechanics.</p>
+  <p class="no-indent"><strong>Design Note</strong></p>
+  <p class="no-indent"><em>Districts aren’t just level design. They are ideological statements. Verticality, line-of-sight, and patrol density mirror different claims on public space.</em></p>
+  <h3 class="subsection-heading">Making Resistance Feel Real</h3>
+  <p class="no-indent">Mini-games and quests aren’t just playful distractions. They’re acts of cultural friction:</p>
+    <ul>
+    <li>Distracting a newsstand proprietor to slip zines</li>
+    <li>Transforming construction-site graffiti into messages of solidarity</li>
+    <li>Organizing flash mobs to manipulate patrol patterns</li>
+    <li>Hacking ATMs to broadcast ASCII art messages of resistance</li>
+  </ul>
+  <p class="no-indent">Even helping a local retrieve a lost purse carries weight, earning future tactical leverage from shopkeepers.</p>
+  <p class="no-indent"><strong>Design Note</strong></p>
+  <p class="no-indent"><em>Subversion is messy and deliberate. Timing, coordination, and attention to environment create tension, reflecting real-world resistance.</em></p>
+  <h3 class="subsection-heading">Victory Redefined</h3>
+  <p class="no-indent">Victory isn’t standing over enemies. It’s the Final Broadcast Hack (no spoilers!). It’s the culmination of completing missions, building street cred, and getting the locals to desire to fight against corporate takeover.</p>
+  <h3 class="subsection-heading">Embracing Risk and Discomfort</h3>
+  <p class="no-indent">This game will make some players uncomfortable. Not because it’s hard, but because it refuses neutrality. Neutrality is easier. Abstraction is safer. <em>New &amp; Improved™</em> is neither. It’s punk. It’s messy. It’s deliberate.</p>
+  <h2 class="section-heading">Looking Ahead</h2>
+  <p class="no-indent">This is just the start. Over the next few weeks, I’ll unpack more of the city’s districts, explore progression systems in depth, reveal mini-games and quest structure, and show how mechanics and design combine to make subversion tangible. Every sticker, zine, hack, and graffiti tag has a story. And every story is a step toward resistance.</p>
+  </main>
+</article>
+</article>
+            </article>
+        </main>
+    </div>
+
+    <footer class="site-footer">
+        <div class="container footer-container">
+            <p>&copy; <span id="current-year-story"></span> Written by Tim Samoff.</p>
+            <script>
+                document.getElementById('current-year-story').textContent = new Date().getFullYear();
+            </script>
+        </div>
+    </footer>
+
+</body>
+</html>
