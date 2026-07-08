@@ -43,12 +43,10 @@ const adminSearchClear = document.getElementById('admin-search-clear');
 const formPublished = document.getElementById('form-published');
 
 // Genre elements
-const genreTagManager = document.getElementById('genre-tag-manager');
 const newGenreInput = document.getElementById('new-genre-input');
 const addGenreBtn = document.getElementById('add-genre-btn');
 
 // Theme elements
-const themeTagManager = document.getElementById('theme-tag-manager');
 const newThemeInput = document.getElementById('new-theme-input');
 const addThemeBtn = document.getElementById('add-theme-btn');
 
@@ -95,42 +93,72 @@ function getFirstImageFromHtml(html) {
 }
 
 function extractArticleContent(html) {
-    if (!html) return '';
+    if (!html) return { content: '', lineHeight: 'ls-2' };
     
-    // First, try to find the innermost article with story-content class
+    // Default line-height
+    let lineHeight = 'ls-2';
     let content = html;
-    let previousContent = '';
+    
+    // Try to find article with story-content class
+    const articleMatch = html.match(/<article[^>]*class="([^"]*story-content[^"]*)"[^>]*>([\s\S]*?)<\/article>/i);
+    if (articleMatch) {
+        const classAttr = articleMatch[1];
+        // Extract line-height from class
+        const lsMatch = classAttr.match(/ls-[1-2](?:-[1-5])?/);
+        if (lsMatch) {
+            lineHeight = lsMatch[0];
+        }
+        // Extract the inner content (without the article wrapper)
+        content = articleMatch[2].trim();
+    } else {
+        // No article wrapper found, check if there's just an opening tag
+        content = content.replace(/^<article[^>]*>/, '');
+        content = content.replace(/<\/article>$/, '');
+    }
+    
+    // If we still have nested articles, keep stripping
     let iterations = 0;
     const maxIterations = 10;
     
-    // Keep stripping outer article tags until we get the innermost content
     while (iterations < maxIterations) {
-        const match = content.match(/<article[^>]*class="story-content[^>]*>([\s\S]*?)<\/article>/i);
+        const match = content.match(/<article[^>]*class="[^"]*story-content[^"]*"[^>]*>([\s\S]*?)<\/article>/i);
         if (!match) break;
         
-        // Store the inner content
         const innerContent = match[1].trim();
         
-        // If the inner content doesn't contain another article tag with story-content, we're done
-        if (!innerContent.match(/<article[^>]*class="story-content[^>]*>/i)) {
+        // Check inner content for line-height class
+        const innerClassMatch = match[0].match(/class="([^"]*story-content[^"]*)"[^>]*>/i);
+        if (innerClassMatch) {
+            const innerLsMatch = innerClassMatch[1].match(/ls-[1-2](?:-[1-5])?/);
+            if (innerLsMatch) {
+                lineHeight = innerLsMatch[0];
+            }
+        }
+        
+        if (!innerContent.match(/<article[^>]*class="[^"]*story-content[^"]*"[^>]*>/i)) {
             content = innerContent;
             break;
         }
-        
-        // Otherwise, continue stripping
         content = innerContent;
         iterations++;
     }
     
-    // If we still have an article tag, try a different approach
+    // Final check for any remaining article tag
     if (content.match(/<article[^>]*>/i)) {
-        const finalMatch = content.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
+        const finalMatch = content.match(/<article[^>]*class="([^"]*)"[^>]*>([\s\S]*?)<\/article>/i);
         if (finalMatch) {
-            content = finalMatch[1].trim();
+            const finalLsMatch = finalMatch[1].match(/ls-[1-2](?:-[1-5])?/);
+            if (finalLsMatch) {
+                lineHeight = finalLsMatch[0];
+            }
+            content = finalMatch[2].trim();
         }
     }
     
-    return content || html;
+    // Remove any wf-credit divs
+    content = content.replace(/<div[^>]*class="[^"]*wf-credit[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
+    
+    return { content: content || html, lineHeight: lineHeight };
 }
 
 // ==========================================================================
@@ -148,7 +176,6 @@ function fixImagePaths(html, project, context) {
     const folderName = mediaPath.split('/').pop() || '';
     
     // Build the absolute base path
-    // The path is: writing/{project.path}{folderName}/
     const cleanPath = project.path.endsWith('/') ? project.path : project.path + '/';
     const absoluteBase = `/writing/${cleanPath}${folderName}/`;
     
@@ -162,11 +189,11 @@ function fixImagePaths(html, project, context) {
         const filename = src.split('/').pop();
         
         if (context === 'save') {
-            // Use relative path: folderName/filename (e.g., ni/ni_001.png)
+            // Use relative path: folderName/filename
             const correctedSrc = folderName ? `${folderName}/${filename}` : filename;
             return `<img${attrs}src="${correctedSrc}"`;
         } else {
-            // Use absolute path: /writing/path/folderName/filename
+            // Use absolute path for preview
             const correctedSrc = folderName ? `${absoluteBase}${filename}` : `/writing/${cleanPath}${filename}`;
             return `<img${attrs}src="${correctedSrc}"`;
         }
@@ -178,25 +205,74 @@ function fixImagePaths(html, project, context) {
 // ==========================================================================
 
 async function loadContentFromFile(project) {
-    if (!project || !project.path || !project.slug) return '';
+    if (!project || !project.path || !project.slug) return { content: '', lineHeight: 'ls-2' };
     
     const cacheKey = `${project.path}${project.slug}`;
     if (contentCache[cacheKey]) {
-        return contentCache[cacheKey];
+        return { content: contentCache[cacheKey], lineHeight: project.lineHeight || 'ls-2' };
     }
     
     const filePath = `http://localhost:3000/writing/${project.path}${project.slug}.html`;
     try {
         const response = await fetch(filePath);
-        if (!response.ok) return '';
+        if (!response.ok) return { content: '', lineHeight: project.lineHeight || 'ls-2' };
         const html = await response.text();
-        const content = extractArticleContent(html);
+        
+        // Extract the content - we want the ENTIRE article block including the credit div
+        let content = '';
+        let lineHeight = project.lineHeight || 'ls-2';
+        
+        // First, try to find the article with story-content class
+        const articleMatch = html.match(/<article[^>]*class="([^"]*story-content[^"]*)"[^>]*>([\s\S]*?)<\/article>/i);
+        if (articleMatch) {
+            const classAttr = articleMatch[1];
+            const lsMatch = classAttr.match(/ls-[1-2](?:-[1-5])?/);
+            if (lsMatch) {
+                lineHeight = lsMatch[0];
+            }
+            // Get the FULL article block (opening tag + content + closing tag)
+            const fullArticleMatch = html.match(/(<article[^>]*class="[^"]*story-content[^"]*"[^>]*>[\s\S]*?<\/article>)/i);
+            if (fullArticleMatch) {
+                content = fullArticleMatch[1];
+            }
+        }
+        
+        // Now look for the credit div after the article
+        const creditMatch = html.match(/(<div[^>]*class="[^"]*wf-credit[^"]*"[^>]*>[\s\S]*?<\/div>)/i);
+        if (creditMatch && content) {
+            // Add the credit div to the content
+            content = content + '\n\n' + creditMatch[1];
+        }
+        
+        // If we couldn't find an article tag, try to find the REPLACED BY ADMIN placeholder content
+        if (!content) {
+            const placeholderMatch = html.match(/<!-- REPLACED BY ADMIN -->\s*([\s\S]*?)\s*(?:<!--|$)/i);
+            if (placeholderMatch) {
+                content = placeholderMatch[1].trim();
+            }
+        }
+        
+        // If we still don't have content, try to extract anything between the main content area
+        if (!content) {
+            const mainMatch = html.match(/<main[^>]*class="[^"]*main-content[^"]*"[^>]*>[\s\S]*?<article[^>]*class="[^"]*reading-body[^"]*"[^>]*>[\s\S]*?<header[^>]*>[\s\S]*?<\/header>[\s\S]*?([\s\S]*?)<\/article>/i);
+            if (mainMatch) {
+                content = mainMatch[1].trim();
+            }
+        }
+        
+        // Update project line-height if it changed
+        if (project.lineHeight !== lineHeight) {
+            project.lineHeight = lineHeight;
+            saveToServer();
+        }
+        
+        // Fix image paths for preview (absolute paths)
         const fixedContent = fixImagePaths(content, project, 'preview');
         contentCache[cacheKey] = fixedContent;
-        return fixedContent;
+        return { content: fixedContent, lineHeight: lineHeight };
     } catch (err) {
         console.warn(`Could not load content for ${project.slug}:`, err);
-        return '';
+        return { content: '', lineHeight: project.lineHeight || 'ls-2' };
     }
 }
 
@@ -236,9 +312,10 @@ fileInput.addEventListener('change', function(e) {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = function(event) {
-        const content = event.target.result;
-        const extracted = extractArticleContent(content);
-        formHtml.value = extracted || content;
+        const rawContent = event.target.result;
+        const extracted = extractArticleContent(rawContent);
+        formHtml.value = extracted.content;
+        formHtml.dataset.lineHeight = extracted.lineHeight;
         fileUploadText.textContent = file.name;
         fileUploadText.parentElement.classList.add('has-file');
         clearFileBtn.classList.add('visible');
@@ -493,7 +570,7 @@ formSeries.addEventListener('change', function() {
 });
 
 // ==========================================================================
-// Simplified Tag Manager
+// Tag Management
 // ==========================================================================
 
 function renderGenreTags() {
@@ -632,7 +709,7 @@ function getFormData() {
         path: formPath.value.trim(),
         slug: formSlug.value.trim(),
         date: formDate.value,
-        mediaPath: formMedia.value.trim().replace(/\/+$/, ''), // Just the folder name
+        mediaPath: formMedia.value.trim().replace(/\/+$/, ''),
         genres: [...selectedGenres],
         themes: [...selectedThemes],
         published: formPublished.checked,
@@ -697,12 +774,13 @@ function loadProject(id) {
     
     isEditing = true;
     editId = id;
-    formHeading.textContent = 'Editing';  // Just "Editing"
+    formHeading.textContent = 'Editing';
     formEditId.value = id;
     
-    loadContentFromFile(project).then(content => {
+    loadContentFromFile(project).then(({ content, lineHeight }) => {
         if (content) {
             formHtml.value = content;
+            formHtml.dataset.lineHeight = lineHeight;
             formHtml.classList.remove('placeholder-warning');
         } else {
             formHtml.value = '';
@@ -792,82 +870,25 @@ function saveToServer() {
 
 function loadFromServer() {
     fetch('http://localhost:3000/api/projects')
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) throw new Error('Network response was not ok');
+            return res.json();
+        })
         .then(data => {
             projects = data.projects || [];
             allGenres = data.genres || ['sci-fi', 'ya', 'article', 'poetry', 'essay', 'guide'];
             allThemes = data.themes || ['technology', 'writing', 'post-apocalyptic', 'publishing', 'autobiographical'];
             series = data.series || [];
-            checkForExistingPieces();
             renderAll();
             showNotification(`Loaded ${projects.length} pieces`, 'success');
         })
-        .catch(() => {
+        .catch((err) => {
+            console.error('Load error:', err);
             showNotification('Could not load data. Server running?', 'error');
             projects = [];
             series = [];
             renderAll();
         });
-}
-
-// ==========================================================================
-// Auto-detect Existing Pieces
-// ==========================================================================
-
-function checkForExistingPieces() {
-    const knownPieces = [
-        {
-            id: 'threxil-pattern',
-            title: 'The Threxil Pattern',
-            path: 'shorts/',
-            slug: 'threxil',
-            date: '2026-05-20',
-            dateDisplay: 'May 20, 2026',
-            mediaPath: 'threxil',
-            genres: ['sci-fi', 'ya'],
-            themes: [],
-            published: true,
-            order: 0,
-            series_id: '',
-            part: null
-        },
-        {
-            id: 'written-formatted',
-            title: 'Written & Formatted',
-            path: 'articles/',
-            slug: 'written-formatted',
-            date: '2026-06-04',
-            dateDisplay: 'June 4, 2026',
-            mediaPath: 'wf',
-            genres: ['article'],
-            themes: ['technology', 'writing', 'publishing'],
-            published: true,
-            order: 1,
-            series_id: '',
-            part: null
-        }
-    ];
-    
-    let addedCount = 0;
-    let totalToAdd = knownPieces.filter(p => !projects.some(existing => existing.id === p.id)).length;
-    
-    if (totalToAdd === 0) {
-        return;
-    }
-    
-    knownPieces.forEach(piece => {
-        const exists = projects.some(p => p.id === piece.id);
-        if (!exists) {
-            projects.push(piece);
-            addedCount++;
-            if (addedCount === totalToAdd) {
-                updateOrders();
-                saveToServer();
-                renderAll();
-                console.log(`✅ Auto-added ${addedCount} existing pieces`);
-            }
-        }
-    });
 }
 
 // ==========================================================================
@@ -1149,20 +1170,19 @@ adminSearchClear.addEventListener('click', () => {
 // ==========================================================================
 
 function buildAssembledHtml(project, content, context) {
-    // content should already be extracted - just fix image paths
-    const fixedContent = fixImagePaths(content, project, context || 'preview');
-    
     return fetch('http://localhost:3000/templates/template.html')
         .then(response => {
             if (!response.ok) throw new Error('Could not load template.html');
             return response.text();
         })
         .then(template => {
+            // Build pills
             const allTags = [...(project.genres || []), ...(project.themes || [])];
             const allPills = allTags.length > 0 
                 ? allTags.map(t => `<span class="pill">${escapeHtml(t)}</span>`).join('\n                        ')
                 : '';
             
+            // Build series HTML
             let seriesHtml = '';
             let seriesNavHtml = '';
             let seriesSubtitleHtml = '';
@@ -1212,9 +1232,10 @@ function buildAssembledHtml(project, content, context) {
                 }
             }
             
+            // Build OG image
             let ogImage = 'https://samoff.com/wbts_icon.png';
             let hasImage = false;
-            const imgPath = getFirstImageFromHtml(fixedContent);
+            const imgPath = getFirstImageFromHtml(content);
             if (imgPath) {
                 hasImage = true;
                 if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
@@ -1222,7 +1243,6 @@ function buildAssembledHtml(project, content, context) {
                 } else if (imgPath.startsWith('/')) {
                     ogImage = `https://samoff.com${imgPath}`;
                 } else {
-                    // Build path using project.path and media folder
                     const cleanPath = project.path.endsWith('/') ? project.path : project.path + '/';
                     const folderName = project.mediaPath ? project.mediaPath.split('/').pop() : '';
                     const filename = imgPath.split('/').pop();
@@ -1234,6 +1254,7 @@ function buildAssembledHtml(project, content, context) {
                 }
             }
             
+            // Replace template placeholders
             const title = project.title || 'Untitled';
             const fullTitle = `${title} @ Written by Tim Samoff`;
             const metaDesc = project.title || '';
@@ -1259,22 +1280,9 @@ function buildAssembledHtml(project, content, context) {
             template = template.replace(/<!-- SERIES_NAV: Generated by admin -->/, seriesNavHtml);
             template = template.replace(/<div class="pill-container">[\s\S]*?<\/div>/, `<div class="pill-container">\n                        ${allPills}\n                    </div>`);
             
-            // Replace article content - insert the cleaned content directly
-            const articleMatch = template.match(/<article class="story-content ls-2">[\s\S]*?<\/article>/);
-            if (articleMatch) {
-                const articleTag = articleMatch[0];
-                const newArticle = `<article class="story-content ls-2">\n${fixedContent}\n</article>`;
-                template = template.replace(articleTag, newArticle);
-            } else {
-                const genericArticle = template.match(/<article[^>]*>[\s\S]*?<\/article>/);
-                if (genericArticle) {
-                    const articleTag = genericArticle[0];
-                    const newArticle = `<article class="story-content ls-2">\n${fixedContent}\n</article>`;
-                    template = template.replace(articleTag, newArticle);
-                } else {
-                    template = template.replace(/<!-- REPLACED BY ADMIN -->/g, fixedContent);
-                }
-            }
+            // Insert the content as-is - it already has its own article tag with the correct class
+            // The content should be the full article with its wrapper
+            template = template.replace(/<!-- REPLACED BY ADMIN -->/, content);
             
             return template;
         });
@@ -1285,11 +1293,12 @@ function buildAssembledHtml(project, content, context) {
 // ==========================================================================
 
 async function getContentForAction(project) {
-    let content = contentCache[`${project.path}${project.slug}`];
-    if (!content) {
-        content = await loadContentFromFile(project);
+    let cached = contentCache[`${project.path}${project.slug}`];
+    if (cached) {
+        return cached;
     }
-    return content;
+    const result = await loadContentFromFile(project);
+    return result.content;
 }
 
 // ==========================================================================
@@ -1320,6 +1329,32 @@ form.addEventListener('submit', async (e) => {
     const dateDisplay = formatDate(date);
     const fullPath = `writing/${cleanPath}${slug}.html`;
     
+    // Check if the content already has an article wrapper
+    const hasArticleWrapper = html.match(/<article[^>]*class="[^"]*story-content[^"]*"[^>]*>/i);
+    
+    let contentToSave = html;
+    let lineHeight = 'ls-2';
+    
+    if (hasArticleWrapper) {
+        // Content already has the wrapper - extract the line-height for metadata
+        const extracted = extractArticleContent(html);
+        lineHeight = extracted.lineHeight || 'ls-2';
+        // Keep the full content with wrapper
+        contentToSave = html;
+    } else {
+        // No wrapper - wrap it with default
+        lineHeight = 'ls-2';
+        contentToSave = `<article class="story-content ${lineHeight}">\n${html}\n</article>`;
+    }
+    
+    // Check if the credit div is already there, if not, add it
+    if (!contentToSave.includes('wf-credit')) {
+        const creditDiv = `<div class="wf-credit" aria-label="Formatted by Written &amp; Formatted">
+    <p>Page formatted by <a href="https://samoff.com/written/app" target="_blank" rel="noopener">Written &amp; Formatted</a>. &copy; Tim Samoff.</p>
+</div>`;
+        contentToSave = contentToSave + '\n\n' + creditDiv;
+    }
+    
     const data = {
         id,
         title,
@@ -1334,24 +1369,30 @@ form.addEventListener('submit', async (e) => {
         published: formPublished.checked,
         series_id: formSeries.value || '',
         part: formPart.value ? parseInt(formPart.value) : undefined,
-        order: projects.length
+        order: projects.length,
+        lineHeight: lineHeight
     };
     
     try {
-        const content = html;
-        const fixedContent = fixImagePaths(content, data, 'save');
+        // Fix image paths for saving (relative paths)
+        const fixedContent = fixImagePaths(contentToSave, data, 'save');
+        
+        // Build the complete HTML using the template
         const assembledHtml = await buildAssembledHtml(data, fixedContent, 'save');
         
+        // Save to server
         const saved = await saveHtmlToServer(fullPath, assembledHtml);
         if (!saved) {
             showNotification('HTML file could not be saved', 'error');
             return;
         }
         
+        // Cache the preview version (with absolute paths)
         const cacheKey = `${cleanPath}${slug}`;
-        const previewContent = fixImagePaths(content, data, 'preview');
+        const previewContent = fixImagePaths(contentToSave, data, 'preview');
         contentCache[cacheKey] = previewContent;
         
+        // Update or add the project
         if (isEditing && editId) {
             const index = projects.findIndex(p => p.id === editId);
             if (index !== -1) {
@@ -1383,14 +1424,13 @@ form.addEventListener('submit', async (e) => {
 });
 
 // ==========================================================================
-// Submit button - triggers form submit (since it's outside the form)
+// Submit button - triggers form submit
 // ==========================================================================
 
 submitBtn.addEventListener('click', function() {
     form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
 });
 
-// Also handle Enter key on the title field to submit
 formTitle.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         e.preventDefault();
@@ -1399,7 +1439,7 @@ formTitle.addEventListener('keydown', function(e) {
 });
 
 // ==========================================================================
-// Preview Button - Opens in new tab with absolute image paths
+// Preview Button
 // ==========================================================================
 
 previewBtn.addEventListener('click', async () => {
@@ -1430,7 +1470,9 @@ previewBtn.addEventListener('click', async () => {
         const formData = getFormData();
         const mergedProject = { ...project, ...formData };
         
-        const assembledHtml = await buildAssembledHtml(mergedProject, content, 'preview');
+        // Fix image paths for preview
+        const fixedContent = fixImagePaths(content, mergedProject, 'preview');
+        const assembledHtml = await buildAssembledHtml(mergedProject, fixedContent, 'preview');
         
         const newWindow = window.open('', '_blank');
         if (newWindow) {
@@ -1447,7 +1489,7 @@ previewBtn.addEventListener('click', async () => {
 });
 
 // ==========================================================================
-// Download Button - Saves directly to server (no dialog)
+// Download Button
 // ==========================================================================
 
 downloadBtn.addEventListener('click', async () => {
@@ -1479,7 +1521,10 @@ downloadBtn.addEventListener('click', async () => {
         const mergedProject = { ...project, ...formData };
         
         const fullPath = `writing/${mergedProject.path}${mergedProject.slug}.html`;
-        const assembledHtml = await buildAssembledHtml(mergedProject, content, 'save');
+        
+        // Fix image paths for saving
+        const fixedContent = fixImagePaths(content, mergedProject, 'save');
+        const assembledHtml = await buildAssembledHtml(mergedProject, fixedContent, 'save');
         
         const saved = await saveHtmlToServer(fullPath, assembledHtml);
         

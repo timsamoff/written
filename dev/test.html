@@ -3,21 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Written & Formatted @ Written by Tim Samoff</title>
-    <meta name="description" content="Written & Formatted">
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="article">
-    <meta property="og:title" content="Written & Formatted @ Written by Tim Samoff">
-    <meta property="og:description" content="Written & Formatted">
-    <meta property="og:site_name" content="Written by Tim Samoff">
-    <meta property="og:image" content="https://samoff.com/written/writing/articles/wf/wf_ui.png">
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Written & Formatted @ Written by Tim Samoff">
-    <meta name="twitter:description" content="Written & Formatted">
-    <meta name="twitter:image" content="https://samoff.com/written/writing/articles/wf/wf_ui.png">
+    <title>Written by Tim Samoff</title>
     
     <link rel="icon" href="../../favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="../../apple-touch-icon.png">
@@ -44,12 +30,9 @@
                     <span class="site-tagline">A collection of stories, essays, poetry, articles, and how-tos.</span>
                 </div>
             </div>
-            <div class="header-btn-group" role="group" aria-label="Site controls">
-                <a href="mailto:samoff@gmail.com" class="header-circle-btn" id="contactBtn" aria-label="Contact Tim by email" title="Contact"><i class="fa-solid fa-envelope" aria-hidden="true"></i></a>
-                <button id="theme-toggle" class="header-circle-btn theme-btn" aria-label="Toggle theme">
-                    <i class="fa-solid fa-moon"></i>
-                </button>
-            </div>
+            <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme">
+                <i class="fa-solid fa-moon"></i>
+            </button>
         </div>
     </header>
 
@@ -59,7 +42,6 @@
                 <a href="../../index.html" class="back-link">
                     <i class="fa-solid fa-arrow-left-long"></i> Index
                 </a>
-                
             </div>
         </aside>
 
@@ -69,28 +51,22 @@
                     <div class="card-meta">
                         <span class="author">By Tim Samoff</span>
                         <span class="meta-separator">&middot;</span>
-                        <span class="date">June 4, 2026</span>
-                        
+                        <span class="date">Published June 4, 2026</span>
                     </div>
-                    <h1 class="story-title" id="story-title">Written & Formatted</h1>
-                    
+                    <h1 class="story-title">Written &amp; Formatted</h1>
+                    <p class="story-subtitle">How a Portfolio Website Led to a Publishing Tool</p>
                     <div class="pill-container">
-                        <span class="pill">article</span>
-                        <span class="pill">technology</span>
-                        <span class="pill">writing</span>
-                        <span class="pill">publishing</span>
+                        <span class="pill">Article</span>
+                        <span class="pill">Software Development</span>
+                        <span class="pill">Writing</span>
                     </div>
                 </header>
 
-                <!-- ARTICLE CONTENT: Replaced by admin -->
-                
                 <article class="story-content ls-1">
                     <p class="no-indent">I’m struck by how often a side project reveals a different project hiding within. You know, those projects you start and then find out you don't have the right tool…?</p>
                     <p class="no-indent">I ran into that while building <a href="https://samoff.com/written" target="_blank" rel="noopener">Written</a>, a portfolio site for my essays, fiction, articles, and other written work. Designing the actual portfolio site was pretty straightforward. The unexpected part was preparing content for it.</p>
                     <p class="no-indent">After beginning the formatting process for one of my short fiction pieces, The <em>Threxil Pattern</em> (read it <a href="https://samoff.com/written/writing/shorts/threxil.html" target="_blank" rel="noopener">here</a>!), I noticed I was performing the same tasks every time. I was wrapping paragraphs in HTML, inserting structural elements, trying to format some of the included monospaced elements, creating section breaks, and so on. None of it was difficult, but this story is 28 pages long! While it's not difficult to tackle a couple of short pieces like this, several dozen, each requiring the same kind of work, would be horrible.</p>
-                    <p class="no-indent">That's when I decided to solve the problem instead of doing the manual formatting work myself.Introducing Written & Formatted:</p>
-
-                    <p class="no-indent"><a href="https://samoff.com/written/app/" target="_blank" rel="noopener">https://samoff.com/written/app/</a></p>
+                    <p class="no-indent">That's when I decided to solve the problem instead of doing the manual formatting work myself.</p>
 
                     <h2 class="section-heading">Why not just use what already exists</h2>
                     <p class="no-indent">I've used most of the obvious options at some point. WordPress, static-site generators, wikis, Markdown, etc. I have looked into Pandoc as well, but that wasn't really made for this either. Don't get me wrong. They're all capable tools. But they are bloated for my simple needs and aren't really geared for, well, this kind of writing.</p>
@@ -163,7 +139,7 @@
                     <hr class="fleuron-end" aria-hidden="true">
                 </article>
 
-<div class="wf-credit" aria-label="Formatted by Written &amp; Formatted">
+                <div class="wf-credit" aria-label="Formatted by Written &amp; Formatted">
                     <p>Page formatted by <a href="https://samoff.com/written/app" target="_blank" rel="noopener">Written &amp; Formatted</a>. &copy; Tim Samoff.</p>
                 </div>
             </article>
@@ -172,9 +148,9 @@
 
     <footer class="site-footer">
         <div class="container footer-container">
-            <p>&copy; <span id="current-year-story"></span> Written by Tim Samoff.</p>
+            <p>&copy; <span id="current-year-guide"></span> Written by Tim Samoff.</p>
             <script>
-                document.getElementById('current-year-story').textContent = new Date().getFullYear();
+                document.getElementById('current-year-guide').textContent = new Date().getFullYear();
             </script>
         </div>
     </footer>

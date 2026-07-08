@@ -274,12 +274,16 @@ var WrittenApp = WrittenApp || {};
             var themes = seriesThemes || [];
             
             return `
-                <tr data-genres='${JSON.stringify(genres)}' data-themes='${JSON.stringify(themes)}' class="series-article-row ${collapsedClass}">
+                <tr data-genres='${JSON.stringify(genres)}' data-themes='${JSON.stringify(themes)}'>
                     <td class="toc-date">${dateDisplay}</td>
                     <td class="toc-title">
-                        <a href="${fullPath}">${escapeHtml(project.title)}</a>${partBadge}
+                        <a href="${fullPath}">${escapeHtml(project.title)}</a>
                     </td>
-                    <td class="toc-tags"></td>
+                    <td class="toc-tags">
+                        <div class="pill-container">
+                            ${pills}
+                        </div>
+                    </td>
                 </tr>
             `;
         } else {

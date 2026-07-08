@@ -1,0 +1,453 @@
+{
+  "app_name": "Written by Tim Samoff",
+  "description": "A self-contained publishing system for stories, essays, poetry, articles, and how-tos. Features an admin panel for content management, dynamic filtering on the index page, series grouping with collapse/expand, and automatic HTML generation with reading time calculation.",
+  "version": "1.0.0",
+  "author": "Tim Samoff",
+  "repository": "https://github.com/timsamoff/written",
+
+  "architecture": {
+    "type": "Static site with local server for saving",
+    "server": "Node.js (save-server.js)",
+    "port": 3000,
+    "assets_directory": "/writing/",
+    "templates_directory": "/templates/"
+  },
+
+  "file_structure": {
+    "root": [
+      {
+        "name": "index.html",
+        "description": "Main index page with table of contents, filter system, and series grouping"
+      },
+      {
+        "name": "style.css",
+        "description": "Global styles with dark/light theme, typography, and responsive design"
+      },
+      {
+        "name": "theme.js",
+        "description": "Universal theme switcher, reading time calculator, and scroll progress bar"
+      },
+      {
+        "name": "index.js",
+        "description": "Index page logic: loads projects, renders table with series grouping, handles expand/collapse"
+      },
+      {
+        "name": "filter-system.js",
+        "description": "Multi-category filtering for genres and themes on the index page"
+      },
+      {
+        "name": "data.js",
+        "description": "Auto-generated project data (projects.json) - DO NOT EDIT MANUALLY"
+      },
+      {
+        "name": "wbts_icon.png",
+        "description": "Site icon/logo"
+      },
+      {
+        "name": "favicon.ico",
+        "description": "Browser favicon"
+      },
+      {
+        "name": "apple-touch-icon.png",
+        "description": "Apple touch icon"
+      }
+    ],
+    "admin": [
+      {
+        "name": "admin.html",
+        "description": "Admin panel interface with 50/50 split layout: form on left, sortable list on right"
+      },
+      {
+        "name": "admin.js",
+        "description": "Complete admin logic: CRUD operations, series management, HTML generation, image path fixing"
+      },
+      {
+        "name": "admin.css",
+        "description": "Admin panel styles with scrollbars, form inputs, tag manager, and responsive design"
+      }
+    ],
+    "writing": [
+      {
+        "name": "shorts/",
+        "description": "Short fiction pieces"
+      },
+      {
+        "name": "articles/",
+        "description": "Articles and essays"
+      },
+      {
+        "name": "poetry/",
+        "description": "Poetry"
+      },
+      {
+        "name": "guides/",
+        "description": "How-to guides"
+      }
+    ],
+    "templates": [
+      {
+        "name": "template.html",
+        "description": "Base HTML template used by admin to generate article pages"
+      }
+    ],
+    "data": [
+      {
+        "name": "projects.json",
+        "description": "Central data store containing projects, genres, themes, and series"
+      }
+    ]
+  },
+
+  "core_data_structure": {
+    "project": {
+      "id": "string (slug)",
+      "title": "string",
+      "path": "string (e.g., 'articles/')",
+      "slug": "string (url-friendly title)",
+      "fullPath": "string (e.g., 'articles/my-article.html')",
+      "date": "string (YYYY-MM-DD)",
+      "dateDisplay": "string (e.g., 'June 4, 2026')",
+      "mediaPath": "string (optional folder name for images)",
+      "genres": "array of strings",
+      "themes": "array of strings",
+      "published": "boolean",
+      "order": "number",
+      "series_id": "string (optional, references series.id)",
+      "part": "number (optional, part number in series)",
+      "lineHeight": "string ('ls-1' | 'ls-1-5' | 'ls-2')"
+    },
+    "series": {
+      "id": "string (url-friendly name)",
+      "name": "string",
+      "description": "string (optional)"
+    }
+  },
+
+  "features": {
+    "index_page": {
+      "table_of_contents": "Displays all published projects grouped by series",
+      "series_grouping": "Series are collapsed by default with toggle icon",
+      "expand_all": "Button to expand/collapse all series",
+      "filter_system": "Multi-select filtering by genre and theme with collapsible panel",
+      "date_range": "Series show date range on two lines (e.g., 'May 20 –' / 'June 4, 2026')",
+      "part_badge": "Shows 'Part X' badge for series articles",
+      "responsive": "Adapts to mobile, tablet, and desktop"
+    },
+    "article_page": {
+      "dynamic_reading_time": "Calculated from word count (200 words per minute)",
+      "series_nav": "Previous/Next navigation in sidebar with vertical layout",
+      "series_subtitle": "Shows 'Part of [Series Name]' under title",
+      "theme_switcher": "Dark/light mode with localStorage persistence",
+      "scroll_progress": "Progress bar at top of page",
+      "back_link": "Returns to index page",
+      "responsive": "Adapts to mobile, tablet, and desktop"
+    },
+    "admin_panel": {
+      "split_layout": "Form on left (50%), sortable list on right (50%)",
+      "form_fields": [
+        "Title (required)",
+        "Path (required, e.g., 'shorts/')",
+        "Slug (required, url-friendly)",
+        "Date (required)",
+        "Media Folder (optional)",
+        "Series dropdown with 'New' button",
+        "Part number (auto-filled)",
+        "Published toggle",
+        "Genre tags (with add/remove)",
+        "Theme tags (with add/remove)",
+        "HTML upload or paste"
+      ],
+      "tag_management": "Add/remove genres and themes with autocomplete",
+      "series_management": "Create, edit, delete series with modal dialogs",
+      "sortable_list": "Drag-and-drop reordering, move up/down buttons",
+      "search": "Filter pieces by title, slug, or path",
+      "auto_save": "Saves metadata changes automatically",
+      "preview": "Preview article in new tab with absolute image paths",
+      "download": "Save HTML to server",
+      "html_generation": "Uses template.html with placeholder replacement",
+      "image_path_fixing": "Automatic relative/absolute path conversion for images"
+    },
+    "theme_system": {
+      "dark_mode": "Dark and light themes with CSS variables",
+      "system_preference": "Respects system dark/light preference",
+      "localStorage": "Persists user preference",
+      "icon_toggle": "Moon/sun icon toggle"
+    }
+  },
+
+  "css_variables": {
+    "colors": {
+      "light": {
+        "--color-bg": "#f2f1ef",
+        "--color-bg-card": "#ffffff",
+        "--color-text": "#2a1f1c",
+        "--color-text-muted": "#6b4e41",
+        "--color-accent": "#8b5a4a",
+        "--color-accent-inline": "#6b3a2a",
+        "--color-border": "#d9d2cc",
+        "--color-toggle-bg": "#d9d2cc",
+        "--pill-bg-universal": "#4a2a20",
+        "--pill-text-universal": "#f2f1ef",
+        "--pill-border-universal": "#4a2a20"
+      },
+      "dark": {
+        "--color-bg": "#221714",
+        "--color-bg-card": "#2b1f1b",
+        "--color-text": "#f2f1ef",
+        "--color-text-muted": "#d9d2cc",
+        "--color-accent": "#e8c4a8",
+        "--color-accent-inline": "#f2d3b7",
+        "--color-border": "#4a3a35",
+        "--color-toggle-bg": "#352824",
+        "--pill-bg-universal": "#352824",
+        "--pill-text-universal": "#f2f1ef",
+        "--pill-border-universal": "#4a3a35"
+      }
+    },
+    "spacing": {
+      "--rhythm-unit": "0.5rem",
+      "--space-xs": "0.5rem",
+      "--space-sm": "1rem",
+      "--space-md": "2rem",
+      "--space-lg": "3rem",
+      "--space-xl": "5rem",
+      "--container-max-w": "920px"
+    }
+  },
+
+  "typography": {
+    "body": "EB Garamond, serif",
+    "sans": "Plus Jakarta Sans, sans-serif",
+    "mono": "Source Code Pro, monospace",
+    "body_size": "1.35rem",
+    "line_heights": {
+      "ls-1": "1.25 (tight)",
+      "ls-1-5": "1.65 (default)",
+      "ls-2": "2.1 (airy)"
+    }
+  },
+
+  "dependencies": {
+    "fonts": [
+      "https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
+      "https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Source+Code+Pro:ital,wght@0,400..900;1,400..900&display=swap"
+    ],
+    "icons": "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  },
+
+  "server_api": {
+    "endpoints": {
+      "GET /api/projects": "Returns all projects, genres, themes, and series",
+      "POST /api/save-projects": "Saves projects, genres, themes, and series to projects.json",
+      "POST /api/save-html": "Saves HTML file to the writing directory"
+    }
+  },
+
+  "key_functions": {
+    "admin.js": {
+      "extractArticleContent(html)": "Extracts inner content and line-height class from article tag",
+      "fixImagePaths(html, project, context)": "Fixes image paths for 'save' (relative) or 'preview' (absolute) contexts",
+      "buildAssembledHtml(project, content, context)": "Generates complete HTML using template.html",
+      "saveToServer()": "Saves project metadata to server",
+      "loadFromServer()": "Loads project metadata from server",
+      "renderList()": "Renders sortable list with series grouping",
+      "openSeriesModal(id)": "Opens modal for creating/editing series",
+      "addGenre() / addTheme()": "Adds new genre or theme to the system"
+    },
+    "index.js": {
+      "renderTable(projects, series)": "Renders TOC with series grouping and expand/collapse",
+      "createRow(project, isSeries, isExpanded, seriesGenres, seriesThemes)": "Creates table row for a project",
+      "toggleSeries(seriesId)": "Toggles series expansion/collapse",
+      "applyDefaultSeriesState()": "Sets all series to collapsed by default",
+      "updateFilterButtons()": "Dynamically creates filter buttons from genres and themes"
+    },
+    "filter-system.js": {
+      "initFilterSystem()": "Initializes filter system with collapsible panel",
+      "matchesFilters(row)": "Checks if a row matches active genre/theme filters",
+      "updateDisplay()": "Updates visibility of rows based on filters",
+      "handleFilterClick(button, type, value)": "Handles genre/theme filter button clicks",
+      "clearAllFilters()": "Resets all filters to show everything"
+    },
+    "theme.js": {
+      "theme switcher": "Handles dark/light mode with localStorage",
+      "reading time": "Calculates reading time from .story-content and appends to .card-meta",
+      "scroll progress": "Tracks scroll position and updates progress bar"
+    }
+  },
+
+  "css_classes": {
+    "layout": [
+      "container",
+      "layout-wrapper-index",
+      "layout-wrapper-post",
+      "sidebar-post-nav",
+      "sticky-sidebar-content",
+      "main-content"
+    ],
+    "header": [
+      "site-header",
+      "header-container",
+      "branding-group",
+      "site-branding-icon",
+      "branding-text",
+      "site-logo",
+      "logo-amp",
+      "site-tagline",
+      "header-btn-group",
+      "header-circle-btn"
+    ],
+    "toc": [
+      "toc-wrapper",
+      "toc-table",
+      "toc-date",
+      "toc-title",
+      "toc-tags",
+      "filter-hidden",
+      "section-header-row",
+      "section-header",
+      "section-icon",
+      "section-name",
+      "section-count"
+    ],
+    "series": [
+      "series-header-row",
+      "series-article-row",
+      "series-title-wrapper",
+      "series-name",
+      "series-count",
+      "series-description",
+      "series-date",
+      "series-tags-cell",
+      "series-pills",
+      "toggle-icon",
+      "date-range",
+      "date-line",
+      "collapsed",
+      "part-badge"
+    ],
+    "filters": [
+      "filter-toggle-btn",
+      "filter-section",
+      "filter-group",
+      "filter-label",
+      "filter-buttons",
+      "filter-chip",
+      "filter-status",
+      "filter-count",
+      "clear-btn",
+      "no-results",
+      "active"
+    ],
+    "article": [
+      "reading-body",
+      "reading-header",
+      "card-meta",
+      "meta-separator",
+      "story-title",
+      "story-subtitle",
+      "series-subtitle",
+      "series-header-wrapper",
+      "series-label",
+      "series-desc",
+      "pill-container",
+      "pill",
+      "back-link",
+      "story-content",
+      "no-indent",
+      "dropcap-paragraph",
+      "section-heading",
+      "subsection-heading",
+      "pull-quote",
+      "fleuron-break",
+      "fleuron-end",
+      "story-end",
+      "literary-mono",
+      "mono-line",
+      "wf-credit",
+      "series-nav",
+      "series-nav-prev",
+      "series-nav-next",
+      "series-nav-current",
+      "series-nav-link",
+      "series-nav-disabled"
+    ],
+    "admin": [
+      "admin-header-full",
+      "header-container-full",
+      "admin-container",
+      "admin-panel",
+      "admin-panel-left",
+      "admin-panel-right",
+      "admin-panel-inner",
+      "admin-form-scroll",
+      "admin-form",
+      "form-header",
+      "form-group",
+      "form-row",
+      "path-input-wrapper",
+      "path-prefix",
+      "path-suffix",
+      "publish-toggle",
+      "custom-checkbox-box",
+      "toggle-label",
+      "tag-manager",
+      "tag-pills",
+      "tag-chip",
+      "tag-add",
+      "filter-btn",
+      "form-actions",
+      "sorting-zone",
+      "sorting-header",
+      "sortable-list",
+      "sort-group",
+      "sort-group-header",
+      "sort-item",
+      "sort-content",
+      "sort-actions",
+      "sort-handle",
+      "row-btn",
+      "move-up-btn",
+      "move-down-btn",
+      "delete-btn",
+      "empty-state",
+      "modal-overlay",
+      "modal-content",
+      "modal-header",
+      "modal-body",
+      "modal-footer",
+      "modal-close",
+      "modal-form-group",
+      "admin-notification",
+      "series-manager",
+      "series-list",
+      "series-chip",
+      "series-chip-count",
+      "series-chip-delete",
+      "admin-search",
+      "admin-search-input",
+      "file-upload-wrapper",
+      "file-upload-label",
+      "clear-file-btn"
+    ]
+  },
+
+  "known_issues_fixed": {
+    "line_height": "Template no longer has hardcoded article tag; content provides its own with correct ls-* class",
+    "series_nav": "Added sidebar back to template; nav uses relative filenames with vertical layout",
+    "reading_time": "Reading time appended to card-meta with duplicate prevention",
+    "date_and_title": "Placeholders replaced in correct order by admin",
+    "image_paths": "fixImagePaths handles relative/absolute conversion for save and preview contexts",
+    "pills_spacing": "Added .reading-header .pill-container styles for consistent spacing",
+    "sidebar_width": "Set to minmax(60px, 80px)",
+    "duplicate_css": "Removed duplicate CSS sections",
+    "series_filtering": "Series articles inherit genres/themes from series for filtering"
+  },
+
+  "future_improvements": {
+    "screenplay_format": "Support for screenplay formatting",
+    "collaborative_editing": "Multi-user editing capabilities",
+    "version_history": "Track changes to articles",
+    "export_options": "PDF, ePub, and other export formats",
+    "analytics": "Basic page view analytics"
+  }
+}

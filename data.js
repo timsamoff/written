@@ -21,7 +21,7 @@ window.__WRITTEN_DATA__ = {
       "published": true,
       "order": 0,
       "series_id": "",
-      "part": null
+      "lineHeight": "ls-2"
     },
     {
       "id": "written-formatted",
@@ -43,7 +43,7 @@ window.__WRITTEN_DATA__ = {
       "published": true,
       "order": 1,
       "series_id": "",
-      "part": null
+      "lineHeight": "ls-1"
     },
     {
       "id": "ni_p1",
@@ -66,7 +66,8 @@ window.__WRITTEN_DATA__ = {
       "published": true,
       "series_id": "new-improved-",
       "part": 1,
-      "order": 2
+      "order": 2,
+      "lineHeight": "ls-2"
     },
     {
       "id": "ni_p2",
@@ -89,7 +90,8 @@ window.__WRITTEN_DATA__ = {
       "published": true,
       "series_id": "new-improved-",
       "part": 2,
-      "order": 3
+      "order": 3,
+      "lineHeight": "ls-1"
     }
   ],
   "genres": [

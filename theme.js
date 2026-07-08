@@ -44,24 +44,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Estimated Reading Time Calculation
     const articleContent = document.querySelector('.story-content');
     if (articleContent) {
-        const words = articleContent.innerText.trim().split(/\s+/).length;
-        const readingTime = Math.ceil(words / 200); // 200 Words Per Minute baseline
+        const text = articleContent.innerText.trim();
+        const words = text ? text.split(/\s+/).length : 0;
+        const readingTime = Math.max(1, Math.ceil(words / 200)); // 200 Words Per Minute baseline, minimum 1 minute
         
         const metaContainer = document.querySelector('.card-meta');
         if (metaContainer) {
-    // Separator dot
-    const separator = document.createElement('span');
-    separator.className = 'meta-separator';
-    separator.textContent = '·';
-    
-    // Reading time text element
-    const timeSpan = document.createElement('span');
-    timeSpan.textContent = `${readingTime} min read`;
-    
-    // Append them
-    metaContainer.appendChild(separator);
-    metaContainer.appendChild(timeSpan);
-}
+            // Check if reading time already exists to prevent duplicates
+            const existingTime = metaContainer.querySelector('.reading-time');
+            if (!existingTime) {
+                // Separator dot
+                const separator = document.createElement('span');
+                separator.className = 'meta-separator';
+                separator.textContent = '·';
+                
+                // Reading time text element
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'reading-time';
+                timeSpan.textContent = `${readingTime} min read`;
+                
+                // Append them
+                metaContainer.appendChild(separator);
+                metaContainer.appendChild(timeSpan);
+            }
+        }
     }
 
     // Scroll Progress Bar
