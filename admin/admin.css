@@ -6,34 +6,29 @@
    SCROLLBAR - Consolidated
    ============================================ */
 
-.admin-panel::-webkit-scrollbar,
 .admin-form-scroll::-webkit-scrollbar,
 .sortable-list::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 
-.admin-panel::-webkit-scrollbar-track,
 .admin-form-scroll::-webkit-scrollbar-track,
 .sortable-list::-webkit-scrollbar-track {
     background: var(--color-bg);
     border-radius: 3px;
 }
 
-.admin-panel::-webkit-scrollbar-thumb,
 .admin-form-scroll::-webkit-scrollbar-thumb,
 .sortable-list::-webkit-scrollbar-thumb {
     background: var(--color-border);
     border-radius: 3px;
 }
 
-.admin-panel::-webkit-scrollbar-thumb:hover,
 .admin-form-scroll::-webkit-scrollbar-thumb:hover,
 .sortable-list::-webkit-scrollbar-thumb:hover {
     background: var(--color-accent);
 }
 
-.admin-panel,
 .admin-form-scroll,
 .sortable-list {
     scrollbar-width: thin;
@@ -41,14 +36,16 @@
 }
 
 /* ============================================
-   FULL WIDTH HEADER
+   FULL WIDTH HEADER - FIXED
    ============================================ */
 
 .admin-header-full {
     border-bottom: 1px solid var(--color-border);
     padding: var(--space-sm) 0;
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     background: var(--color-bg);
     z-index: 1000;
     backdrop-filter: blur(8px);
@@ -63,29 +60,67 @@
 }
 
 /* ============================================
-   50/50 SPLIT LAYOUT
+   FOOTER - FIXED
+   ============================================ */
+
+.site-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-bg);
+    border-top: 1px solid var(--color-border);
+    z-index: 999;
+    padding: var(--space-sm) 0;
+    margin-top: 0;
+}
+
+.site-footer .footer-container {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    padding: 0 var(--space-md);
+}
+
+/* ============================================
+   50/50 SPLIT LAYOUT - FIXED LEFT PANEL
    ============================================ */
 
 .admin-container {
     display: flex;
-    height: calc(100vh - 140px);
-    overflow: hidden;
+    min-height: 100vh;
+    height: auto;
+    padding-top: 80px; /* Height of the fixed header */
+    padding-bottom: 40px; /* Height of the fixed footer */
 }
 
 .admin-panel {
     flex: 1;
-    overflow-y: auto;
-    padding: var(--space-md);
     min-width: 0;
 }
 
 .admin-panel-left {
     background: var(--color-bg);
     border-right: 1px solid var(--color-border);
+    position: fixed;
+    top: 80px; /* Height of the header */
+    left: 0;
+    bottom: 40px; /* Height of the footer */
+    width: 50%;
+    overflow: hidden;
+    padding: var(--space-md);
 }
 
 .admin-panel-right {
     background: var(--color-bg-card);
+    height: auto;
+    overflow: visible;
+    padding: var(--space-md);
+    padding-bottom: var(--space-xl);
+    margin-left: 50%; /* Width of the left panel */
 }
 
 .admin-panel-inner {
@@ -96,7 +131,7 @@
 }
 
 /* ============================================
-   ADMIN FORM
+   ADMIN FORM - Left panel (fixed, scrolls internally)
    ============================================ */
 
 .admin-form-scroll {
@@ -591,15 +626,15 @@
 }
 
 /* ============================================
-   SORTABLE LIST
+   SORTING ZONE - Right panel (full height, page scroll)
    ============================================ */
 
 .sorting-zone {
-    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    overflow: hidden;
+    height: auto;
+    overflow: visible;
 }
 
 .sorting-header {
@@ -651,8 +686,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    flex: 1;
-    overflow-y: auto;
+    height: auto;
+    overflow: visible;
 }
 
 .sort-group {
@@ -963,14 +998,14 @@
 
 .admin-notification {
     position: fixed;
-    bottom: 24px;
+    bottom: 70px; /* Above the footer */
     right: 24px;
     padding: 8px 16px;
     border-radius: 40px;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 0.8rem;
     font-weight: 500;
-    z-index: 10000;
+    z-index: 10001;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
     animation: slideInRight 0.3s ease;
     pointer-events: none;
@@ -1044,24 +1079,35 @@
 @media (max-width: 1024px) {
     .admin-container {
         flex-direction: column;
+        align-items: stretch;
+        min-height: auto;
         height: auto;
-        min-height: calc(100vh - 140px);
+        padding-top: 80px;
+        padding-bottom: 60px;
     }
     
     .admin-panel {
         flex: none;
-        padding: var(--space-sm);
-        max-height: 50vh;
     }
     
     .admin-panel-left {
+        position: relative;
+        top: 0;
+        bottom: auto;
+        width: 100%;
+        height: auto;
+        max-height: 55vh;
         border-right: none;
         border-bottom: 1px solid var(--color-border);
-        max-height: 55vh;
+        overflow: hidden;
+        padding: var(--space-sm);
     }
     
     .admin-panel-right {
+        margin-left: 0;
         max-height: 50vh;
+        overflow-y: auto;
+        padding: var(--space-sm);
     }
     
     .admin-form-scroll {
@@ -1078,17 +1124,23 @@
 }
 
 @media (max-width: 640px) {
+    .admin-container {
+        padding-top: 70px;
+        padding-bottom: 50px;
+    }
+    
     .admin-panel {
         padding: var(--space-xs);
-        max-height: 45vh;
     }
     
     .admin-panel-left {
         max-height: 50vh;
+        padding: var(--space-xs);
     }
     
     .admin-panel-right {
         max-height: 45vh;
+        padding: var(--space-xs);
     }
     
     .form-row {
@@ -1102,5 +1154,13 @@
 
     .sort-item .sort-content strong {
         max-width: 100px;
+    }
+    
+    .site-footer {
+        padding: var(--space-xs) 0;
+    }
+    
+    .site-footer .footer-container {
+        font-size: 0.7rem;
     }
 }
