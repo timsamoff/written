@@ -17,21 +17,39 @@ var WrittenApp = WrittenApp || {};
     var seriesState = {};
     
     function loadData() {
-    return fetch('/api/projects')
-        .then(function(response) {
-            if (!response.ok) {
-                throw new Error('Could not load projects from server');
+        return new Promise(function(resolve, reject) {
+            // First check if data was loaded from data.js
+            if (typeof window.__WRITTEN_DATA__ !== 'undefined' && window.__WRITTEN_DATA__) {
+                var data = window.__WRITTEN_DATA__;
+                projectsData = data.projects || [];
+                seriesData = data.series || [];
+                genresData = data.genres || [];
+                themesData = data.themes || [];
+                resolve(data);
+                return;
             }
-            return response.json();
-        })
-        .then(function(data) {
-            projectsData = data.projects || [];
-            seriesData = data.series || [];
-            genresData = data.genres || [];
-            themesData = data.themes || [];
-            return data;
+            
+            // Fallback: fetch from server (for local development)
+            fetch('/api/projects')
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Could not load projects from server');
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    projectsData = data.projects || [];
+                    seriesData = data.series || [];
+                    genresData = data.genres || [];
+                    themesData = data.themes || [];
+                    resolve(data);
+                })
+                .catch(function(error) {
+                    console.error('Error loading data:', error);
+                    reject(error);
+                });
         });
-}
+    }
     
     document.addEventListener('DOMContentLoaded', function() {
         var tbody = document.getElementById('toc-body');
