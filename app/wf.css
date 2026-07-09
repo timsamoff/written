@@ -1774,6 +1774,16 @@ body {
   border: 2px solid transparent;
 }
 
+.btn-danger {
+  background-color: #c0392b;
+  color: #ffffff;
+  border-color: #c0392b;
+}
+.btn-danger:hover {
+  background-color: #e74c3c;
+  border-color: #e74c3c;
+}
+
 /* ==========================================================================
    View Modals — code display
    ========================================================================== */

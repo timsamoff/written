@@ -1389,21 +1389,18 @@ function getSelectedStyle() {
 }
 
 function setSelectedStyle(styleId) {
-  // Validate the style exists
   if (!THEME_TOKENS[styleId]) {
     styleId = 'wf-light';
   }
   
-  // Save to localStorage
   localStorage.setItem(STYLE_KEY, styleId);
   
-  // Update the select element if it exists
   const select = document.getElementById('previewStyleSelect');
   if (select) {
     select.value = styleId;
   }
   
-  // Update the preview
+  // Always apply the theme and update preview
   convertText();
 }
 
@@ -1451,23 +1448,32 @@ function getStyleCss(styleId) {
 
 function convertText() {
   const raw = inputText.value;
+  const styleId = getSelectedStyle(); // Get style FIRST
+  
+  // Always ensure the theme style is applied
+  let existingStyle = document.getElementById('preview-style');
+  if (existingStyle) existingStyle.remove();
+  const styleEl = document.createElement('style');
+  styleEl.id = 'preview-style';
+  styleEl.textContent = buildThemeCss(styleId);
+  document.head.appendChild(styleEl);
+  
+  // If empty, just show the theme background
   if (!raw.trim()) {
     outputHtml.value = '';
     livePreview.innerHTML = '';
     checkAltWarnings('');
     announcePreviewUpdate(0);
-    const existingStyle = document.getElementById('preview-style');
-    if (existingStyle) existingStyle.remove();
     livePreview.className = 'story-content preview-body';
     return;
   }
 
+  // Rest of function with content...
   const dropcap = getRadio('dropcap');
   const indent  = getRadio('indent');
   const endhr   = getRadio('endhr');
   const spacing = getRadio('linespacing');
   const justify = getRadio('justify') || 'on';
-  const styleId = getSelectedStyle();
 
   const tokens = tokenize(raw);
   const fnMap     = buildFnMap(tokens);
@@ -1638,17 +1644,10 @@ function convertText() {
 }
 
 function updatePreview(html, lsClass, styleId, justify) {
-  const styleCss = buildThemeCss(styleId);
   
-  let existingStyle = document.getElementById('preview-style');
-  if (existingStyle) {
-    existingStyle.remove();
-  }
-  
-  const styleEl = document.createElement('style');
-  styleEl.id = 'preview-style';
-  styleEl.textContent = styleCss;
-  document.head.appendChild(styleEl);
+  // Remove any existing preview override
+  let existingOverride = document.getElementById('preview-override');
+  if (existingOverride) existingOverride.remove();
   
   const previewOverride = document.createElement('style');
   previewOverride.id = 'preview-override';
@@ -1659,7 +1658,6 @@ function updatePreview(html, lsClass, styleId, justify) {
       padding: var(--space-md) !important;
       background-color: var(--wf-bg);
     }
-    /* Ragged right at container level */
     #livePreview.story-content.ragged p,
     #livePreview.story-content.ragged .pullquote p,
     #livePreview.story-content.ragged .editorial-aside p,
@@ -1672,14 +1670,12 @@ function updatePreview(html, lsClass, styleId, justify) {
   `;
   document.head.appendChild(previewOverride);
   
-  // Add ragged class to the container if needed
   let containerClass = 'story-content preview-body' + lsClass;
   if (justify === 'off') {
     containerClass += ' ragged';
   }
   livePreview.className = containerClass;
   
-  // No more per-paragraph processing—just use the HTML as-is
   livePreview.innerHTML = html
     .replace(/^<article class="story-content[^"]*">\n/, '')
     .replace(/\n<\/article>$/, '');
@@ -2147,6 +2143,31 @@ function confirmManuscript() {
   setTimeout(() => syncPreviewToInputLineImmediate(), 100);
 }
 
+// ── Clear Modal ──────────────────────────────────────────────────────────────
+
+function openClearModal() {
+  const modal = document.getElementById('clearModal');
+  if (!modal) return;
+  openModalWithFocus(modal);
+  document.getElementById('clearModalCancel').focus();
+}
+
+function closeClearModal() {
+  closeModalWithFocus(document.getElementById('clearModal'));
+}
+
+function confirmClear() {
+  inputText.value = '';
+  localStorage.removeItem(AUTOSAVE_KEY);
+  outputHtml.value = '';
+  livePreview.innerHTML = '';
+  checkAltWarnings('');
+  announcePreviewUpdate(0);
+  inputText.focus();
+  closeClearModal();
+  showToast('Text cleared');
+}
+
 // ── Modal Setup ─────────────────────────────────────────────────────────────
 
 function setupModals() {
@@ -2209,7 +2230,25 @@ function setupModals() {
     if (field) field.addEventListener('keypress', handleImgEnter);
   });
   
-  const modals = [linkModal, msModal, imgModal];
+  // ── Clear Modal ──────────────────────────────────────────────────────────
+  const clearModal = document.getElementById('clearModal');
+  const clearClose = document.getElementById('clearModalClose');
+  const clearCancel = document.getElementById('clearModalCancel');
+  const clearConfirm = document.getElementById('clearModalConfirm');
+  
+  if (clearClose) clearClose.addEventListener('click', closeClearModal);
+  if (clearCancel) clearCancel.addEventListener('click', closeClearModal);
+  if (clearConfirm) {
+    clearConfirm.addEventListener('click', confirmClear);
+  }
+  
+  if (clearModal) {
+    clearModal.addEventListener('click', (e) => {
+      if (e.target === clearModal) closeClearModal();
+    });
+  }
+  
+  const modals = [linkModal, msModal, imgModal, clearModal];
   modals.forEach(modal => {
     if (modal) {
       modal.addEventListener('click', (e) => {
@@ -2217,6 +2256,7 @@ function setupModals() {
           if (modal.id === 'linkModal') closeLinkModal();
           if (modal.id === 'manuscriptModal') closeManuscriptModal();
           if (modal.id === 'imageModal') closeImageModal();
+          if (modal.id === 'clearModal') closeClearModal();
         }
       });
     }
@@ -2227,6 +2267,7 @@ function setupModals() {
       if (linkModal && !linkModal.hasAttribute('hidden')) closeLinkModal();
       if (msModal && !msModal.hasAttribute('hidden')) closeManuscriptModal();
       if (imgModal && !imgModal.hasAttribute('hidden')) closeImageModal();
+      if (clearModal && !clearModal.hasAttribute('hidden')) closeClearModal();
     }
   });
 }
@@ -2475,14 +2516,11 @@ function setupViewModals() {
     fileInput.click();
   });
   document.getElementById('clearBtn')?.addEventListener('click', () => {
-    if (inputText.value.trim() && !confirm('Clear all text? This cannot be undone.')) return;
-    inputText.value = '';
-    localStorage.removeItem(AUTOSAVE_KEY);
-    outputHtml.value = '';
-    livePreview.innerHTML = '';
-    checkAltWarnings('');
-    announcePreviewUpdate(0);
-    inputText.focus();
+    if (!inputText.value.trim()) {
+      // Nothing to clear
+      return;
+    }
+    openClearModal();
   });
 }
 

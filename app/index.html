@@ -411,6 +411,23 @@
     </div>
   </div>
 
+    <!-- ── Clear Confirmation Modal ──────────────────────────────────────── -->
+    <div id="clearModal" class="modal-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="clearModalTitle">
+      <div class="modal-box modal-box--small">
+        <div class="modal-header">
+          <h3 class="modal-title" id="clearModalTitle">Clear All Text?</h3>
+          <button type="button" class="modal-close" id="clearModalClose" aria-label="Close dialog">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="clear-modal-message">This will permanently delete all text in the editor. This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer modal-footer--between">
+          <button type="button" class="btn btn-ghost" id="clearModalCancel">Cancel</button>
+          <button type="button" class="btn btn-danger" id="clearModalConfirm">Clear All</button>
+        </div>
+      </div>
+    </div>
+
   <!-- Prism -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
