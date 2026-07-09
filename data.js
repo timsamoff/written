@@ -188,6 +188,74 @@ window.__WRITTEN_DATA__ = {
       "part": 6,
       "order": 7,
       "lineHeight": "ls-1"
+    },
+    {
+      "id": "bts",
+      "title": "Beyond the Screen: How Games Forge Our Deepest Connections",
+      "path": "articles/",
+      "slug": "bts",
+      "fullPath": "writing/articles/bts.html",
+      "date": "2025-11-19",
+      "dateDisplay": "November 19, 2025",
+      "mediaPath": "bts",
+      "genres": [
+        "article"
+      ],
+      "themes": [
+        "culture",
+        "game-design",
+        "gaming"
+      ],
+      "published": true,
+      "series_id": "",
+      "order": 8,
+      "lineHeight": "ls-1"
+    },
+    {
+      "id": "skyrim",
+      "title": "Why I Go Back And Play This (Now) Fourteen-Year-Old Game",
+      "path": "articles/",
+      "slug": "skyrim",
+      "fullPath": "writing/articles/skyrim.html",
+      "date": "2025-11-12",
+      "dateDisplay": "November 12, 2025",
+      "mediaPath": "skyrim",
+      "genres": [
+        "article"
+      ],
+      "themes": [
+        "culture",
+        "game-design",
+        "gaming"
+      ],
+      "published": true,
+      "series_id": "",
+      "order": 9,
+      "lineHeight": "ls-1"
+    },
+    {
+      "id": "strands",
+      "title": "Social Strands: Why a Highly Divisive Game Made Me Care About Strangers",
+      "path": "articles/",
+      "slug": "strands",
+      "fullPath": "writing/articles/strands.html",
+      "date": "2025-12-03",
+      "dateDisplay": "December 3, 2025",
+      "mediaPath": "strands",
+      "genres": [
+        "article",
+        "sci-fi"
+      ],
+      "themes": [
+        "dystopia",
+        "culture",
+        "game-design",
+        "gaming"
+      ],
+      "published": true,
+      "series_id": "",
+      "order": 10,
+      "lineHeight": "ls-1"
     }
   ],
   "genres": [
@@ -207,7 +275,9 @@ window.__WRITTEN_DATA__ = {
     "game-design",
     "culture",
     "dystopia",
-    "short-fiction"
+    "short-fiction",
+    "game-culture",
+    "gaming"
   ],
   "series": [
     {
