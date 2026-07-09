@@ -67,7 +67,7 @@ window.__WRITTEN_DATA__ = {
       "series_id": "new-improved-",
       "part": 1,
       "order": 2,
-      "lineHeight": "ls-2"
+      "lineHeight": "ls-1"
     },
     {
       "id": "ni_p2",

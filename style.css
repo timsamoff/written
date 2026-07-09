@@ -493,16 +493,95 @@ body {
     margin-left: 0.3rem;
 }
 
-/* Series Navigation - Vertical layout in sidebar */
-.series-nav {
+/* Series Navigation */
+.series-nav-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.2rem !important;
+    white-space: nowrap !important;
+}
+
+.series-nav-disabled {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.2rem !important;
+    white-space: nowrap !important;
+}
+
+/* Ensure the parent containers don't force breaks */
+.series-nav-prev,
+.series-nav-next {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 0.1rem 0;
+}
+
+.series-nav-prev a,
+.series-nav-next a,
+.series-nav-prev span,
+.series-nav-next span {
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+}
+
+.series-nav-link:hover {
+    color: var(--color-accent-inline);
+    background: var(--color-bg-card);
+}
+
+.series-nav-disabled {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.2rem !important;
+    white-space: nowrap !important;
+    color: var(--color-text-muted);
+    opacity: 0.3;
+    font-size: 0.8rem;
+    padding: 0.15rem 0.4rem;
+    width: auto;
+    text-align: center;
+}
+
+/* Ensure the parent containers don't force breaks */
+.series-nav-prev,
+.series-nav-next {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    padding: 0.1rem 0;
+}
+
+.series-nav-prev a,
+.series-nav-next a,
+.series-nav-prev span,
+.series-nav-next span {
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+}
+
+.series-nav-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    margin-top: 0.65rem;
+    margin-bottom: 0.65rem;
+    padding: 0;
+    line-height: 2;
+    display: block;
+    height: auto;
+}
+
+.series-nav-links {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.2rem;
-    margin-top: var(--space-md);
-    padding-top: var(--space-sm);
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.85rem;
+    gap: 0.1rem;
+    width: 100%;
 }
 
 .series-nav-prev,
@@ -510,23 +589,28 @@ body {
     display: flex;
     justify-content: center;
     width: 100%;
+    padding: 0.1rem 0;
 }
 
 .series-nav-current {
     color: var(--color-text);
     font-weight: 600;
     font-size: 0.85rem;
-    padding: 0.2rem 0;
+    padding: 0.15rem 0;
+    text-align: center;
+    width: 100%;
 }
 
 .series-nav-link {
     color: var(--color-accent);
     text-decoration: none;
     font-weight: 500;
-    padding: 0.15rem 0.4rem;
+    padding: 0.15rem 0.6rem;
     border-radius: 4px;
     transition: all 0.2s ease;
     font-size: 0.8rem;
+    width: auto;
+    text-align: center;
 }
 
 .series-nav-link:hover {
@@ -539,6 +623,8 @@ body {
     opacity: 0.3;
     font-size: 0.8rem;
     padding: 0.15rem 0.4rem;
+    width: auto;
+    text-align: center;
 }
 
 /* For the card meta series info */

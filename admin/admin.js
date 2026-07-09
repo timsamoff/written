@@ -1214,23 +1214,37 @@ function buildAssembledHtml(project, content, context) {
                         </p>
                     `;
                     
+                    // When building series navigation (inside buildAssembledHtml):
                     if (seriesParts.length > 1) {
                         const currentIndex = seriesParts.findIndex(p => p.id === project.id);
                         let navLinks = '';
+                        
+                        // Helper to get the URL path
+                        const getUrlPath = (p) => {
+                            if (p.fullPath && p.fullPath.startsWith('writing/')) {
+                                return '/' + p.fullPath;
+                            }
+                            return p.fullPath || '#';
+                        };
+                        
                         navLinks = `
                             <div class="series-nav">
                                 <span class="series-nav-label">${escapeHtml(seriesInfo.name)}</span>
                                 <div class="series-nav-links">
-                                    ${currentIndex > 0 ? `<a href="${seriesParts[currentIndex - 1].fullPath || '#'}" class="series-nav-prev">← Previous</a>` : '<span class="series-nav-disabled">← Previous</span>'}
-                                    <span class="series-nav-current">${currentPart}${totalParts > 1 ? `/${totalParts}` : ''}</span>
-                                    ${currentIndex < seriesParts.length - 1 ? `<a href="${seriesParts[currentIndex + 1].fullPath || '#'}" class="series-nav-next">Next →</a>` : '<span class="series-nav-disabled">Next →</span>'}
+                                    ${currentIndex > 0 
+                                        ? `<div class="series-nav-prev"><a href="${getUrlPath(seriesParts[currentIndex - 1])}" class="series-nav-link">← Previous</a></div>` 
+                                        : `<div class="series-nav-prev"><span class="series-nav-disabled">← Previous</span></div>`}
+                                    <div class="series-nav-current">${currentPart}${totalParts > 1 ? `/${totalParts}` : ''}</div>
+                                    ${currentIndex < seriesParts.length - 1 
+                                        ? `<div class="series-nav-next"><a href="${getUrlPath(seriesParts[currentIndex + 1])}" class="series-nav-link">Next →</a></div>` 
+                                        : `<div class="series-nav-next"><span class="series-nav-disabled">Next →</span></div>`}
                                 </div>
                             </div>
                         `;
                         seriesNavHtml = navLinks;
                     }
                 }
-            }
+        }
             
             // Build OG image
             let ogImage = 'https://samoff.com/wbts_icon.png';

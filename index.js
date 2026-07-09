@@ -17,36 +17,21 @@ var WrittenApp = WrittenApp || {};
     var seriesState = {};
     
     function loadData() {
-        return new Promise(function(resolve, reject) {
-            // First check if data was loaded from data.js
-            if (typeof window.__WRITTEN_DATA__ !== 'undefined' && window.__WRITTEN_DATA__) {
-                var data = window.__WRITTEN_DATA__;
-                projectsData = data.projects || [];
-                seriesData = data.series || [];
-                genresData = data.genres || [];
-                themesData = data.themes || [];
-                resolve(data);
-                return;
+    return fetch('/api/projects')
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Could not load projects from server');
             }
-            
-            // Fallback: fetch from server
-            fetch('/data/projects.json')
-                .then(function(response) {
-                    if (!response.ok) {
-                        throw new Error('Could not load projects.json');
-                    }
-                    return response.json();
-                })
-                .then(function(data) {
-                    projectsData = data.projects || [];
-                    seriesData = data.series || [];
-                    genresData = data.genres || [];
-                    themesData = data.themes || [];
-                    resolve(data);
-                })
-                .catch(reject);
+            return response.json();
+        })
+        .then(function(data) {
+            projectsData = data.projects || [];
+            seriesData = data.series || [];
+            genresData = data.genres || [];
+            themesData = data.themes || [];
+            return data;
         });
-    }
+}
     
     document.addEventListener('DOMContentLoaded', function() {
         var tbody = document.getElementById('toc-body');
@@ -157,9 +142,11 @@ var WrittenApp = WrittenApp || {};
             var seriesTags = [];
             seriesGenres.forEach(function(g) { seriesTags.push(g); });
             seriesThemes.forEach(function(t) { seriesTags.push(t); });
-            var seriesPills = seriesTags.map(function(tag) {
-                return `<span class="pill">${escapeHtml(tag)}</span>`;
-            }).join('\n                                ');
+            var seriesPillsHtml = seriesTags.length > 0 
+                ? seriesTags.map(function(tag) {
+                    return `<span class="pill">${escapeHtml(tag)}</span>`;
+                }).join('\n                                ')
+                : '';
 
             // Get date range for the series
             var dates = groupItems.map(function(p) { return p.date; }).filter(function(d) { return d; }).sort();
@@ -202,7 +189,7 @@ var WrittenApp = WrittenApp || {};
                     </td>
                     <td class="toc-tags series-tags-cell">
                         <div class="pill-container series-pills">
-                            ${seriesPills}
+                            ${seriesPillsHtml}
                         </div>
                     </td>
                 </tr>
@@ -269,20 +256,19 @@ var WrittenApp = WrittenApp || {};
             var dateDisplay = project.dateDisplay || formatDate(project.date);
             var collapsedClass = isExpanded ? '' : 'collapsed';
             
-            // Use the series genres and themes for filtering
+            // Use the series genres and themes for filtering (data attributes only)
             var genres = seriesGenres || [];
             var themes = seriesThemes || [];
             
+            // NO pills for series articles - they only appear on the series header
             return `
-                <tr data-genres='${JSON.stringify(genres)}' data-themes='${JSON.stringify(themes)}'>
+                <tr class="series-article-row ${collapsedClass}" data-genres='${JSON.stringify(genres)}' data-themes='${JSON.stringify(themes)}'>
                     <td class="toc-date">${dateDisplay}</td>
                     <td class="toc-title">
-                        <a href="${fullPath}">${escapeHtml(project.title)}</a>
+                        <a href="${fullPath}">${escapeHtml(project.title)}${partBadge}</a>
                     </td>
                     <td class="toc-tags">
-                        <div class="pill-container">
-                            ${pills}
-                        </div>
+                        <!-- Series articles inherit tags from series header, no pills shown -->
                     </td>
                 </tr>
             `;
@@ -345,7 +331,8 @@ var WrittenApp = WrittenApp || {};
         
         var next = header.nextElementSibling;
         while (next && !next.classList.contains('series-header-row') && !next.classList.contains('section-header-row')) {
-            if (next.classList.contains('series-article-row')) {
+            // Toggle the collapsed class for series article rows
+            if (next.classList.contains('series-article-row') || next.tagName === 'TR') {
                 next.classList.toggle('collapsed', !newState);
             }
             next = next.nextElementSibling;
@@ -389,7 +376,7 @@ var WrittenApp = WrittenApp || {};
                 }
                 var next = header.nextElementSibling;
                 while (next && !next.classList.contains('series-header-row') && !next.classList.contains('section-header-row')) {
-                    if (next.classList.contains('series-article-row')) {
+                    if (next.classList.contains('series-article-row') || next.tagName === 'TR') {
                         next.classList.add('collapsed');
                     }
                     next = next.nextElementSibling;
