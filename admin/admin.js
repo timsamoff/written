@@ -445,6 +445,7 @@ function openSeriesModal(id) {
         seriesName.value = '';
         seriesDescription.value = '';
         seriesEditId.value = '';
+        // When creating a new series from the "New" button, auto-select it after saving
         seriesAutoSelect.value = 'true';
     }
     seriesModal.style.display = 'flex';
@@ -557,15 +558,67 @@ seriesDeleteModal.addEventListener('click', (e) => {
 });
 
 formSeries.addEventListener('change', function() {
-    if (this.value) {
-        const parts = projects.filter(p => p.series_id === this.value && p.id !== editId);
+    const seriesId = this.value;
+    
+    if (seriesId) {
+        // Calculate next part number
+        const parts = projects.filter(p => p.series_id === seriesId && p.id !== editId);
         const nextPart = parts.length + 1;
         formPart.value = nextPart;
+        
+        // Get all projects in this series (including the one being edited if any)
+        const seriesProjects = projects.filter(p => p.series_id === seriesId);
+        
+        // Collect all genres and themes from the series
+        const allGenres = new Set();
+        const allThemes = new Set();
+        
+        seriesProjects.forEach(p => {
+            (p.genres || []).forEach(g => allGenres.add(g));
+            (p.themes || []).forEach(t => allThemes.add(t));
+        });
+        
+        // If editing an existing piece, keep its current selections
+        // but add any missing ones from the series
+        if (isEditing && editId) {
+            // Get the current project's existing genres and themes
+            const currentProject = projects.find(p => p.id === editId);
+            if (currentProject) {
+                // Add current project's selections
+                allGenres.forEach(g => {
+                    if (!selectedGenres.includes(g)) {
+                        selectedGenres.push(g);
+                    }
+                });
+                allThemes.forEach(t => {
+                    if (!selectedThemes.includes(t)) {
+                        selectedThemes.push(t);
+                    }
+                });
+            }
+        } else {
+            // New piece - set genres and themes to the series defaults
+            selectedGenres = Array.from(allGenres);
+            selectedThemes = Array.from(allThemes);
+        }
+        
+        // Re-render the tag displays
+        renderGenreTags();
+        renderThemeTags();
+        
+        // Auto-save if editing
+        if (isEditing && editId) {
+            debouncedAutoSave();
+        }
+        
+        // Show notification
+        if (allGenres.size > 0 || allThemes.size > 0) {
+            const tagCount = allGenres.size + allThemes.size;
+            showNotification(`Applied ${tagCount} tag${tagCount !== 1 ? 's' : ''} from series`, 'success');
+        }
     } else {
+        // No series selected - clear part number
         formPart.value = '';
-    }
-    if (isEditing && editId) {
-        debouncedAutoSave();
     }
 });
 
@@ -1190,12 +1243,30 @@ function buildAssembledHtml(project, content, context) {
             if (project.series_id) {
                 const seriesInfo = series.find(s => s.id === project.series_id);
                 if (seriesInfo) {
-                    const seriesParts = projects
-                        .filter(p => p.series_id === project.series_id && p.published !== false)
+                    // Get ALL parts in the series (including unpublished for total count)
+                    const allParts = projects
+                        .filter(p => p.series_id === project.series_id)
+                        .sort((a, b) => (a.part || 0) - (b.part || 0));
+                    
+                    // For navigation, use published parts only
+                    const seriesParts = allParts
+                        .filter(p => p.published !== false)
                         .sort((a, b) => (a.part || 0) - (b.part || 0));
                     
                     const currentPart = project.part || 1;
-                    const totalParts = seriesParts.length;
+                    
+                    // Calculate total parts from ALL parts (not just published)
+                    let totalParts = allParts.length;
+                    // If there are gaps in part numbers, use the max part number
+                    const maxPart = Math.max(...allParts.map(p => p.part || 0), 0);
+                    if (maxPart > totalParts) {
+                        totalParts = maxPart;
+                    }
+                    // Ensure at least current part
+                    if (totalParts < currentPart) {
+                        totalParts = currentPart;
+                    }
+                    
                     const partDisplay = `Part ${currentPart}${totalParts > 1 ? ` of ${totalParts}` : ''}`;
                     
                     seriesHtml = `
@@ -1214,12 +1285,10 @@ function buildAssembledHtml(project, content, context) {
                         </p>
                     `;
                     
-                    // When building series navigation (inside buildAssembledHtml):
-                    if (seriesParts.length > 1) {
-                        const currentIndex = seriesParts.findIndex(p => p.id === project.id);
+                    // When building series navigation
+                    if (allParts.length > 1) {
                         let navLinks = '';
                         
-                        // Helper to get the URL path
                         const getUrlPath = (p) => {
                             if (p.fullPath && p.fullPath.startsWith('writing/')) {
                                 return '/' + p.fullPath;
@@ -1227,16 +1296,20 @@ function buildAssembledHtml(project, content, context) {
                             return p.fullPath || '#';
                         };
                         
+                        // Find previous and next parts by part number from ALL parts
+                        const prevPart = allParts.find(p => p.part === currentPart - 1);
+                        const nextPart = allParts.find(p => p.part === currentPart + 1);
+                        
                         navLinks = `
                             <div class="series-nav">
                                 <span class="series-nav-label">${escapeHtml(seriesInfo.name)}</span>
                                 <div class="series-nav-links">
-                                    ${currentIndex > 0 
-                                        ? `<div class="series-nav-prev"><a href="${getUrlPath(seriesParts[currentIndex - 1])}" class="series-nav-link">← Previous</a></div>` 
+                                    ${prevPart 
+                                        ? `<div class="series-nav-prev"><a href="${getUrlPath(prevPart)}" class="series-nav-link">← Previous</a></div>` 
                                         : `<div class="series-nav-prev"><span class="series-nav-disabled">← Previous</span></div>`}
-                                    <div class="series-nav-current">${currentPart}${totalParts > 1 ? `/${totalParts}` : ''}</div>
-                                    ${currentIndex < seriesParts.length - 1 
-                                        ? `<div class="series-nav-next"><a href="${getUrlPath(seriesParts[currentIndex + 1])}" class="series-nav-link">Next →</a></div>` 
+                                    <div class="series-nav-current">${currentPart}/${totalParts}</div>
+                                    ${nextPart 
+                                        ? `<div class="series-nav-next"><a href="${getUrlPath(nextPart)}" class="series-nav-link">Next →</a></div>` 
                                         : `<div class="series-nav-next"><span class="series-nav-disabled">Next →</span></div>`}
                                 </div>
                             </div>
@@ -1244,7 +1317,7 @@ function buildAssembledHtml(project, content, context) {
                         seriesNavHtml = navLinks;
                     }
                 }
-        }
+            }
             
             // Build OG image
             let ogImage = 'https://samoff.com/wbts_icon.png';
@@ -1295,7 +1368,6 @@ function buildAssembledHtml(project, content, context) {
             template = template.replace(/<div class="pill-container">[\s\S]*?<\/div>/, `<div class="pill-container">\n                        ${allPills}\n                    </div>`);
             
             // Insert the content as-is - it already has its own article tag with the correct class
-            // The content should be the full article with its wrapper
             template = template.replace(/<!-- REPLACED BY ADMIN -->/, content);
             
             return template;
