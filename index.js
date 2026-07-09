@@ -23,8 +23,56 @@ var WrittenApp = WrittenApp || {};
                 var data = window.__WRITTEN_DATA__;
                 projectsData = data.projects || [];
                 seriesData = data.series || [];
-                genresData = data.genres || [];
-                themesData = data.themes || [];
+                
+                // Filter to only published projects
+                var publishedProjects = projectsData.filter(function(p) { 
+                    return p.published !== false; 
+                });
+                
+                // Group by series to handle inheritance
+                var seriesMap = {};
+                var standalone = [];
+                
+                publishedProjects.forEach(function(p) {
+                    if (p.series_id && seriesData.some(function(s) { return s.id === p.series_id; })) {
+                        if (!seriesMap[p.series_id]) seriesMap[p.series_id] = [];
+                        seriesMap[p.series_id].push(p);
+                    } else {
+                        standalone.push(p);
+                    }
+                });
+                
+                // Collect all genres and themes actually used
+                var usedGenres = new Set();
+                var usedThemes = new Set();
+                
+                // Add genres/themes from standalone projects
+                standalone.forEach(function(p) {
+                    (p.genres || []).forEach(function(g) { usedGenres.add(g); });
+                    (p.themes || []).forEach(function(t) { usedThemes.add(t); });
+                });
+                
+                // For series, collect from all articles AND the series header
+                Object.keys(seriesMap).forEach(function(seriesId) {
+                    var groupItems = seriesMap[seriesId];
+                    var allGenres = new Set();
+                    var allThemes = new Set();
+                    
+                    // Collect from each article in the series
+                    groupItems.forEach(function(p) {
+                        (p.genres || []).forEach(function(g) { allGenres.add(g); });
+                        (p.themes || []).forEach(function(t) { allThemes.add(t); });
+                    });
+                    
+                    // Add all series genres/themes to the used collections
+                    allGenres.forEach(function(g) { usedGenres.add(g); });
+                    allThemes.forEach(function(t) { usedThemes.add(t); });
+                });
+                
+                // Convert to arrays and sort
+                genresData = Array.from(usedGenres).sort();
+                themesData = Array.from(usedThemes).sort();
+                
                 resolve(data);
                 return;
             }
@@ -40,8 +88,49 @@ var WrittenApp = WrittenApp || {};
                 .then(function(data) {
                     projectsData = data.projects || [];
                     seriesData = data.series || [];
-                    genresData = data.genres || [];
-                    themesData = data.themes || [];
+                    
+                    // Same logic as above...
+                    var publishedProjects = projectsData.filter(function(p) { 
+                        return p.published !== false; 
+                    });
+                    
+                    var seriesMap = {};
+                    var standalone = [];
+                    
+                    publishedProjects.forEach(function(p) {
+                        if (p.series_id && seriesData.some(function(s) { return s.id === p.series_id; })) {
+                            if (!seriesMap[p.series_id]) seriesMap[p.series_id] = [];
+                            seriesMap[p.series_id].push(p);
+                        } else {
+                            standalone.push(p);
+                        }
+                    });
+                    
+                    var usedGenres = new Set();
+                    var usedThemes = new Set();
+                    
+                    standalone.forEach(function(p) {
+                        (p.genres || []).forEach(function(g) { usedGenres.add(g); });
+                        (p.themes || []).forEach(function(t) { usedThemes.add(t); });
+                    });
+                    
+                    Object.keys(seriesMap).forEach(function(seriesId) {
+                        var groupItems = seriesMap[seriesId];
+                        var allGenres = new Set();
+                        var allThemes = new Set();
+                        
+                        groupItems.forEach(function(p) {
+                            (p.genres || []).forEach(function(g) { allGenres.add(g); });
+                            (p.themes || []).forEach(function(t) { allThemes.add(t); });
+                        });
+                        
+                        allGenres.forEach(function(g) { usedGenres.add(g); });
+                        allThemes.forEach(function(t) { usedThemes.add(t); });
+                    });
+                    
+                    genresData = Array.from(usedGenres).sort();
+                    themesData = Array.from(usedThemes).sort();
+                    
                     resolve(data);
                 })
                 .catch(function(error) {
