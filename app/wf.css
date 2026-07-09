@@ -2070,6 +2070,7 @@ div.wf-credit a:hover {
   .editor-area {
     min-height: 400px;
     height: auto;
+    overflow: visible;
   }
 
   .preview-panel {
@@ -2080,13 +2081,20 @@ div.wf-credit a:hover {
   .editor-pane {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: auto;
     min-height: 0;
+    overflow: visible;
   }
 
-  .editor-pane .text-pane {
-    flex: 1;
-    min-height: 280px;
+  /* Let the textarea control its own height */
+  .editor-pane .text-pane,
+  .input-pane {
+    flex: 0 1 auto;
+    resize: vertical;
+    min-height: 200px;
+    max-height: 70vh;
+    height: 250px; /* Starting height */
+    overflow: auto;
   }
 
   .syntax-reference {

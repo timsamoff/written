@@ -1443,6 +1443,11 @@ function convertText() {
     livePreview.innerHTML = '';
     checkAltWarnings('');
     announcePreviewUpdate(0);
+    // Remove preview style when empty
+    const existingStyle = document.getElementById('preview-style');
+    if (existingStyle) existingStyle.remove();
+    // Also remove any leftover preview content
+    livePreview.className = 'story-content preview-body';
     return;
   }
 
@@ -1624,6 +1629,19 @@ function updatePreview(html, lsClass, styleId) {
   styleEl.id = 'preview-style';
   styleEl.textContent = styleCss;
   document.head.appendChild(styleEl);
+  
+  // Override preview-specific styles
+  const previewOverride = document.createElement('style');
+  previewOverride.id = 'preview-override';
+  previewOverride.textContent = `
+    #livePreview.story-content {
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: var(--space-md) !important;
+      background-color: var(--wf-bg);
+    }
+  `;
+  document.head.appendChild(previewOverride);
   
   livePreview.className = 'story-content preview-body' + lsClass;
   livePreview.innerHTML = html
