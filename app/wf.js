@@ -899,6 +899,19 @@ body.standalone {
   text-align: justify;
   text-justify: inter-word;
 }
+.story-content p {
+  margin: 0 0 0.5em 0;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+/* Ragged right (no justification) */
+.story-content p.ragged {
+  text-align: left !important;
+  text-justify: auto;
+  hyphens: none;
+  -webkit-hyphens: none;
+}
 .story-content p + p { text-indent: 1.5rem; }
 .story-content p.no-indent { text-indent: 0 !important; }
 .story-content p.continues  { text-indent: 1.4rem; }
@@ -1443,10 +1456,8 @@ function convertText() {
     livePreview.innerHTML = '';
     checkAltWarnings('');
     announcePreviewUpdate(0);
-    // Remove preview style when empty
     const existingStyle = document.getElementById('preview-style');
     if (existingStyle) existingStyle.remove();
-    // Also remove any leftover preview content
     livePreview.className = 'story-content preview-body';
     return;
   }
@@ -1455,6 +1466,7 @@ function convertText() {
   const indent  = getRadio('indent');
   const endhr   = getRadio('endhr');
   const spacing = getRadio('linespacing');
+  const justify = getRadio('justify') || 'on';
   const styleId = getSelectedStyle();
 
   const tokens = tokenize(raw);
@@ -1606,16 +1618,28 @@ function convertText() {
   out.push(`</article>`);
 
   const html = out.join('\n');
-  outputHtml.value = html;
+  
+  // Apply ragged class to output HTML for standalone/embed exports
+  let finalHtml = html;
+  if (justify === 'off') {
+    finalHtml = finalHtml.replace(/<p([^>]*)>/g, (match, attrs) => {
+      if (attrs.includes('class=')) {
+        return `<p${attrs.replace(/class="([^"]*)"/, 'class="$1 ragged"')}>`;
+      }
+      return `<p class="ragged">`;
+    });
+  }
+  
+  outputHtml.value = finalHtml;
   checkAltWarnings(html);
   
   const paraCount = (html.match(/<p/g) || []).length;
   announcePreviewUpdate(paraCount);
   
-  updatePreview(html, lsClass, styleId);
+  updatePreview(html, lsClass, styleId, justify);
 }
 
-function updatePreview(html, lsClass, styleId) {
+function updatePreview(html, lsClass, styleId, justify) {
   const styleCss = buildThemeCss(styleId);
   
   // Remove existing preview style if it exists
@@ -1640,11 +1664,31 @@ function updatePreview(html, lsClass, styleId) {
       padding: var(--space-md) !important;
       background-color: var(--wf-bg);
     }
+    /* Add justification override */
+    #livePreview.story-content p.ragged {
+      text-align: left !important;
+      text-justify: auto;
+      hyphens: none;
+      -webkit-hyphens: none;
+    }
   `;
   document.head.appendChild(previewOverride);
   
   livePreview.className = 'story-content preview-body' + lsClass;
-  livePreview.innerHTML = html
+  
+  // Apply justification class to paragraphs
+  let processedHtml = html;
+  if (justify === 'off') {
+    // Add 'ragged' class to all paragraphs that don't already have a class
+    processedHtml = processedHtml.replace(/<p([^>]*)>/g, (match, attrs) => {
+      if (attrs.includes('class=')) {
+        return `<p${attrs.replace(/class="([^"]*)"/, 'class="$1 ragged"')}>`;
+      }
+      return `<p class="ragged">`;
+    });
+  }
+  
+  livePreview.innerHTML = processedHtml
     .replace(/^<article class="story-content[^"]*">\n/, '')
     .replace(/\n<\/article>$/, '');
   wireCopyButtons(livePreview);
@@ -2745,7 +2789,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ── localStorage for options ──────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
-  const formattingOptions = ['dropcap', 'indent', 'linespacing', 'endhr'];
+  const formattingOptions = ['dropcap', 'indent', 'linespacing', 'endhr', 'justify'];
 
   formattingOptions.forEach(optionName => {
     const savedValue = localStorage.getItem(`wf_opt_${optionName}`);

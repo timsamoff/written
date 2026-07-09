@@ -942,6 +942,13 @@ body {
   -webkit-hyphens: auto;
 }
 
+.story-content p.ragged {
+  text-align: left !important;
+  text-justify: auto;
+  hyphens: none;
+  -webkit-hyphens: none;
+}
+
 .story-content p + p {
   text-indent: 1.4rem;
 }
