@@ -247,7 +247,6 @@ window.__WRITTEN_DATA__ = {
         "sci-fi"
       ],
       "themes": [
-        "dystopia",
         "culture",
         "game-design",
         "gaming"
@@ -255,6 +254,51 @@ window.__WRITTEN_DATA__ = {
       "published": true,
       "series_id": "",
       "order": 10,
+      "lineHeight": "ls-1"
+    },
+    {
+      "id": "cr",
+      "title": "Cash Royale: How Over-Monetization Cancels Magic",
+      "path": "articles/",
+      "slug": "cr",
+      "fullPath": "writing/articles/cr.html",
+      "date": "2025-11-05",
+      "dateDisplay": "November 5, 2025",
+      "mediaPath": "cr",
+      "genres": [
+        "article"
+      ],
+      "themes": [
+        "culture",
+        "game-design",
+        "gaming",
+        "game-theory"
+      ],
+      "published": true,
+      "series_id": "",
+      "order": 11,
+      "lineHeight": "ls-1"
+    },
+    {
+      "id": "dws",
+      "title": "Why I Can’t Stop Playing Dark War Survival",
+      "path": "articles/",
+      "slug": "dws",
+      "fullPath": "writing/articles/dws.html",
+      "date": "2025-10-29",
+      "dateDisplay": "October 29, 2025",
+      "mediaPath": "dws",
+      "genres": [
+        "article"
+      ],
+      "themes": [
+        "culture",
+        "game-design",
+        "gaming"
+      ],
+      "published": true,
+      "series_id": "",
+      "order": 12,
       "lineHeight": "ls-1"
     }
   ],
@@ -277,7 +321,8 @@ window.__WRITTEN_DATA__ = {
     "dystopia",
     "short-fiction",
     "game-culture",
-    "gaming"
+    "gaming",
+    "game-theory"
   ],
   "series": [
     {
