@@ -942,11 +942,14 @@ body {
   -webkit-hyphens: auto;
 }
 
-.story-content p.ragged {
+.story-content.ragged p,
+.story-content.ragged .pullquote p,
+.story-content.ragged .editorial-aside p,
+.story-content.ragged li {
   text-align: left !important;
   text-justify: auto;
-  hyphens: none;
-  -webkit-hyphens: none;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
 }
 
 .story-content p + p {

@@ -964,6 +964,21 @@ hr.fleuron-end + p {
     margin-bottom: 0; 
     text-indent: 2rem;
     color: var(--color-text);
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+}
+
+/* Ragged right (no justification) */
+.story-content.ragged p,
+.story-content.ragged .pullquote p,
+.story-content.ragged .editorial-aside p,
+.story-content.ragged li {
+  text-align: left !important;
+  text-justify: auto;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
 }
 
 .story-content p.no-indent {

@@ -1619,15 +1619,13 @@ function convertText() {
 
   const html = out.join('\n');
   
-  // Apply ragged class to output HTML for standalone/embed exports
+  // Apply ragged class to the ARTICLE CONTAINER (not each paragraph)
   let finalHtml = html;
   if (justify === 'off') {
-    finalHtml = finalHtml.replace(/<p([^>]*)>/g, (match, attrs) => {
-      if (attrs.includes('class=')) {
-        return `<p${attrs.replace(/class="([^"]*)"/, 'class="$1 ragged"')}>`;
-      }
-      return `<p class="ragged">`;
-    });
+    finalHtml = finalHtml.replace(
+      /<article class="([^"]*)"/,
+      '<article class="$1 ragged"'
+    );
   }
   
   outputHtml.value = finalHtml;
@@ -1642,19 +1640,16 @@ function convertText() {
 function updatePreview(html, lsClass, styleId, justify) {
   const styleCss = buildThemeCss(styleId);
   
-  // Remove existing preview style if it exists
   let existingStyle = document.getElementById('preview-style');
   if (existingStyle) {
     existingStyle.remove();
   }
   
-  // Create and inject the new style
   const styleEl = document.createElement('style');
   styleEl.id = 'preview-style';
   styleEl.textContent = styleCss;
   document.head.appendChild(styleEl);
   
-  // Override preview-specific styles
   const previewOverride = document.createElement('style');
   previewOverride.id = 'preview-override';
   previewOverride.textContent = `
@@ -1664,31 +1659,28 @@ function updatePreview(html, lsClass, styleId, justify) {
       padding: var(--space-md) !important;
       background-color: var(--wf-bg);
     }
-    /* Add justification override */
-    #livePreview.story-content p.ragged {
+    /* Ragged right at container level */
+    #livePreview.story-content.ragged p,
+    #livePreview.story-content.ragged .pullquote p,
+    #livePreview.story-content.ragged .editorial-aside p,
+    #livePreview.story-content.ragged li {
       text-align: left !important;
       text-justify: auto;
-      hyphens: none;
-      -webkit-hyphens: none;
+      hyphens: none !important;
+      -webkit-hyphens: none !important;
     }
   `;
   document.head.appendChild(previewOverride);
   
-  livePreview.className = 'story-content preview-body' + lsClass;
-  
-  // Apply justification class to paragraphs
-  let processedHtml = html;
+  // Add ragged class to the container if needed
+  let containerClass = 'story-content preview-body' + lsClass;
   if (justify === 'off') {
-    // Add 'ragged' class to all paragraphs that don't already have a class
-    processedHtml = processedHtml.replace(/<p([^>]*)>/g, (match, attrs) => {
-      if (attrs.includes('class=')) {
-        return `<p${attrs.replace(/class="([^"]*)"/, 'class="$1 ragged"')}>`;
-      }
-      return `<p class="ragged">`;
-    });
+    containerClass += ' ragged';
   }
+  livePreview.className = containerClass;
   
-  livePreview.innerHTML = processedHtml
+  // No more per-paragraph processing—just use the HTML as-is
+  livePreview.innerHTML = html
     .replace(/^<article class="story-content[^"]*">\n/, '')
     .replace(/\n<\/article>$/, '');
   wireCopyButtons(livePreview);
