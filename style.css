@@ -413,7 +413,7 @@ body {
     white-space: nowrap;
 }
 
-/* Toggle icon */
+/* Toggle icon - using Unicode with font styling to prevent emoji rendering */
 .toggle-icon {
     display: inline-block;
     font-size: 0.65rem;
@@ -422,6 +422,17 @@ body {
     width: 1rem;
     text-align: center;
     transition: transform 0.2s ease;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 400;
+    /* Prevent emoji rendering on iOS */
+    font-feature-settings: "ss01";
+    -webkit-font-feature-settings: "ss01";
+    speak: none;
+}
+
+/* Force text rendering instead of emoji */
+.toggle-icon::before {
+    content: attr(data-icon);
 }
 
 /* Series header row */
@@ -1519,21 +1530,72 @@ div.wf-credit a:hover {
         font-size: 0.65rem;
     }
     
+    /* Series styles for mobile */
     .series-header-row .series-name {
-        font-size: 1.1rem;
+        font-size: 1rem;
+        white-space: normal;
+        word-break: break-word;
     }
     
     .series-header-row .series-description {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
     }
     
     .series-header-row .series-date {
-        font-size: 0.7rem;
+        font-size: 0.6rem;
+        min-width: 60px;
+    }
+    
+    .series-header-row .series-count {
+        font-size: 0.55rem;
+        white-space: nowrap;
+    }
+    
+    .series-title-wrapper {
+        gap: 0.15rem 0.3rem;
     }
 
     .series-name {
-        white-space: nowrap;
+        white-space: normal;
+        word-break: break-word;
+        font-size: 1rem;
+    }
+    
+    /* Date range on mobile - allow wrapping */
+    .date-range {
+        line-height: 1.3;
+    }
+    
+    .date-line {
+        white-space: normal;
+        word-break: break-word;
+    }
+    
+    /* Toggle icon sizing */
+    .toggle-icon {
+        font-size: 0.55rem;
+        width: 0.8rem;
+        margin-right: 0.15rem;
+    }
+    
+    /* Table cell padding */
+    .toc-table td {
+        padding: 0.5rem 0.2rem;
+    }
+    
+    .toc-date {
+        padding-right: 0.3rem !important;
+        width: 15%;
+    }
+    
+    .toc-title {
+        padding-right: 0.3rem !important;
+        width: 60%;
         font-size: 1.1rem;
+    }
+    
+    .toc-tags {
+        width: 25%;
     }
 }
 
@@ -1555,20 +1617,54 @@ div.wf-credit a:hover {
         padding: 0.2rem 0.6rem;
     }
     
+    /* Even smaller series text */
     .series-header-row .series-name {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
     
     .series-header-row .series-description {
-        font-size: 0.65rem;
+        font-size: 0.6rem;
     }
     
     .series-header-row .series-date {
-        font-size: 0.65rem;
+        font-size: 0.55rem;
+        min-width: 50px;
+    }
+    
+    .series-header-row .series-count {
+        font-size: 0.5rem;
+    }
+    
+    .series-header-row td {
+        padding: 0.4rem 0.15rem !important;
     }
 
     .series-name {
-        white-space: nowrap;
+        white-space: normal;
+        word-break: break-word;
+        font-size: 0.9rem;
+    }
+    
+    .toggle-icon {
+        font-size: 0.5rem;
+        width: 0.7rem;
+        margin-right: 0.1rem;
+    }
+    
+    .date-line {
+        font-size: 0.5rem;
+    }
+    
+    .toc-title {
         font-size: 0.95rem;
+    }
+    
+    .toc-date {
+        font-size: 0.55rem;
+    }
+    
+    .pill {
+        font-size: 0.5rem;
+        padding: 0.1rem 0.35rem;
     }
 }

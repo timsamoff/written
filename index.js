@@ -280,11 +280,14 @@ var WrittenApp = WrittenApp || {};
 
             // Series header row
             var descriptionHtml = s && s.description ? `<div class="series-description">${escapeHtml(s.description)}</div>` : '';
-            
+
+            // Get the icon character - use a span with data attribute to prevent emoji
+            var toggleIconChar = isExpanded ? '▼' : '▶';
+
             html += `
                 <tr class="series-header-row" data-series-id="${seriesId}" data-expanded="${isExpanded}">
                     <td class="toc-date series-date">
-                        <span class="toggle-icon">${toggleIcon}</span>
+                        <span class="toggle-icon" data-icon="${toggleIconChar}">${toggleIconChar}</span>
                         <span class="date-range">${dateDisplay}</span>
                     </td>
                     <td class="toc-title series-title-cell">
@@ -433,7 +436,9 @@ var WrittenApp = WrittenApp || {};
         
         var icon = header.querySelector('.toggle-icon');
         if (icon) {
-            icon.textContent = newState ? '▼' : '▶';
+            var newIconChar = newState ? '▼' : '▶';
+            icon.textContent = newIconChar;
+            icon.dataset.icon = newIconChar;
         }
         
         var next = header.nextElementSibling;
@@ -480,6 +485,7 @@ var WrittenApp = WrittenApp || {};
                 var icon = header.querySelector('.toggle-icon');
                 if (icon) {
                     icon.textContent = '▶';
+                    icon.dataset.icon = '▶';
                 }
                 var next = header.nextElementSibling;
                 while (next && !next.classList.contains('series-header-row') && !next.classList.contains('section-header-row')) {
