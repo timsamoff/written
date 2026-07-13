@@ -377,7 +377,6 @@ body {
 
 .series-name {
     font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.45rem;
     font-weight: 500;
     color: var(--color-text);
 }
@@ -430,10 +429,10 @@ body {
     speak: none;
 }
 
-/* Force text rendering instead of emoji */
-.toggle-icon::before {
-    content: attr(data-icon);
-}
+/* Note: icon glyph is set via JS textContent (with \uFE0E variation selector
+   to force text-style rendering on iOS). data-icon attribute is kept only
+   for potential CSS targeting, not for rendering — that avoided a
+   duplicate-arrow bug from also rendering it via ::before. */
 
 /* Series header row */
 .series-header-row {
@@ -1471,24 +1470,12 @@ div.wf-credit a:hover {
         padding: 0.3rem 0.8rem;
     }
     
-    .series-header-row .series-name {
-        font-size: 1.1rem;
-    }
-    
     .series-header-row .series-description {
-        font-size: 0.7rem;
-    }
-    
-    .series-header-row .series-date {
         font-size: 0.7rem;
     }
     
     .section-header {
         font-size: 0.75rem;
-    }
-
-    .series-name {
-        white-space: nowrap;
     }
 }
 
@@ -1532,18 +1519,12 @@ div.wf-credit a:hover {
     
     /* Series styles for mobile */
     .series-header-row .series-name {
-        font-size: 1rem;
         white-space: normal;
         word-break: break-word;
     }
     
     .series-header-row .series-description {
         font-size: 0.65rem;
-    }
-    
-    .series-header-row .series-date {
-        font-size: 0.6rem;
-        min-width: 60px;
     }
     
     .series-header-row .series-count {
@@ -1558,7 +1539,6 @@ div.wf-credit a:hover {
     .series-name {
         white-space: normal;
         word-break: break-word;
-        font-size: 1rem;
     }
     
     /* Date range on mobile - allow wrapping */
@@ -1618,17 +1598,8 @@ div.wf-credit a:hover {
     }
     
     /* Even smaller series text */
-    .series-header-row .series-name {
-        font-size: 0.9rem;
-    }
-    
     .series-header-row .series-description {
         font-size: 0.6rem;
-    }
-    
-    .series-header-row .series-date {
-        font-size: 0.55rem;
-        min-width: 50px;
     }
     
     .series-header-row .series-count {
@@ -1642,7 +1613,6 @@ div.wf-credit a:hover {
     .series-name {
         white-space: normal;
         word-break: break-word;
-        font-size: 0.9rem;
     }
     
     .toggle-icon {

@@ -276,13 +276,15 @@ var WrittenApp = WrittenApp || {};
 
             // Get saved state for this series - default to false (collapsed)
             var isExpanded = seriesState[seriesId] === true;
-            var toggleIcon = isExpanded ? '▼' : '▶';
+            var toggleIcon = isExpanded ? '▼\uFE0E' : '▶\uFE0E';
 
             // Series header row
             var descriptionHtml = s && s.description ? `<div class="series-description">${escapeHtml(s.description)}</div>` : '';
 
             // Get the icon character - use a span with data attribute to prevent emoji
-            var toggleIconChar = isExpanded ? '▼' : '▶';
+            // \uFE0E (text variation selector) forces text-style glyph instead of iOS's
+            // built-in colored emoji glyph, which ▶ (but not ▼) defaults to on Apple platforms
+            var toggleIconChar = isExpanded ? '▼\uFE0E' : '▶\uFE0E';
 
             html += `
                 <tr class="series-header-row" data-series-id="${seriesId}" data-expanded="${isExpanded}">
@@ -363,7 +365,7 @@ var WrittenApp = WrittenApp || {};
         var partBadge = project.part ? ' <span class="part-badge">Part ' + project.part + '</span>' : '';
         
         if (isSeries) {
-            var dateDisplay = project.dateDisplay || formatDate(project.date);
+            var dateDisplay = formatDate(project.date);
             var collapsedClass = isExpanded ? '' : 'collapsed';
             
             // Use the series genres and themes for filtering (data attributes only)
@@ -383,7 +385,7 @@ var WrittenApp = WrittenApp || {};
                 </tr>
             `;
         } else {
-            var dateDisplay = project.dateDisplay || formatDate(project.date);
+            var dateDisplay = formatDate(project.date);
             var genres = project.genres || [];
             var themes = project.themes || [];
             var allTags = genres.concat(themes);
@@ -418,7 +420,7 @@ var WrittenApp = WrittenApp || {};
     function formatDate(dateStr) {
         if (!dateStr) return '';
         var d = new Date(dateStr + 'T00:00:00');
-        return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
     
     // ==========================================================================
@@ -436,7 +438,7 @@ var WrittenApp = WrittenApp || {};
         
         var icon = header.querySelector('.toggle-icon');
         if (icon) {
-            var newIconChar = newState ? '▼' : '▶';
+            var newIconChar = newState ? '▼\uFE0E' : '▶\uFE0E';
             icon.textContent = newIconChar;
             icon.dataset.icon = newIconChar;
         }
@@ -484,8 +486,8 @@ var WrittenApp = WrittenApp || {};
                 header.dataset.expanded = 'false';
                 var icon = header.querySelector('.toggle-icon');
                 if (icon) {
-                    icon.textContent = '▶';
-                    icon.dataset.icon = '▶';
+                    icon.textContent = '▶\uFE0E';
+                    icon.dataset.icon = '▶\uFE0E';
                 }
                 var next = header.nextElementSibling;
                 while (next && !next.classList.contains('series-header-row') && !next.classList.contains('section-header-row')) {
