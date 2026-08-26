@@ -3,6 +3,27 @@
 window.__WRITTEN_DATA__ = {
   "projects": [
     {
+      "id": "pink",
+      "title": "The Pink Post-It Note: How a Place I Never Expected to Matter Shaped My Life",
+      "path": "essays/",
+      "slug": "pink",
+      "fullPath": "writing/essays/pink.html",
+      "date": "2026-08-26",
+      "dateDisplay": "August 26, 2026",
+      "mediaPath": "pink",
+      "genres": [
+        "essay"
+      ],
+      "themes": [
+        "autobiographical",
+        "game-design"
+      ],
+      "published": true,
+      "series_id": "",
+      "order": 0,
+      "lineHeight": "ls-1"
+    },
+    {
       "id": "threxil-pattern",
       "title": "The Threxil Pattern",
       "path": "shorts/",
@@ -19,31 +40,9 @@ window.__WRITTEN_DATA__ = {
         "short-fiction"
       ],
       "published": true,
-      "order": 0,
-      "series_id": "",
-      "lineHeight": "ls-2"
-    },
-    {
-      "id": "written-formatted",
-      "title": "Written & Formatted",
-      "path": "articles/",
-      "slug": "written-formatted",
-      "fullPath": "writing/articles/written-formatted.html",
-      "date": "2026-06-04",
-      "dateDisplay": "June 4, 2026",
-      "mediaPath": "articles/wf",
-      "genres": [
-        "article"
-      ],
-      "themes": [
-        "technology",
-        "writing",
-        "publishing"
-      ],
-      "published": true,
       "order": 1,
       "series_id": "",
-      "lineHeight": "ls-1"
+      "lineHeight": "ls-2"
     },
     {
       "id": "ni_p1",
@@ -70,6 +69,28 @@ window.__WRITTEN_DATA__ = {
       "lineHeight": "ls-1"
     },
     {
+      "id": "written-formatted",
+      "title": "Written & Formatted",
+      "path": "articles/",
+      "slug": "written-formatted",
+      "fullPath": "writing/articles/written-formatted.html",
+      "date": "2026-06-04",
+      "dateDisplay": "June 4, 2026",
+      "mediaPath": "articles/wf",
+      "genres": [
+        "article"
+      ],
+      "themes": [
+        "technology",
+        "writing",
+        "publishing"
+      ],
+      "published": true,
+      "order": 3,
+      "series_id": "",
+      "lineHeight": "ls-1"
+    },
+    {
       "id": "ni_p2",
       "title": "Progress Isn’t Power: Designing Systems That Measure Impact, Not Dominance",
       "path": "articles/",
@@ -90,7 +111,7 @@ window.__WRITTEN_DATA__ = {
       "published": true,
       "series_id": "new-improved-",
       "part": 2,
-      "order": 3,
+      "order": 4,
       "lineHeight": "ls-1"
     },
     {
@@ -114,7 +135,7 @@ window.__WRITTEN_DATA__ = {
       "published": true,
       "series_id": "new-improved-",
       "part": 3,
-      "order": 4,
+      "order": 5,
       "lineHeight": "ls-1"
     },
     {
@@ -138,7 +159,7 @@ window.__WRITTEN_DATA__ = {
       "published": true,
       "series_id": "new-improved-",
       "part": 4,
-      "order": 5,
+      "order": 6,
       "lineHeight": "ls-1"
     },
     {
@@ -162,7 +183,7 @@ window.__WRITTEN_DATA__ = {
       "published": true,
       "series_id": "new-improved-",
       "part": 5,
-      "order": 6,
+      "order": 7,
       "lineHeight": "ls-1"
     },
     {
@@ -186,7 +207,7 @@ window.__WRITTEN_DATA__ = {
       "published": true,
       "series_id": "new-improved-",
       "part": 6,
-      "order": 7,
+      "order": 8,
       "lineHeight": "ls-1"
     },
     {
@@ -208,7 +229,7 @@ window.__WRITTEN_DATA__ = {
       ],
       "published": true,
       "series_id": "",
-      "order": 8,
+      "order": 9,
       "lineHeight": "ls-1"
     },
     {
@@ -230,7 +251,7 @@ window.__WRITTEN_DATA__ = {
       ],
       "published": true,
       "series_id": "",
-      "order": 9,
+      "order": 10,
       "lineHeight": "ls-1"
     },
     {
@@ -253,7 +274,7 @@ window.__WRITTEN_DATA__ = {
       ],
       "published": true,
       "series_id": "",
-      "order": 10,
+      "order": 11,
       "lineHeight": "ls-1"
     },
     {
@@ -276,7 +297,7 @@ window.__WRITTEN_DATA__ = {
       ],
       "published": true,
       "series_id": "",
-      "order": 11,
+      "order": 12,
       "lineHeight": "ls-1"
     },
     {
@@ -298,7 +319,7 @@ window.__WRITTEN_DATA__ = {
       ],
       "published": true,
       "series_id": "",
-      "order": 12,
+      "order": 13,
       "lineHeight": "ls-1"
     }
   ],

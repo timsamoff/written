@@ -968,21 +968,36 @@ function updatePieceCount() {
 // Auto-save
 // ==========================================================================
 
-function autoSave() {
+async function autoSave() {
     if (!isEditing || editId === null) return;
     const data = getFormData();
     if (!data.title || !data.slug) return;
-    
+
     const index = projects.findIndex(p => p.id === editId);
     if (index === -1) return;
-    
+
+    const cleanPath = data.path.endsWith('/') ? data.path : data.path + '/';
     const dateDisplay = data.date ? formatDate(data.date) : '';
+    const fullPath = `writing/${cleanPath}${data.slug}.html`;
+
+    data.id = editId;
+    data.path = cleanPath;
+    data.dateDisplay = dateDisplay;
+    data.fullPath = fullPath;
+    data.order = projects[index].order;
+
+    const html = formHtml.value.trim();
+    if (html) {
+        const saved = await saveHtmlContent(data, html);
+        if (!saved) {
+            showNotification('Auto-save failed: HTML file could not be saved', 'error');
+            return;
+        }
+    }
+
     projects[index] = {
         ...projects[index],
-        ...data,
-        id: editId,
-        dateDisplay: dateDisplay,
-        fullPath: `writing/${data.path}${data.slug}.html`
+        ...data
     };
     saveToServer();
     renderList();
@@ -1388,39 +1403,15 @@ async function getContentForAction(project) {
 }
 
 // ==========================================================================
-// Form Submit - Save metadata AND HTML file
+// Shared HTML build + save logic (used by form submit and autoSave)
 // ==========================================================================
 
-form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const title = formTitle.value.trim();
-    const path = formPath.value.trim();
-    const slug = formSlug.value.trim();
-    const date = formDate.value;
-    const html = formHtml.value.trim();
-    
-    if (!title || !path || !slug || !date) {
-        showNotification('Please fill in all required fields', 'error');
-        return;
-    }
-    
-    if (!html) {
-        showNotification('Please add HTML content before saving', 'error');
-        return;
-    }
-    
-    const cleanPath = path.endsWith('/') ? path : path + '/';
-    const id = slug;
-    const dateDisplay = formatDate(date);
-    const fullPath = `writing/${cleanPath}${slug}.html`;
-    
-    // Check if the content already has an article wrapper
+function wrapArticleContent(html) {
     const hasArticleWrapper = html.match(/<article[^>]*class="[^"]*story-content[^"]*"[^>]*>/i);
-    
+
     let contentToSave = html;
     let lineHeight = 'ls-2';
-    
+
     if (hasArticleWrapper) {
         // Content already has the wrapper - extract the line-height for metadata
         const extracted = extractArticleContent(html);
@@ -1432,7 +1423,7 @@ form.addEventListener('submit', async (e) => {
         lineHeight = 'ls-2';
         contentToSave = `<article class="story-content ${lineHeight}">\n${html}\n</article>`;
     }
-    
+
     // Check if the credit div is already there, if not, add it
     if (!contentToSave.includes('wf-credit')) {
         const creditDiv = `<div class="wf-credit" aria-label="Formatted by Written &amp; Formatted">
@@ -1440,7 +1431,62 @@ form.addEventListener('submit', async (e) => {
 </div>`;
         contentToSave = contentToSave + '\n\n' + creditDiv;
     }
-    
+
+    return { contentToSave, lineHeight };
+}
+
+async function saveHtmlContent(data, html) {
+    const { contentToSave, lineHeight } = wrapArticleContent(html);
+    data.lineHeight = lineHeight;
+
+    // Fix image paths for saving (relative paths)
+    const fixedContent = fixImagePaths(contentToSave, data, 'save');
+
+    // Build the complete HTML using the template
+    const assembledHtml = await buildAssembledHtml(data, fixedContent, 'save');
+
+    // Save to server
+    const saved = await saveHtmlToServer(data.fullPath, assembledHtml);
+    if (!saved) {
+        return false;
+    }
+
+    // Cache the preview version (with absolute paths)
+    const cacheKey = `${data.path}${data.slug}`;
+    const previewContent = fixImagePaths(contentToSave, data, 'preview');
+    contentCache[cacheKey] = previewContent;
+
+    return true;
+}
+
+// ==========================================================================
+// Form Submit - Save metadata AND HTML file
+// ==========================================================================
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const title = formTitle.value.trim();
+    const path = formPath.value.trim();
+    const slug = formSlug.value.trim();
+    const date = formDate.value;
+    const html = formHtml.value.trim();
+
+    if (!title || !path || !slug || !date) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+    }
+
+    if (!html) {
+        showNotification('Please add HTML content before saving', 'error');
+        return;
+    }
+
+    const cleanPath = path.endsWith('/') ? path : path + '/';
+    const id = slug;
+    const dateDisplay = formatDate(date);
+    const fullPath = `writing/${cleanPath}${slug}.html`;
+
     const data = {
         id,
         title,
@@ -1455,29 +1501,16 @@ form.addEventListener('submit', async (e) => {
         published: formPublished.checked,
         series_id: formSeries.value || '',
         part: formPart.value ? parseInt(formPart.value) : undefined,
-        order: projects.length,
-        lineHeight: lineHeight
+        order: projects.length
     };
-    
+
     try {
-        // Fix image paths for saving (relative paths)
-        const fixedContent = fixImagePaths(contentToSave, data, 'save');
-        
-        // Build the complete HTML using the template
-        const assembledHtml = await buildAssembledHtml(data, fixedContent, 'save');
-        
-        // Save to server
-        const saved = await saveHtmlToServer(fullPath, assembledHtml);
+        const saved = await saveHtmlContent(data, html);
         if (!saved) {
             showNotification('HTML file could not be saved', 'error');
             return;
         }
-        
-        // Cache the preview version (with absolute paths)
-        const cacheKey = `${cleanPath}${slug}`;
-        const previewContent = fixImagePaths(contentToSave, data, 'preview');
-        contentCache[cacheKey] = previewContent;
-        
+
         // Update or add the project
         if (isEditing && editId) {
             const index = projects.findIndex(p => p.id === editId);
@@ -1494,7 +1527,7 @@ form.addEventListener('submit', async (e) => {
             updateOrders();
             showNotification(`Added: ${title} - HTML saved to ${fullPath}`, 'success');
         }
-        
+
         saveToServer();
         resetForm();
         renderList();
@@ -1502,7 +1535,7 @@ form.addEventListener('submit', async (e) => {
         renderSeriesDropdown();
         renderSeriesChips();
         formTitle.focus();
-        
+
     } catch (err) {
         console.error('Error saving piece:', err);
         showNotification('Error: ' + err.message, 'error');
