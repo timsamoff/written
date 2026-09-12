@@ -68,6 +68,11 @@
     --container-max-w: 920px;
 
     --font-sans: 'Plus Jakarta Sans', sans-serif;
+
+    /* Status colors — same in both themes, not structural (see admin.css) */
+    --color-success: #10b981;
+    --color-error: #ef4444;
+    --color-text-inverted: #fff;
 }
 
 /* ==========================================================================
