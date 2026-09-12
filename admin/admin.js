@@ -853,20 +853,10 @@ function loadProject(id) {
     
     document.querySelectorAll('.sort-item.editing').forEach(el => {
         el.classList.remove('editing');
-        el.style.borderColor = '';
-        el.style.borderWidth = '';
-        el.style.borderStyle = '';
-        el.style.boxShadow = '';
-        el.style.backgroundColor = '';
     });
     const row = document.querySelector(`.sort-item[data-id="${id}"]`);
     if (row) {
         row.classList.add('editing');
-        row.style.borderColor = 'var(--color-accent)';
-        row.style.borderWidth = '2px';
-        row.style.borderStyle = 'solid';
-        row.style.boxShadow = '0 0 0 3px rgba(139, 90, 74, 0.15)';
-        row.style.backgroundColor = 'var(--color-bg-card)';
     }
 }
 
@@ -1127,11 +1117,6 @@ function createListItem(project, isSeries) {
     
     if (editId === project.id) {
         li.classList.add('editing');
-        li.style.borderColor = 'var(--color-accent)';
-        li.style.borderWidth = '2px';
-        li.style.borderStyle = 'solid';
-        li.style.boxShadow = '0 0 0 3px rgba(139, 90, 74, 0.15)';
-        li.style.backgroundColor = 'var(--color-bg-card)';
     }
     
     const genreDisplay = project.genres && project.genres.length > 0 

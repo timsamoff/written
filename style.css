@@ -10,6 +10,8 @@
     --color-text-muted: #6b4e41;   /* Matches wf.css muted text (5.2:1 contrast) */
     --color-accent: #8b5a4a;       /* Matches wf.css accent (4.8:1 contrast) */
     --color-accent-inline: #6b3a2a;/* Matches wf.css inline accent (7.2:1 contrast) */
+    --color-accent-ring: rgba(139, 90, 74, 0.12);   /* --color-accent @ 12% — focus rings */
+    --color-accent-ring-strong: rgba(139, 90, 74, 0.15); /* --color-accent @ 15% — stronger highlight (e.g. active row) */
     --color-border: #d9d2cc;       /* Matches wf.css border */
     --color-toggle-bg: #d9d2cc;
 
@@ -31,6 +33,8 @@
     --color-text-muted: #d9d2cc;   /* Matches wf.css muted text */
     --color-accent: #e8c4a8;       /* Matches wf.css accent (improved contrast) */
     --color-accent-inline: #f2d3b7;/* Matches wf.css inline accent */
+    --color-accent-ring: rgba(232, 196, 168, 0.12);   /* --color-accent @ 12% — focus rings */
+    --color-accent-ring-strong: rgba(232, 196, 168, 0.15); /* --color-accent @ 15% — stronger highlight (e.g. active row) */
     --color-border: #4a3a35;       /* Matches wf.css border */
     --color-toggle-bg: #352824;
 

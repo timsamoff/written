@@ -215,7 +215,7 @@
 .admin-form .form-group select:focus {
     outline: none;
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(139, 90, 74, 0.12);
+    box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
 .admin-form .form-group textarea {
@@ -271,7 +271,7 @@
 
 .path-input-wrapper:focus-within {
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(139, 90, 74, 0.12);
+    box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
 .path-prefix,
@@ -739,7 +739,7 @@
 .sort-item.editing {
     border-color: var(--color-accent);
     border-width: 2px;
-    box-shadow: 0 0 0 2px rgba(139, 90, 74, 0.15);
+    box-shadow: 0 0 0 2px var(--color-accent-ring-strong);
 }
 
 .sort-item.series-item {
@@ -1062,7 +1062,7 @@
 .modal-form-group textarea:focus {
     outline: none;
     border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(139, 90, 74, 0.12);
+    box-shadow: 0 0 0 3px var(--color-accent-ring);
 }
 
 .modal-form-group textarea {

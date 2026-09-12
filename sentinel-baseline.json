@@ -4,18 +4,6 @@
     {
       "rule": "COLOR-001",
       "file": "admin/admin.css",
-      "line": 218,
-      "message": "Hardcoded color value \"rgba(139, 90, 74, 0.12)\" added outside a :root token-definition block."
-    },
-    {
-      "rule": "COLOR-001",
-      "file": "admin/admin.css",
-      "line": 274,
-      "message": "Hardcoded color value \"rgba(139, 90, 74, 0.12)\" added outside a :root token-definition block."
-    },
-    {
-      "rule": "COLOR-001",
-      "file": "admin/admin.css",
       "line": 361,
       "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
     },
@@ -42,12 +30,6 @@
       "file": "admin/admin.css",
       "line": 625,
       "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
-    },
-    {
-      "rule": "COLOR-001",
-      "file": "admin/admin.css",
-      "line": 742,
-      "message": "Hardcoded color value \"rgba(139, 90, 74, 0.15)\" added outside a :root token-definition block."
     },
     {
       "rule": "COLOR-001",
@@ -120,12 +102,6 @@
       "file": "admin/admin.css",
       "line": 1021,
       "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
-    },
-    {
-      "rule": "COLOR-001",
-      "file": "admin/admin.css",
-      "line": 1065,
-      "message": "Hardcoded color value \"rgba(139, 90, 74, 0.12)\" added outside a :root token-definition block."
     },
     {
       "rule": "COLOR-001",
