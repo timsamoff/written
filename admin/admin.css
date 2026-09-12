@@ -95,6 +95,8 @@
     height: auto;
     padding-top: 80px; /* Height of the fixed header */
     padding-bottom: 40px; /* Height of the fixed footer */
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
 .admin-panel {
@@ -1130,8 +1132,17 @@
 }
 
 @media (max-width: 640px) {
+    /* header-container-full can wrap to two lines below this width (long
+       branding text + button group no longer fit one row); the fixed
+       header's real height then exceeds admin-container's reserved
+       padding-top, so bump it to avoid content sliding underneath. */
+    .header-container-full {
+        flex-wrap: wrap;
+        gap: var(--space-2xs);
+    }
+
     .admin-container {
-        padding-top: 70px;
+        padding-top: 110px;
         padding-bottom: 50px;
     }
     

@@ -251,6 +251,76 @@ body {
     }
 }
 
+/* Narrow phones: header logo/tagline/icon and controls overflowed with no
+   accommodation below 640px - shrink text and icon sizes so the whole
+   header fits without clipping the button group off-screen. */
+@media (max-width: 480px) {
+    .header-container {
+        flex-wrap: wrap;
+        gap: var(--space-2xs);
+    }
+
+    .branding-group {
+        max-width: 100%;
+    }
+
+    .site-branding-icon {
+        height: 2.4rem;
+    }
+
+    .site-logo {
+        font-size: 1.15rem !important;
+    }
+
+    .site-tagline {
+        font-size: 0.6rem;
+    }
+
+    .header-btn-group {
+        gap: var(--space-4xs);
+    }
+
+    /* Table columns (date/title/genres+themes) forced the table wider than
+       the viewport at this width, since .toc-tags' pills had no room to
+       wrap within a 30%-wide column. Stack the table into blocks instead:
+       date, then title, then tags/pills underneath - same DOM order as
+       the row markup, so no reordering is needed, just display changes. */
+    .toc-table thead {
+        display: none;
+    }
+
+    .toc-table,
+    .toc-table tbody,
+    .toc-table tr,
+    .toc-table td {
+        display: block;
+        width: 100% !important;
+    }
+
+    .toc-table tr {
+        padding: var(--space-sm) 0;
+    }
+
+    .toc-date,
+    .toc-title,
+    .toc-tags {
+        padding: 0 !important;
+        border-bottom: none !important;
+    }
+
+    .toc-date {
+        margin-bottom: var(--space-4xs);
+    }
+
+    .toc-title {
+        margin-bottom: var(--space-3xs);
+    }
+
+    .toc-table tr:not(:last-child) {
+        border-bottom: 1px solid var(--color-border);
+    }
+}
+
 /* ==========================================================================
    Progress Bar
    ========================================================================== */

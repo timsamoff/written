@@ -409,6 +409,9 @@ body {
   align-items: stretch;
   min-height: 0;
   overflow: hidden;
+  max-width: var(--container-max-w);
+  margin: 0 auto;
+  width: 100%;
 }
 
 /* Each panel handles its own scrolling - all start equal height */
@@ -846,6 +849,23 @@ body {
     font-size: 0.62rem;
     padding: 2px 18px 2px 4px;
     max-width: 110px;
+  }
+
+  /* Header logo/tagline + button group otherwise overflow at narrow
+     phone widths; wrap and shrink so nothing clips off-screen. This
+     header is position: sticky, so it grows in place - no reserved
+     offset elsewhere needs adjusting. */
+  .header-container {
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+  }
+
+  .site-logo {
+    font-size: 1.3rem;
+  }
+
+  .site-tagline {
+    font-size: 0.62rem;
   }
 }
 
