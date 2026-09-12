@@ -64,8 +64,10 @@
     --space-md: calc(var(--rhythm-unit) * 4);  /* 32px */
     --space-lg: calc(var(--rhythm-unit) * 6);  /* 48px */
     --space-xl: calc(var(--rhythm-unit) * 10); /* 80px */
-    
-    --container-max-w: 920px; 
+
+    --container-max-w: 920px;
+
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
 }
 
 /* ==========================================================================
