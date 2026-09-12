@@ -11,11 +11,6 @@
 const inputText        = document.getElementById('inputText');
 const outputHtml       = document.getElementById('outputHtml');
 const clearBtn         = document.getElementById('clearBtn');
-const copyBtn          = document.getElementById('copyBtn');
-const copyCleanBtn     = document.getElementById('copyCleanBtn');
-const downloadBtn      = document.getElementById('downloadBtn');
-const downloadCleanBtn = document.getElementById('downloadCleanBtn');
-const downloadCssBtn   = document.getElementById('downloadCssBtn');
 const livePreview      = document.getElementById('livePreview');
 const themeToggle      = document.getElementById('themeToggle');
 const helpBtn          = document.getElementById('helpBtn');
@@ -899,11 +894,6 @@ body.standalone {
   text-align: justify;
   text-justify: inter-word;
 }
-.story-content p {
-  margin: 0 0 0.5em 0;
-  text-align: justify;
-  text-justify: inter-word;
-}
 
 /* Ragged right (no justification) */
 .story-content p.ragged {
@@ -1683,24 +1673,8 @@ function updatePreview(html, lsClass, styleId, justify) {
   wireFootnoteLinks(livePreview);
 }
 
-function getCleanHtml() {
-  return outputHtml.value
-    .replace(/^<article class="story-content[^"]*">\n/, '')
-    .replace(/\n<\/article>$/, '');
-}
-
-async function copyToClipboard(text, label) {
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast(`${label} copied!`);
-  } catch {
-    outputHtml.select();
-    showToast('Press Ctrl+C / ⌘+C to copy manually');
-  }
-}
-
-function triggerDownload(content, filename) {
-  const blob = new Blob([content], { type: 'text/html;charset=utf-8;' });
+function triggerDownload(content, filename, mimeType = 'text/html;charset=utf-8;') {
+  const blob = new Blob([content], { type: mimeType });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url; a.download = filename;
@@ -2071,17 +2045,20 @@ function confirmImage() {
   const pre = (before.length > 0 && !before.endsWith('\n')) ? '\n' : '';
   const post = (after.length > 0 && !after.startsWith('\n')) ? '\n' : '';
   const fullTag = pre + tag + post;
-  
+
   replaceRangeWithUndo(inputText, insertPoint, insertPoint, fullTag);
-  
+
   const newCursorPos = insertPoint + fullTag.length;
   inputText.setSelectionRange(newCursorPos, newCursorPos);
-  
+
   closeImageModal();
   scheduleConvert();
   scheduleAutosave();
   inputText.focus();
-  setTimeout(() => syncPreviewToInputLineImmediate(), 100);
+  // Sync-scroll to the start of the inserted block, not the real caret
+  // position (which sits on the blank line after it) - see confirmManuscript.
+  const syncTarget = insertPoint + pre.length;
+  setTimeout(() => findAndScrollToLine(inputText.value, syncTarget), 100);
 }
 
 // ── Manuscript Modal ────────────────────────────────────────────────────────
@@ -2130,17 +2107,22 @@ function confirmManuscript() {
   const pre = (before.length > 0 && !before.endsWith('\n')) ? '\n' : '';
   const post = (after.length > 0 && !after.startsWith('\n')) ? '\n' : '';
   const fullTag = pre + tag + post;
-  
+
   replaceRangeWithUndo(inputText, insertPoint, insertPoint, fullTag);
-  
+
   const newCursorPos = insertPoint + fullTag.length;
   inputText.setSelectionRange(newCursorPos, newCursorPos);
-  
+
   closeManuscriptModal();
   scheduleConvert();
   scheduleAutosave();
   inputText.focus();
-  setTimeout(() => syncPreviewToInputLineImmediate(), 100);
+  // Sync-scroll to the start of the inserted block, not the real caret
+  // position (which sits on the blank line after it) - otherwise the
+  // "skip past markup/blank lines" logic searches from past the block
+  // and can land on unrelated content further down the document.
+  const syncTarget = insertPoint + pre.length;
+  setTimeout(() => findAndScrollToLine(inputText.value, syncTarget), 100);
 }
 
 // ── Clear Modal ──────────────────────────────────────────────────────────────
@@ -2463,12 +2445,7 @@ function setupViewModals() {
     });
 
     document.getElementById(dlId)?.addEventListener('click', () => {
-      const blob = new Blob([getContent()], { type: dlType + ';charset=utf-8;' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url; a.download = getFilename();
-      document.body.appendChild(a); a.click();
-      document.body.removeChild(a); URL.revokeObjectURL(url);
+      triggerDownload(getContent(), getFilename(), dlType + ';charset=utf-8;');
     });
   });
 
@@ -2489,12 +2466,7 @@ function setupViewModals() {
       ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
       : 'story';
     const filename = `${slug}.txt`;
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(url);
+    triggerDownload(text, filename, 'text/plain;charset=utf-8;');
     showToast('Text saved!');
   });
   document.getElementById('openTextBtn')?.addEventListener('click', () => {
@@ -2844,282 +2816,226 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── Preview scroll sync ──────────────────────────────────────────────────────
+// Module-scoped (not inside DOMContentLoaded) because syncPreviewToInputLineImmediate
+// is called from the Link/Image/Manuscript modal-insert handlers defined earlier
+// in this file - those calls previously threw a silent ReferenceError, since the
+// function was only defined inside a separate DOMContentLoaded closure they had
+// no access to. inputText/livePreview are the same elements a closure-local
+// lookup would have found, already defined at module scope above.
 
-document.addEventListener('DOMContentLoaded', () => {
-  const inputPane = document.getElementById('inputText');
-  const previewPane = document.getElementById('livePreview');
+let scrollTimeout;
 
-  if (!inputPane || !previewPane) return;
+// Shared core for both the debounced (typing/cursor-movement) and immediate
+// (after a toolbar modal inserts a tag) sync paths: find the preview element
+// that best matches the editor's current line and scroll the preview to it.
+// Kept as the more capable of the two versions that previously existed
+// separately (markup-line skip-ahead, word-normalization fallback,
+// end-of-document handling) - a stricter matcher should still behave
+// correctly for the simpler one-shot case, not just the frequent one.
+function findAndScrollToLine(text, cursorIdx) {
+  if (!inputText || !livePreview || !text || cursorIdx === undefined) return;
+  const previewPane = livePreview;
 
-  let scrollTimeout;
+  const lines = text.split('\n');
+  const lineIndex = text.substring(0, cursorIdx).split('\n').length - 1;
+  const currentLineText = lines[lineIndex] || '';
+  const trimmedLine = currentLineText.trim();
 
-  function syncPreviewToInputLineImmediate() {
-    const text = inputPane.value;
-    const cursorIdx = inputPane.selectionStart;
-    
-    if (!text || cursorIdx === undefined) return;
+  const isAtEnd = cursorIdx >= text.length - 1;
+  const totalLines = lines.length;
+  const isLastLine = lineIndex >= totalLines - 1;
 
-    const lines = text.split('\n');
-    const lineIndex = text.substring(0, cursorIdx).split('\n').length - 1;
-    const currentLineText = lines[lineIndex] || '';
-    const trimmedLine = currentLineText.trim();
-    
-    const totalLines = lines.length;
-    const isLastLine = lineIndex >= totalLines - 1;
-    const isMarkupLine = /^\[\/?[a-z]+\]$/i.test(trimmedLine) || 
-                         trimmedLine === '' ||
-                         /^\[\/?[a-z]+=/.test(trimmedLine);
-    
-    const cleanTarget = trimmedLine
-      .replace(/\[\/?[a-z]+\]/gi, '')
-      .replace(/\[\/?[a-z]+=.*?\]/gi, '')
-      .trim();
-    
-    const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure, .manuscript-header, .story-title, .story-subtitle, .story-byline, .story-end');
-    let bestMatch = null;
-    let bestMatchScore = 0;
+  const isMarkupLine = /^\[\/?[a-z]+\]$/i.test(trimmedLine) ||
+                       trimmedLine === '' ||
+                       /^\[\/?[a-z]+=/.test(trimmedLine);
 
-    elements.forEach(el => {
-      const textContent = el.textContent || '';
-      
-      const isHeader = el.classList?.contains('story-title') || 
-                       el.classList?.contains('story-subtitle') || 
-                       el.classList?.contains('story-byline') ||
-                       el.classList?.contains('manuscript-header');
-      
-      if (cleanTarget.length > 0 && textContent.includes(cleanTarget.substring(0, 30))) {
-        const score = Math.min(cleanTarget.length, textContent.length);
-        if (score > bestMatchScore) {
-          bestMatchScore = score;
-          bestMatch = el;
-        }
-      } else if (isHeader && lineIndex < 10 && cleanTarget.length < 10) {
-        bestMatch = el;
-        bestMatchScore = 1;
+  if (isMarkupLine) {
+    let nextContentLine = lineIndex + 1;
+    while (nextContentLine < lines.length) {
+      const nextLine = lines[nextContentLine].trim();
+      const isNextMarkup = /^\[\/?[a-z]+\]$/i.test(nextLine) || nextLine === '';
+      if (!isNextMarkup && nextLine.length > 0) {
+        break;
       }
-    });
-
-    if (bestMatch) {
-      const elementRect = bestMatch.getBoundingClientRect();
-      const previewRect = previewPane.getBoundingClientRect();
-      const currentScroll = previewPane.scrollTop;
-      const offsetFromTop = 20;
-      const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
-      
-      previewPane.scrollTo({ 
-        top: Math.max(0, targetScroll), 
-        behavior: 'smooth' 
-      });
-    } else if (lineIndex === 0 || (lineIndex < 5 && isMarkupLine)) {
-      previewPane.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (isLastLine || lineIndex >= totalLines - 2) {
-      previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
+      nextContentLine++;
     }
-  }
 
-  function syncPreviewToInputLine() {
-    clearTimeout(scrollTimeout);
-    
-    scrollTimeout = setTimeout(() => {
-      if (window._skipLinkActive) {
-        return;
+    let prevContentLine = lineIndex - 1;
+    while (prevContentLine >= 0) {
+      const prevLine = lines[prevContentLine].trim();
+      const isPrevMarkup = /^\[\/?[a-z]+\]$/i.test(prevLine) || prevLine === '';
+      if (!isPrevMarkup && prevLine.length > 0) {
+        break;
       }
+      prevContentLine--;
+    }
 
-      const text = inputPane.value;
-      const cursorIdx = inputPane.selectionStart;
-      
-      if (!text || cursorIdx === undefined) return;
+    let targetLine = -1;
+    if (nextContentLine < lines.length) {
+      targetLine = nextContentLine;
+    } else if (prevContentLine >= 0) {
+      targetLine = prevContentLine;
+    }
 
-      const lines = text.split('\n');
-      const lineIndex = text.substring(0, cursorIdx).split('\n').length - 1;
-      const currentLineText = lines[lineIndex] || '';
-      const trimmedLine = currentLineText.trim();
-      
-      const isAtEnd = cursorIdx >= text.length - 1;
-      const totalLines = lines.length;
-      const isLastLine = lineIndex >= totalLines - 1;
-      
-      const isMarkupLine = /^\[\/?[a-z]+\]$/i.test(trimmedLine) || 
-                           trimmedLine === '' ||
-                           /^\[\/?[a-z]+=/.test(trimmedLine);
-      
-      if (isMarkupLine) {
-        let nextContentLine = lineIndex + 1;
-        while (nextContentLine < lines.length) {
-          const nextLine = lines[nextContentLine].trim();
-          const isNextMarkup = /^\[\/?[a-z]+\]$/i.test(nextLine) || nextLine === '';
-          if (!isNextMarkup && nextLine.length > 0) {
-            break;
-          }
-          nextContentLine++;
-        }
-        
-        let prevContentLine = lineIndex - 1;
-        while (prevContentLine >= 0) {
-          const prevLine = lines[prevContentLine].trim();
-          const isPrevMarkup = /^\[\/?[a-z]+\]$/i.test(prevLine) || prevLine === '';
-          if (!isPrevMarkup && prevLine.length > 0) {
-            break;
-          }
-          prevContentLine--;
-        }
-        
-        let targetLine = -1;
-        if (nextContentLine < lines.length) {
-          targetLine = nextContentLine;
-        } else if (prevContentLine >= 0) {
-          targetLine = prevContentLine;
-        }
-        
-        if (targetLine !== -1) {
-          const targetText = lines[targetLine].trim();
-          const cleanTarget = targetText
-            .replace(/\[\/?[a-z]+\]/gi, '')
-            .replace(/\[\/?[a-z]+=.*?\]/gi, '')
-            .trim();
-          
-          if (cleanTarget) {
-            const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure, .manuscript-header, .story-title, .story-subtitle, .story-byline, .story-end');
-            let bestMatch = null;
-            
-            for (const el of elements) {
-              const textContent = el.textContent || '';
-              if (textContent.includes(cleanTarget.substring(0, 30))) {
-                bestMatch = el;
-                break;
-              }
-            }
-            
-            if (bestMatch) {
-              const elementRect = bestMatch.getBoundingClientRect();
-              const previewRect = previewPane.getBoundingClientRect();
-              const currentScroll = previewPane.scrollTop;
-              const offsetFromTop = 20;
-              const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
-              previewPane.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
-              return;
-            }
-          }
-        }
-        
-        const scrollRatio = Math.min(0.95, Math.max(0, lineIndex / totalLines));
-        const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * scrollRatio;
-        previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
-        return;
-      }
-      
-      if (isAtEnd || (isLastLine && isMarkupLine)) {
-        previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
-        return;
-      }
-      
-      if (lineIndex === 0 && isMarkupLine) {
-        let firstContentLine = 0;
-        while (firstContentLine < lines.length) {
-          const line = lines[firstContentLine].trim();
-          const isMarkup = /^\[\/?[a-z]+\]$/i.test(line) || line === '';
-          if (!isMarkup && line.length > 0) {
-            break;
-          }
-          firstContentLine++;
-        }
-        
-        if (firstContentLine < lines.length) {
-          previewPane.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-          previewPane.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-        return;
-      }
-      
-      const cleanTarget = trimmedLine
+    if (targetLine !== -1) {
+      const targetText = lines[targetLine].trim();
+      const cleanTarget = targetText
         .replace(/\[\/?[a-z]+\]/gi, '')
         .replace(/\[\/?[a-z]+=.*?\]/gi, '')
         .trim();
 
-      function normalizeForMatch(str) {
-        return str
-          .toLowerCase()
-          .replace(/[^\w\s]/g, '')
-          .replace(/\s+/g, ' ')
-          .trim();
-      }
+      if (cleanTarget) {
+        const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure, .manuscript-header, .story-title, .story-subtitle, .story-byline, .story-end');
+        let bestMatch = null;
 
-      const normalizedTarget = normalizeForMatch(cleanTarget);
-      const targetWords = normalizedTarget.split(/\s+/).filter(w => w.length > 3);
+        for (const el of elements) {
+          const textContent = el.textContent || '';
+          if (textContent.includes(cleanTarget.substring(0, 30))) {
+            bestMatch = el;
+            break;
+          }
+        }
 
-      const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure, .manuscript-header, .story-title, .story-subtitle, .story-byline, .story-end');
-      let bestMatch = null;
-      let bestMatchScore = 0;
-
-      elements.forEach(el => {
-        const textContent = el.textContent || '';
-        const normalizedContent = normalizeForMatch(textContent);
-        
-        const isEndElement = el.classList?.contains('story-end') || 
-                            (el.tagName === 'HR' && el.classList?.contains('fleuron-end'));
-        
-        if (isEndElement && isLastLine) {
-          bestMatch = el;
-          bestMatchScore = Infinity;
+        if (bestMatch) {
+          const elementRect = bestMatch.getBoundingClientRect();
+          const previewRect = previewPane.getBoundingClientRect();
+          const currentScroll = previewPane.scrollTop;
+          const offsetFromTop = 32;
+          const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
+          previewPane.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
           return;
         }
-        
-        const isHeader = el.classList?.contains('story-title') || 
-                         el.classList?.contains('story-subtitle') || 
-                         el.classList?.contains('story-byline') ||
-                         el.classList?.contains('manuscript-header');
-        
-        if (cleanTarget.length > 0) {
-          if (normalizedContent.includes(normalizedTarget) && normalizedTarget.length > 0) {
-            const score = normalizedTarget.length;
-            if (score > bestMatchScore) {
-              bestMatchScore = score;
-              bestMatch = el;
-            }
-          } else if (targetWords.length > 0) {
-            let matchCount = 0;
-            for (const word of targetWords) {
-              if (normalizedContent.includes(word)) {
-                matchCount++;
-              }
-            }
-            const score = matchCount / targetWords.length;
-            if (score > bestMatchScore && score > 0.3) {
-              bestMatchScore = score;
-              bestMatch = el;
-            }
-          }
-        } else if (isHeader && lineIndex < 10 && cleanTarget.length < 10) {
-          bestMatch = null;
-        }
-      });
-
-      if (!bestMatch && trimmedLine.length > 0) {
-        const scrollRatio = Math.min(0.95, Math.max(0, lineIndex / totalLines));
-        const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * scrollRatio;
-        previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
-      } else if (bestMatch) {
-        const elementRect = bestMatch.getBoundingClientRect();
-        const previewRect = previewPane.getBoundingClientRect();
-        const currentScroll = previewPane.scrollTop;
-        const offsetFromTop = 20;
-        const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
-        
-        previewPane.scrollTo({ 
-          top: Math.max(0, targetScroll), 
-          behavior: 'smooth' 
-        });
-      } else if (lineIndex === 0 || (lineIndex < 5 && isMarkupLine)) {
-        previewPane.scrollTo({ top: 0, behavior: 'smooth' });
-      } else if (isLastLine || lineIndex >= totalLines - 2) {
-        previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
       }
-    }, 80);
+    }
+
+    const scrollRatio = Math.min(0.95, Math.max(0, lineIndex / totalLines));
+    const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * scrollRatio;
+    previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
+    return;
   }
 
-  inputPane.addEventListener('click', syncPreviewToInputLine);
-  inputPane.addEventListener('keyup', (e) => {
+  if (isAtEnd || (isLastLine && isMarkupLine)) {
+    previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
+    return;
+  }
+
+  if (lineIndex === 0 && isMarkupLine) {
+    previewPane.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+
+  const cleanTarget = trimmedLine
+    .replace(/\[\/?[a-z]+\]/gi, '')
+    .replace(/\[\/?[a-z]+=.*?\]/gi, '')
+    .trim();
+
+  function normalizeForMatch(str) {
+    return str
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  const normalizedTarget = normalizeForMatch(cleanTarget);
+  const targetWords = normalizedTarget.split(/\s+/).filter(w => w.length > 3);
+
+  const elements = previewPane.querySelectorAll('p, h1, h2, h3, h4, blockquote, aside, pre, li, figure, .manuscript-header, .story-title, .story-subtitle, .story-byline, .story-end');
+  let bestMatch = null;
+  let bestMatchScore = 0;
+
+  elements.forEach(el => {
+    const textContent = el.textContent || '';
+    const normalizedContent = normalizeForMatch(textContent);
+
+    const isEndElement = el.classList?.contains('story-end') ||
+                        (el.tagName === 'HR' && el.classList?.contains('fleuron-end'));
+
+    if (isEndElement && isLastLine) {
+      bestMatch = el;
+      bestMatchScore = Infinity;
+      return;
+    }
+
+    const isHeader = el.classList?.contains('story-title') ||
+                     el.classList?.contains('story-subtitle') ||
+                     el.classList?.contains('story-byline') ||
+                     el.classList?.contains('manuscript-header');
+
+    if (cleanTarget.length > 0) {
+      if (normalizedContent.includes(normalizedTarget) && normalizedTarget.length > 0) {
+        const score = normalizedTarget.length;
+        if (score > bestMatchScore) {
+          bestMatchScore = score;
+          bestMatch = el;
+        }
+      } else if (targetWords.length > 0) {
+        let matchCount = 0;
+        for (const word of targetWords) {
+          if (normalizedContent.includes(word)) {
+            matchCount++;
+          }
+        }
+        const score = matchCount / targetWords.length;
+        if (score > bestMatchScore && score > 0.3) {
+          bestMatchScore = score;
+          bestMatch = el;
+        }
+      }
+    } else if (isHeader && lineIndex < 10 && cleanTarget.length < 10) {
+      bestMatch = null;
+    }
+  });
+
+  if (!bestMatch && trimmedLine.length > 0) {
+    const scrollRatio = Math.min(0.95, Math.max(0, lineIndex / totalLines));
+    const targetScroll = (previewPane.scrollHeight - previewPane.clientHeight) * scrollRatio;
+    previewPane.scrollTo({ top: targetScroll, behavior: 'smooth' });
+  } else if (bestMatch) {
+    const elementRect = bestMatch.getBoundingClientRect();
+    const previewRect = previewPane.getBoundingClientRect();
+    const currentScroll = previewPane.scrollTop;
+    const offsetFromTop = 32;
+    const targetScroll = currentScroll + elementRect.top - previewRect.top - offsetFromTop;
+
+    previewPane.scrollTo({
+      top: Math.max(0, targetScroll),
+      behavior: 'smooth'
+    });
+  } else if (lineIndex === 0 || (lineIndex < 5 && isMarkupLine)) {
+    previewPane.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (isLastLine || lineIndex >= totalLines - 2) {
+    previewPane.scrollTo({ top: previewPane.scrollHeight, behavior: 'smooth' });
+  }
+}
+
+// One-shot: called 100ms after a toolbar modal (Link/Image/Manuscript)
+// inserts a tag and closes. No debounce needed since it fires once.
+function syncPreviewToInputLineImmediate() {
+  if (!inputText) return;
+  findAndScrollToLine(inputText.value, inputText.selectionStart);
+}
+
+// High-frequency: fires on every click/arrow/Home/End/Backspace/Enter in
+// the editor while reading or typing, so it stays debounced (80ms) with
+// the existing link-drag skip guard.
+function syncPreviewToInputLine() {
+  clearTimeout(scrollTimeout);
+
+  scrollTimeout = setTimeout(() => {
+    if (window._skipLinkActive) {
+      return;
+    }
+    if (!inputText) return;
+    findAndScrollToLine(inputText.value, inputText.selectionStart);
+  }, 80);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!inputText || !livePreview) return;
+
+  inputText.addEventListener('click', syncPreviewToInputLine);
+  inputText.addEventListener('keyup', (e) => {
     if (e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End' || e.key === 'Backspace' || e.key === 'Enter') {
       syncPreviewToInputLine();
     }
@@ -3177,25 +3093,3 @@ inputText.addEventListener('paste', (e) => {
   showToast(msg);
 }, true);
 
-// ── Copy and Download Button Listeners ─────────────────────────────────────
-
-copyBtn?.addEventListener('click', () => {
-  copyToClipboard(outputHtml.value, 'HTML');
-});
-
-copyCleanBtn?.addEventListener('click', () => {
-  copyToClipboard(getCleanHtml(), 'Clean HTML');
-});
-
-downloadBtn?.addEventListener('click', () => {
-  triggerDownload(outputHtml.value, 'story.html');
-});
-
-downloadCleanBtn?.addEventListener('click', () => {
-  triggerDownload(getCleanHtml(), 'story-clean.html');
-});
-
-downloadCssBtn?.addEventListener('click', () => {
-  const css = buildThemeCss(getSelectedStyle());
-  triggerDownload(css, 'story-base.css');
-});
