@@ -554,18 +554,24 @@ function checkColor001(ctx) {
                 `Could not read ${f.path} to scan for hardcoded colors.`, 'Investigate missing file; do not treat as a pass.'));
             continue;
         }
-        // Only check ADDED lines in the diff, resolved back to the
-        // current file to determine root-block membership accurately.
-        const addedLineTexts = ctx.getAddedLines(f.path);
-        if (addedLineTexts === null) continue;
+        // Only check ADDED lines in the diff, matched by actual new-file
+        // line NUMBER (not trimmed text) - a text-match against common
+        // boilerplate (e.g. "color: #ffffff;") can collide with an
+        // unrelated, unchanged line elsewhere in the same file that
+        // happens to read identically, incorrectly re-flagging an
+        // already-known/baseline color as if it were newly added. This
+        // was a real false positive found when adding a genuinely new
+        // "color: #ffffff;" line elsewhere in app/wf.css re-triggered the
+        // pre-existing, already-tracked .btn-danger "color: #ffffff;" line.
+        const addedLines = ctx.getAddedLinesWithNumbers(f.path);
+        if (addedLines === null) continue;
+        const addedLineNumbers = new Set(addedLines.map(l => l.lineNo));
 
         let match;
         COLOR_RE.lastIndex = 0;
         while ((match = COLOR_RE.exec(content)) !== null) {
             const line = lineOf(content, match.index);
-            const lineText = content.split('\n')[line - 1];
-            const wasAdded = addedLineTexts.some(t => t.trim() === lineText.trim());
-            if (!wasAdded) continue;
+            if (!addedLineNumbers.has(line)) continue;
             // Exclusion is per-ROLE (token definition), not per-file: any
             // CSS file's own :root block is where color literals are
             // legitimately DEFINED as tokens, so a literal inside a :root
