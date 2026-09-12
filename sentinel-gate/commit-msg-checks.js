@@ -62,6 +62,24 @@ function checkCommitMessageStructure(rawMessage) {
         });
     }
 
+    // A body (if any) MUST be separated from the subject by a real blank
+    // line - this is not optional formatting, it is what makes `git log
+    // --oneline` / `%s` / `%b` treat the subject as a one-line summary at
+    // all. Without it, tools have no way to know where the "subject"
+    // conceptually ends, and every git view that relies on that
+    // convention (oneline log, %s/%b format strings) silently collapses
+    // the whole message into one run-on line - exactly the failure mode
+    // this check exists to prevent, not just a cosmetic preference.
+    if (lines.length > 1 && lines[1].trim() !== '') {
+        violations.push({
+            rule: 'MSG-NO-BLANK-LINE-AFTER-SUBJECT',
+            overrideEligible: false,
+            message: 'No blank line between the subject and the body. Git (and this project\'s own commit-log tooling) treats everything up to the first blank line as the subject - without one, the whole message is read as a single run-on subject line, not a short summary plus bullets.',
+            correction: 'Insert a blank line immediately after the subject line, before the first body bullet.'
+        });
+        return violations; // can't reliably parse body structure without a real boundary
+    }
+
     // Body = everything after the first blank line following the subject.
     let bodyStart = 1;
     while (bodyStart < lines.length && lines[bodyStart].trim() === '') bodyStart++;
