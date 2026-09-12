@@ -1424,6 +1424,15 @@ function wrapArticleContent(html) {
         contentToSave = `<article class="story-content ${lineHeight}">\n${html}\n</article>`;
     }
 
+    // Site-wide convention: all published pieces use ragged (non-justified) text.
+    // Backfill it here so it can't be missed regardless of how the content arrived.
+    contentToSave = contentToSave.replace(
+        /(<article[^>]*class="story-content[^"]*")([^>]*>)/i,
+        (match, openTag, rest) => {
+            return /\bragged\b/.test(openTag) ? match : `${openTag.slice(0, -1)} ragged"${rest}`;
+        }
+    );
+
     // Check if the credit div is already there, if not, add it
     if (!contentToSave.includes('wf-credit')) {
         const creditDiv = `<div class="wf-credit" aria-label="Formatted by Written &amp; Formatted">

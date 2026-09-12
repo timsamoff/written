@@ -7,8 +7,6 @@
     'use strict';
     
     function initFilterSystem() {
-        console.log('initFilterSystem called');
-        
         const filterToggleBtn = document.getElementById('filter-toggle');
         const filterSection = document.getElementById('filter-section');
         const genreFilterContainer = document.getElementById('genre-filters');
@@ -21,8 +19,6 @@
             console.error('tbody not found');
             return;
         }
-        
-        console.log('Filter system initialized with', tbody.querySelectorAll('tr').length, 'rows');
         
         // ============================================
         // Collapsible Section
@@ -138,8 +134,6 @@
         }
         
         function updateDisplay() {
-            console.log('updateDisplay called');
-            
             var allRows = Array.from(tbody.querySelectorAll('tr'));
             var totalContentRows = 0;
             var visibleContentRows = 0;
@@ -161,8 +155,6 @@
                     row.classList.add('filter-hidden');
                 }
             });
-            
-            console.log('Content rows:', totalContentRows, 'Visible:', visibleContentRows, 'Hidden:', totalContentRows - visibleContentRows);
             
             // Second pass: show/hide series headers based on visible children
             allRows.forEach(function(row) {
@@ -245,9 +237,6 @@
         }
         
         function handleFilterClick(button, type, value) {
-            console.log('Filter clicked:', type, value);
-            
-            // Toggle the button
             button.classList.toggle('active');
             
             // If "All" was clicked
@@ -283,13 +272,10 @@
                 }
             }
             
-            // Update the display
             updateDisplay();
         }
-        
+
         function clearAllFilters() {
-            console.log('Clear all filters');
-            
             // Reset genre filters
             document.querySelectorAll('#genre-filters .filter-chip').forEach(function(btn) {
                 if (btn.dataset.filter === 'all') {
@@ -316,8 +302,6 @@
         // ============================================
         
         function attachFilterListeners() {
-            console.log('Attaching filter listeners');
-            
             // Genre filters
             document.querySelectorAll('#genre-filters .filter-chip').forEach(function(btn) {
                 // Remove any existing listeners by cloning
@@ -359,8 +343,6 @@
         
         // Initial display update
         updateDisplay();
-        
-        console.log('Filter system ready');
     }
     
     // Make initFilterSystem available globally
