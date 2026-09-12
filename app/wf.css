@@ -106,6 +106,13 @@
   --radius-md:      12px;
   --radius-lg:      18px;
   --transition-base: 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  /* Toast status colors - theme-independent, same reasoning as
+     style.css's --color-error/--color-success: a status color
+     shouldn't change hue between light/dark mode. */
+  --color-toast-success: #4a7c59;
+  --color-toast-error:   #a4423a;
+  --color-text-inverted: #ffffff;
 }
 
 /* ==========================================================================
@@ -1409,6 +1416,14 @@ body {
 .toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+.toast.toast-success {
+  background-color: var(--color-toast-success);
+  color: var(--color-text-inverted);
+}
+.toast.toast-error {
+  background-color: var(--color-toast-error);
+  color: var(--color-text-inverted);
 }
 
 .site-footer {

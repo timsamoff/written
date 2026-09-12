@@ -1695,9 +1695,10 @@ function scheduleAutosave() {
   autosaveTimer = setTimeout(autosaveToLocalStorage, 1000);
 }
 
-function showToast(msg) {
+function showToast(msg, type = 'success') {
   toast.textContent = msg;
-  toast.classList.add('show');
+  toast.classList.remove('toast-success', 'toast-error');
+  toast.classList.add('show', `toast-${type}`);
   setTimeout(() => toast.classList.remove('show'), 2000);
 }
 
@@ -1984,7 +1985,7 @@ function confirmLink() {
   const modal = document.getElementById('linkModal');
   const text  = document.getElementById('linkText').value.trim();
   const url   = document.getElementById('linkUrl').value.trim();
-  if (!url) { showToast('Please enter a URL'); return; }
+  if (!url) { showToast('Please enter a URL', 'error'); return; }
   const displayText = text || url;
   const tag  = `[link]${displayText} -> ${url}[/link]`;
   const insertPoint = modal._selStart;
@@ -2024,7 +2025,7 @@ function confirmImage() {
   const credit  = document.getElementById('imgCredit').value.trim();
   
   if (!source) {
-    showToast('Please enter an image source URL or path');
+    showToast('Please enter an image source URL or path', 'error');
     document.getElementById('imgSource').focus();
     return;
   }
@@ -2089,7 +2090,7 @@ function confirmManuscript() {
   const email     = document.getElementById('msEmail').value.trim();
   const wordcount = document.getElementById('msWordcount').value.trim();
 
-  if (!name && !address) { showToast('Enter at least a name or address'); return; }
+  if (!name && !address) { showToast('Enter at least a name or address', 'error'); return; }
 
   const lines = ['[manuscript]'];
   if (name)      lines.push(`name: ${name}`);
@@ -2311,7 +2312,7 @@ function wireCopyButtons(container) {
           fresh.innerHTML = originalHtml;
           fresh.setAttribute('aria-label', 'Copy code');
         }, 1800);
-      }).catch(() => showToast('Copy failed'));
+      }).catch(() => showToast('Copy failed', 'error'));
     });
   });
 }
@@ -2441,7 +2442,7 @@ function setupViewModals() {
     modal.addEventListener('keydown', e => { if (e.key === 'Escape') closeViewModal(id); });
 
     document.getElementById(copyId)?.addEventListener('click', () => {
-      navigator.clipboard.writeText(getContent()).then(() => showToast('Copied!')).catch(() => showToast('Copy failed'));
+      navigator.clipboard.writeText(getContent()).then(() => showToast('Copied!')).catch(() => showToast('Copy failed', 'error'));
     });
 
     document.getElementById(dlId)?.addEventListener('click', () => {
@@ -2450,17 +2451,17 @@ function setupViewModals() {
   });
 
   document.getElementById('viewStandaloneBtn')?.addEventListener('click', () => {
-    if (!outputHtml.value.trim()) { showToast('Nothing to view — type some text first'); return; }
+    if (!outputHtml.value.trim()) { showToast('Nothing to view — type some text first', 'error'); return; }
     openViewModal('viewStandaloneModal');
   });
   document.getElementById('viewEmbedBtn')?.addEventListener('click', () => {
-    if (!outputHtml.value.trim()) { showToast('Nothing to view — type some text first'); return; }
+    if (!outputHtml.value.trim()) { showToast('Nothing to view — type some text first', 'error'); return; }
     openViewModal('viewEmbedModal');
   });
   document.getElementById('viewCssBtn')?.addEventListener('click', () => openViewModal('viewCssModal'));
   document.getElementById('saveTextBtn')?.addEventListener('click', () => {
     const text = inputText.value;
-    if (!text.trim()) { showToast('Nothing to save — type some text first'); return; }
+    if (!text.trim()) { showToast('Nothing to save — type some text first', 'error'); return; }
     const title = getDocTitle();
     const slug  = title
       ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
@@ -2482,7 +2483,7 @@ function setupViewModals() {
         scheduleConvert();
         showToast(`Opened: ${file.name}`);
       };
-      reader.onerror = () => showToast('Could not read file');
+      reader.onerror = () => showToast('Could not read file', 'error');
       reader.readAsText(file, 'utf-8');
     });
     fileInput.click();
