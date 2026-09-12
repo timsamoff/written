@@ -45,7 +45,23 @@ function violation(rule, file, line, message, correction) {
 // should probably also drop the registry entry, but that's PERSIST/registry
 // territory the audit didn't scope this rule to cover; scoped exactly as
 // proposed: added/changed).
+//
+// Batch-edit carve-out: this rule can't distinguish "forgot to register a
+// new piece" (the case it exists to catch) from "a structural/template
+// change swept through many already-registered pieces at once" (no
+// registration needed, since no piece's metadata changed - only its
+// markup shape). The second case is common for exactly the kind of
+// project-wide convention fix this project has already needed twice
+// (the ragged-class rollout in 93bc358, and the reading-body <article>
+// nesting fix) and will need again. A high touched-file count in one
+// commit is a real, mechanical signal for "batch structural edit," so
+// above BATCH_THRESHOLD files this downgrades to a non-blocking
+// reminder instead of one hard block per file - still visible, but not
+// something that has to be worked around via override/exception every
+// time a convention rollout touches many pieces at once.
 // --------------------------------------------------------------------------
+const REGISTRY_001_BATCH_THRESHOLD = 3;
+
 function checkRegistry001(ctx) {
     // This rule is inherently "same commit" shaped (a diff concept) - it
     // has no sound full-repo analog: in full-scan mode every tracked file
@@ -61,16 +77,27 @@ function checkRegistry001(ctx) {
     if (touchedWriting.length === 0) return violations;
 
     const projectsTouched = ctx.changedFiles.some(f => f.path === 'data/projects.json');
-    if (!projectsTouched) {
-        for (const f of touchedWriting) {
-            violations.push(violation(
-                'REGISTRY-001',
-                f.path,
-                null,
-                `${f.path} was ${f.status === 'A' ? 'added' : 'changed'} but data/projects.json was not touched in the same commit.`,
-                'Add or update the corresponding entry in data/projects.json (id, title, path, slug, fullPath, date, dateDisplay, genres, themes, published, order, lineHeight, etc.).'
-            ));
-        }
+    if (projectsTouched) return violations;
+
+    if (touchedWriting.length > REGISTRY_001_BATCH_THRESHOLD) {
+        violations.push(violation(
+            'REGISTRY-001-BATCH',
+            `${touchedWriting.length} files under writing/**`,
+            null,
+            `${touchedWriting.length} writing/**.html files changed in this commit with no data/projects.json touch - over the ${REGISTRY_001_BATCH_THRESHOLD}-file threshold for treating this as "forgot to register a new piece," so this reads as a batch structural/convention change instead.`,
+            'This is a reminder, not a hard block: confirm none of these changes actually added a new piece or changed a piece\'s registered metadata (title, genres, dates, etc.) - if one did, add/update its data/projects.json entry. If this is purely a markup/structure sweep (like the ragged-class or reading-body fixes), no action is needed.'
+        ));
+        return violations;
+    }
+
+    for (const f of touchedWriting) {
+        violations.push(violation(
+            'REGISTRY-001',
+            f.path,
+            null,
+            `${f.path} was ${f.status === 'A' ? 'added' : 'changed'} but data/projects.json was not touched in the same commit.`,
+            'Add or update the corresponding entry in data/projects.json (id, title, path, slug, fullPath, date, dateDisplay, genres, themes, published, order, lineHeight, etc.).'
+        ));
     }
     return violations;
 }
@@ -651,44 +678,20 @@ function checkImg001(ctx) {
 }
 
 // --------------------------------------------------------------------------
-// STRUCT-001 — nested <article> lint against generated writing/**.html,
-// gated to run only when admin's template-assembly code changes (per the
-// source material: this is a KNOWN, currently-100%-present violation, so
-// it must not hard-block on every existing file — only surfaced when
-// template-assembly code changes, as a reminder that touching that code
-// is a chance to fix it, and tracked as a Part 4 baseline item otherwise).
+// STRUCT-001 — REMOVED. This rule reminded whoever touched admin's
+// template-assembly code that every generated writing/**.html file
+// nested <article class="story-content"> inside <article
+// class="reading-body">. That issue is now fixed (reading-body's wrapper
+// is a <div> in templates/template.html and every existing writing/**.html
+// file) - the rule's message was a static, unconditional string rather
+// than an actual check of current state, so leaving it in place would
+// mean it keeps firing a now-false "KNOWN pre-existing structural issue"
+// claim forever. Removed rather than "fixed to check current state,"
+// since a real structural regression here would need a check that
+// re-parses the actual nesting on every affected file, not a one-line
+// tweak to this reminder - not worth building for an issue that's
+// resolved unless it recurs.
 // --------------------------------------------------------------------------
-function checkStruct001(ctx) {
-    // Diff-mode only: this reminder is meant to surface "you're touching
-    // assembly code right now, here's a known issue to consider fixing
-    // while you're in there." In full mode every scan would trivially see
-    // the assembly functions present in the file (the synthetic full-file
-    // hunk always "contains" them), making the reminder fire on every
-    // single full scan regardless of what changed - not useful signal,
-    // just noise. The full-repo tracking of this issue belongs in the
-    // Part 4 baseline (as a permanent known-backlog entry), not as a
-    // repeated non-blocking reminder on every push.
-    if (ctx.mode === 'full') return [];
-    const violations = [];
-    const templateOrAssemblyChanged = ctx.changedFiles.some(f => f.path === 'templates/template.html') ||
-        (ctx.changedFiles.some(f => f.path === 'admin/admin.js') &&
-            functionBodyChanged(ctx.getDiffHunks('admin/admin.js') || [], ['buildAssembledHtml', 'wrapArticleContent']));
-
-    if (!templateOrAssemblyChanged) return violations;
-
-    const trigger = ctx.changedFiles.some(f => f.path === 'templates/template.html')
-        ? 'templates/template.html'
-        : 'admin/admin.js';
-
-    violations.push(violation(
-        'STRUCT-001',
-        trigger,
-        null,
-        'Admin template-assembly code changed. This project has a KNOWN pre-existing structural issue: every generated writing/**.html file nests <article class="story-content"> inside <article class="reading-body"> (a landmark/semantic issue documented in CLAUDE.md\'s "Known structural issues").',
-        'This is not a new violation (it is 100% pre-existing, tracked in the Part 4 baseline) — but since you are touching the assembly code right now, consider fixing the double-<article> nesting as part of this change. This is a reminder, not a hard block, because blocking would fail on all pre-existing content.'
-    ));
-    return violations;
-}
 
 // --------------------------------------------------------------------------
 // CONVENTION-001 — full-repo-only. Walks every writing/**.html and checks
@@ -744,7 +747,6 @@ module.exports = {
     checkColor001,
     checkLog001,
     checkImg001,
-    checkStruct001,
     checkConvention001,
     IMAGE_SIZE_LIMIT_BYTES,
     ASSEMBLY_FUNCTION_NAMES

@@ -5,5 +5,12 @@
         "reason": "One-off fix backfilling the site-wide 'ragged' class (see CLAUDE.md) onto an already-published piece; no new piece is being registered, so no data/projects.json change is expected alongside it.",
         "owner": "Tim Samoff",
         "reviewBy": "2026-10-15"
+    },
+    {
+        "rule": "CONVENTION-001",
+        "scope": "writing/shorts/threxil_og.html",
+        "reason": "Intentionally-preserved pre-ragged-conversion original of threxil.html, kept for archival comparison. Not registered in data/projects.json and not a live published piece, so it predates and is exempt from the site-wide ragged-class convention (commit 93bc358).",
+        "owner": "Tim Samoff",
+        "reviewBy": "2027-03-01"
     }
 ]

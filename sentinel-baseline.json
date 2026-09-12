@@ -264,12 +264,6 @@
       "file": "writing/essays/pink/ppn.png",
       "line": null,
       "message": "Image writing/essays/pink/ppn.png is 1121KB, over the 400KB budget for writing/** assets."
-    },
-    {
-      "rule": "CONVENTION-001",
-      "file": "writing/shorts/threxil_og.html",
-      "line": null,
-      "message": "writing/shorts/threxil_og.html's story-content wrapper is missing the site-wide \"ragged\" class convention (established in commit 93bc358)."
     }
   ]
 }

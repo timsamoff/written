@@ -5,9 +5,10 @@
 // Installed copy lives at .git/hooks/pre-commit (see
 // sentinel-gate/install-hooks.js for the tracked source -> installed copy).
 // Runs the diff-scoped content checks against the staged diff:
-//   REGISTRY-001, RENDER-001, PERSIST-001, REGISTRY-002, DOC-001,
-//   DOC-002 (non-blocking), COLOR-001, LOG-001, IMG-001, STRUCT-001
-//   (non-blocking reminder).
+//   REGISTRY-001 (or REGISTRY-001-BATCH, non-blocking, for a large batch
+//   of writing/**.html changes in one commit), RENDER-001, PERSIST-001,
+//   REGISTRY-002, DOC-001, DOC-002 (non-blocking), COLOR-001, LOG-001,
+//   IMG-001.
 // Blocks the commit (non-zero exit) on any blocking violation not covered
 // by a valid sentinel-exceptions.json entry.
 

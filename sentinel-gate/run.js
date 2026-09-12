@@ -1,9 +1,10 @@
 // ==========================================================================
 // Sentinel Gate-Check — shared runner
 // ==========================================================================
-// Runs the content checks (REGISTRY-001, RENDER-001, PERSIST-001,
-// REGISTRY-002, DOC-001, DOC-002, COLOR-001, LOG-001, IMG-001, STRUCT-001)
-// against a context (diff-scoped or full-repo), applies exceptions, and
+// Runs the content checks (REGISTRY-001[-BATCH], RENDER-001, PERSIST-001,
+// REGISTRY-002, DOC-001, DOC-002, COLOR-001, LOG-001, IMG-001,
+// CONVENTION-001) against a context (diff-scoped or full-repo), applies
+// exceptions, and
 // (for full mode) partitions against the baseline. Used by:
 //   - .git/hooks/pre-commit          (mode: diff, blocking)
 //   - .git/hooks/pre-push            (mode: full, blocking on non-baseline)
@@ -17,7 +18,7 @@ const { loadBaseline, partitionAgainstBaseline } = require('./baseline');
 const checks = require('./checks');
 
 // Rules that are non-blocking reminders regardless of mode.
-const NON_BLOCKING_RULES = new Set(['DOC-002', 'STRUCT-001']);
+const NON_BLOCKING_RULES = new Set(['DOC-002', 'REGISTRY-001-BATCH']);
 // Rules that only make sense / only run meaningfully in diff mode (they
 // compare "this commit" against something) vs rules that are meaningful
 // in both. All current rules work in both modes since context.getDiffHunks
@@ -32,7 +33,6 @@ const ALL_RULE_FNS = [
     checks.checkColor001,
     checks.checkLog001,
     checks.checkImg001,
-    checks.checkStruct001,
     checks.checkConvention001
 ];
 
