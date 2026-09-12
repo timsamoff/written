@@ -207,12 +207,6 @@
     },
     {
       "rule": "IMG-001",
-      "file": "writing/articles/bts/bts_002.png",
-      "line": null,
-      "message": "Image writing/articles/bts/bts_002.png is 1280KB, over the 400KB budget for writing/** assets."
-    },
-    {
-      "rule": "IMG-001",
       "file": "writing/articles/cr/cr_001.png",
       "line": null,
       "message": "Image writing/articles/cr/cr_001.png is 1064KB, over the 400KB budget for writing/** assets."
@@ -222,12 +216,6 @@
       "file": "writing/articles/ni/ni_001.png",
       "line": null,
       "message": "Image writing/articles/ni/ni_001.png is 864KB, over the 400KB budget for writing/** assets."
-    },
-    {
-      "rule": "IMG-001",
-      "file": "writing/articles/wf/wf_standalone.png",
-      "line": null,
-      "message": "Image writing/articles/wf/wf_standalone.png is 604KB, over the 400KB budget for writing/** assets."
     },
     {
       "rule": "IMG-001",
