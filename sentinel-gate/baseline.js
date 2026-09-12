@@ -4,11 +4,20 @@
 // The full-repo scan mode (pre-push) must not fail on violations that
 // already existed before these checks were implemented (Part 4). This
 // module reads/writes sentinel-baseline.json, a flat list of
-// { rule, file } fingerprints considered "already known backlog."
+// { rule, file, line, message } fingerprints considered "already known
+// backlog."
 //
-// A violation is baseline-matched by (rule, file) only - not by exact
-// message text, since messages can be reworded without changing whether
-// the underlying violation is "the same known issue."
+// A violation is baseline-matched by (rule, file, message) - not by line
+// number. Line numbers drift whenever anything earlier in the same file
+// changes (an insertion above a flagged line shifts it down with no
+// change to the violation itself), which would otherwise make an
+// unrelated, unconnected edit elsewhere in the file falsely present a
+// pre-existing violation as new. The violation's message already embeds
+// the actual offending value (e.g. the literal hex/rgb string for
+// COLOR-001), so matching on it still distinguishes a genuinely new
+// violation (a different color/value) from a pre-existing one that only
+// moved - without needing line numbers to stay stable across unrelated
+// edits.
 
 'use strict';
 
@@ -48,19 +57,18 @@ function saveBaseline(repoRoot, violations) {
     return data;
 }
 
-// Matches by (rule, file, line). Line-level rules (COLOR-001, LOG-001)
-// carry a real line number, so a NEW violation at a different line in an
-// already-flagged file is correctly treated as new, not baseline-covered
-// - matching by (rule, file) alone would have silently let a second,
-// unrelated hardcoded-color addition in an already-noisy file slip past
-// the pre-push gate. File-level rules (IMG-001, PERSIST-001, DOC-001)
-// have line === null on both sides, so they still match on (rule, file)
-// as intended.
+// Matches by (rule, file, message). A genuinely new violation in an
+// already-flagged file (e.g. a second, different hardcoded color added to
+// a file that already has one baseline color) still has a different
+// message - the specific value is embedded in it - so it is correctly
+// treated as new, not baseline-covered. A pre-existing violation whose
+// line number merely shifted because of an unrelated earlier edit in the
+// same file keeps the same message and stays correctly matched.
 function isInBaseline(violation, baseline) {
     return baseline.entries.some(e =>
         e.rule === violation.rule &&
         e.file === violation.file &&
-        (e.line || null) === (violation.line || null)
+        e.message === violation.message
     );
 }
 
