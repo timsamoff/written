@@ -252,11 +252,13 @@ async function loadContentFromFile(project) {
             }
         }
         
-        // If we still don't have content, try to extract anything between the main content area
+        // If we still don't have content, try to extract anything between the main content area.
+        // reading-body's tag isn't fixed (it was <article>, now <div>, to fix double-article
+        // nesting), so match by class only and close on whichever tag opened it.
         if (!content) {
-            const mainMatch = html.match(/<main[^>]*class="[^"]*main-content[^"]*"[^>]*>[\s\S]*?<article[^>]*class="[^"]*reading-body[^"]*"[^>]*>[\s\S]*?<header[^>]*>[\s\S]*?<\/header>[\s\S]*?([\s\S]*?)<\/article>/i);
+            const mainMatch = html.match(/<main[^>]*class="[^"]*main-content[^"]*"[^>]*>[\s\S]*?<(article|div)[^>]*class="[^"]*reading-body[^"]*"[^>]*>[\s\S]*?<header[^>]*>[\s\S]*?<\/header>[\s\S]*?([\s\S]*?)<\/\1>/i);
             if (mainMatch) {
-                content = mainMatch[1].trim();
+                content = mainMatch[2].trim();
             }
         }
         
