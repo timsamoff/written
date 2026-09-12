@@ -315,8 +315,8 @@ body {
 .header-circle-btn {
   background-color: var(--color-toggle-bg);
   border: none;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   cursor: pointer;
   color: var(--color-text);

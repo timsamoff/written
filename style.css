@@ -194,8 +194,8 @@ body {
 .header-circle-btn {
     background-color: var(--color-toggle-bg);
     border: none;
-    width: calc(var(--rhythm-unit) * 5);
-    height: calc(var(--rhythm-unit) * 5);
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     cursor: pointer;
     color: var(--color-text);
