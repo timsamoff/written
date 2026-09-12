@@ -2,7 +2,7 @@
 
 A beautifully crafted digital publishing platform for writers. Browse stories, essays, poetry, and articles with powerful filtering, and transform plain text into semantically rich, professionally formatted HTML.
 
-## 🎯 What is Written?
+## What is Written?
 
 **Written** is a dual-purpose creative platform:
 
@@ -12,23 +12,23 @@ A beautifully crafted digital publishing platform for writers. Browse stories, e
 
 ---
 
-## 🌟 Features
+## Features
 
 ### The Reading Portal
-- 📚 **Browse & Filter** — Discover content by genre (Sci-Fi, YA, Articles, Poetry, Essays, Guides) and theme (Software Development, Writing, Post-Apocalyptic, Publishing, Autobiographical)
-- 🌓 **Dark/Light Theme** — Toggle between elegant light and dark color schemes with persistent preferences
-- 📱 **Responsive Design** — Seamless reading experience across desktop, tablet, and mobile
-- 🎨 **Typographic Excellence** — Built on EB Garamond and Plus Jakarta Sans for sophisticated, readable layouts
-- ✨ **Smooth Interactions** — Polished hover states, transitions, and animations
+- **Browse & Filter** — Discover content by genre (Sci-Fi, YA, Articles, Poetry, Essays, Guides) and theme (Software Development, Writing, Post-Apocalyptic, Publishing, Autobiographical)
+- **Dark/Light Theme** — Toggle between elegant light and dark color schemes with persistent preferences
+- **Responsive Design** — Seamless reading experience across desktop, tablet, and mobile
+- **Typographic Excellence** — Built on EB Garamond and Plus Jakarta Sans for sophisticated, readable layouts
+- **Smooth Interactions** — Polished hover states, transitions, and animations
 
 ### Written & Formatted Editor
-- ✍️ **Live Preview** — See your formatted story update in real-time as you type
-- 🏷️ **Simple Markup Syntax** — Intuitive tag-based formatting: `[b]bold[/b]`, `[i]italic[/i]`, `[section]Heading[/section]`, and more
-- 🎨 **Four Output Styles** — Choose how your story looks:
+- **Live Preview** — See your formatted story update in real-time as you type
+- **Simple Markup Syntax** — Intuitive tag-based formatting: `[b]bold[/b]`, `[i]italic[/i]`, `[section]Heading[/section]`, and more
+- **Four Output Styles** — Choose how your story looks:
   - **Written & Formatted Light/Dark** — Classic serif typography with warm, timeless tones
   - **Modern Light/Dark** — Clean sans-serif design with a contemporary feel
   - Switch styles instantly in the preview; exports use your selected style
-- 📖 **Professional Features**:
+- **Professional Features**:
   - Smart typography (curly quotes, ligatures, proper dashes)
   - Drop caps and paragraph indentation options
   - Adjustable line spacing (1×, 1.5×, 2×)
@@ -37,17 +37,17 @@ A beautifully crafted digital publishing platform for writers. Browse stories, e
   - Code blocks with syntax highlighting (via Prism)
   - Images with captions and credits
   - Lists (bullets, numbered, alphabetical) with nesting
-- 📤 **Export Options**:
+- **Export Options**:
   - **Standalone HTML** — Complete, self-contained page with your chosen style embedded
   - **Embeddable HTML** — Clean `<article>` block for pasting into CMSs or existing sites
   - **Base CSS** — Structural stylesheet for custom theming
-- 💾 **Local Storage** — Save and load your work directly from your browser
-- 🎯 **Formatting Toolbar** — Click to insert tags or type manually—your choice
-- 🌗 **App Theme** — Switch between light and dark mode for comfortable editing
+- **Local Storage** — Save and load your work directly from your browser
+- **Formatting Toolbar** — Click to insert tags or type manually—your choice
+- **App Theme** — Switch between light and dark mode for comfortable editing
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 written/
@@ -78,7 +78,7 @@ written/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### For Readers
 1. Open `index.html` in any modern web browser
@@ -126,7 +126,7 @@ The reading portal and the Written & Formatted editor are both fully static and 
 
 ---
 
-## 🎨 Design Highlights
+## Design Highlights
 
 - **Color Palette** — Warm, sophisticated earthy tones with excellent contrast for accessibility
 - **Typography** — EB Garamond for prose (refined and elegant), Plus Jakarta Sans for UI (modern and clear)
@@ -136,7 +136,7 @@ The reading portal and the Written & Formatted editor are both fully static and 
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **HTML5** — Semantic markup for accessibility and SEO
 - **CSS3** — Custom properties, flexbox, grid, and smooth transitions
@@ -147,7 +147,7 @@ The reading portal and the Written & Formatted editor are both fully static and 
 
 ---
 
-## 📝 Markup Reference
+## Markup Reference
 
 ### Document Structure
 ```
@@ -211,7 +211,7 @@ Letter B item
 
 ---
 
-## 🌐 Live Features
+## Live Features
 
 ### Filtering System
 - **Multi-select filtering** — Choose multiple genres and themes simultaneously
@@ -228,7 +228,7 @@ Letter B item
 
 ---
 
-## 📖 Example: Publishing a Story
+## Example: Publishing a Story
 
 1. Open the **Written & Formatted** editor
 2. Paste or type your story in plain text
@@ -258,25 +258,25 @@ Letter B item
 
 ---
 
-## 🔐 License
+## License
 
 This work is released under the **Creative Commons Zero v1.0 Universal** (CC0) license—public domain. Use it freely, with no restrictions.
 
 ---
 
-## 📬 Contact
+## Contact
 
 Questions or suggestions? Reach out:  
-📧 **Email**: [samoff@gmail.com](mailto:samoff@gmail.com)
+**Email**: [samoff@gmail.com](mailto:samoff@gmail.com)
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - **Fonts**: Google Fonts (EB Garamond, Plus Jakarta Sans, Source Code Pro)
 - **Icons**: Font Awesome 6.4
 - **Syntax Highlighting**: Prism.js
-- Built with care for readers and writers alike ✨
+- Built with ❤️ for readers and writers alike
 
 ---
 
