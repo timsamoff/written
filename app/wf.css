@@ -2095,7 +2095,7 @@ div.wf-credit a:hover {
 
   .preview-panel {
     min-height: 400px;
-    height: 400px;
+    height: auto;
   }
 
   .editor-pane {
