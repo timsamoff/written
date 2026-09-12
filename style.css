@@ -69,6 +69,12 @@
     --space-lg: calc(var(--rhythm-unit) * 6);  /* 48px */
     --space-xl: calc(var(--rhythm-unit) * 10); /* 80px */
 
+    /* Sub-8px micro-scale for pill/badge/chip spacing, below --space-xs */
+    --space-2xs: 0.4rem;  /* 6.4px */
+    --space-3xs: 0.3rem;  /* 4.8px */
+    --space-4xs: 0.2rem;  /* 3.2px */
+    --space-5xs: 0.1rem;  /* 1.6px */
+
     --container-max-w: 920px;
 
     --font-sans: 'Plus Jakarta Sans', sans-serif;
@@ -346,7 +352,7 @@ body {
 .toc-tags .pill-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem;
+    gap: var(--space-3xs);
     align-items: center;
 }
 
@@ -362,7 +368,7 @@ body {
     background-color: var(--pill-bg-universal);
     color: var(--pill-text-universal);
     border: 1px solid var(--pill-border-universal);
-    padding: 0.15rem 0.5rem;
+    padding: var(--space-4xs) 0.5rem;
     border-radius: 50px;
     white-space: nowrap;
     line-height: 1;
@@ -383,7 +389,7 @@ body {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.3rem 0.5rem;
+    gap: var(--space-3xs) 0.5rem;
 }
 
 .series-name {
@@ -407,7 +413,7 @@ body {
     color: var(--color-text-muted);
     letter-spacing: 0.02em;
     width: 100%;
-    margin-top: 0.1rem;
+    margin-top: var(--space-5xs);
     opacity: 0.7;
 }
 
@@ -428,7 +434,7 @@ body {
     display: inline-block;
     font-size: 0.65rem;
     color: var(--color-text-muted);
-    margin-right: 0.3rem;
+    margin-right: var(--space-3xs);
     width: 1rem;
     text-align: center;
     transition: transform 0.2s ease;
@@ -470,9 +476,9 @@ body {
     font-weight: 600;
     color: var(--color-accent);
     background: var(--color-bg-card);
-    padding: 0.05rem 0.4rem;
+    padding: var(--space-5xs) var(--space-2xs);
     border-radius: 4px;
-    margin-left: 0.3rem;
+    margin-left: var(--space-3xs);
     border: 1px solid var(--color-border);
 }
 
@@ -489,7 +495,7 @@ body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1rem;
     color: var(--color-text-muted);
-    margin-bottom: 0.25rem;
+    margin-bottom: var(--space-3xs);
     text-align: left !important;
 }
 
@@ -498,7 +504,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     opacity: 0.7;
-    margin-right: 0.3rem;
+    margin-right: var(--space-3xs);
 }
 
 .series-subtitle .series-name {
@@ -511,21 +517,21 @@ body {
 .series-subtitle .series-desc {
     font-size: 0.9rem;
     opacity: 0.7;
-    margin-left: 0.3rem;
+    margin-left: var(--space-3xs);
 }
 
 /* Series Navigation */
 .series-nav-link {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 0.2rem !important;
+    gap: var(--space-4xs) !important;
     white-space: nowrap !important;
 }
 
 .series-nav-disabled {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 0.2rem !important;
+    gap: var(--space-4xs) !important;
     white-space: nowrap !important;
 }
 
@@ -535,7 +541,7 @@ body {
     display: flex;
     justify-content: center;
     width: 100%;
-    padding: 0.1rem 0;
+    padding: var(--space-5xs) 0;
 }
 
 .series-nav-prev a,
@@ -555,12 +561,12 @@ body {
 .series-nav-disabled {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 0.2rem !important;
+    gap: var(--space-4xs) !important;
     white-space: nowrap !important;
     color: var(--color-text-muted);
     opacity: 0.3;
     font-size: 0.8rem;
-    padding: 0.15rem 0.4rem;
+    padding: var(--space-4xs) var(--space-2xs);
     width: auto;
     text-align: center;
 }
@@ -571,7 +577,7 @@ body {
     display: flex;
     justify-content: center;
     width: 100%;
-    padding: 0.1rem 0;
+    padding: var(--space-5xs) 0;
 }
 
 .series-nav-prev a,
@@ -601,7 +607,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.1rem;
+    gap: var(--space-5xs);
     width: 100%;
 }
 
@@ -610,14 +616,14 @@ body {
     display: flex;
     justify-content: center;
     width: 100%;
-    padding: 0.1rem 0;
+    padding: var(--space-5xs) 0;
 }
 
 .series-nav-current {
     color: var(--color-text);
     font-weight: 600;
     font-size: 0.85rem;
-    padding: 0.15rem 0;
+    padding: var(--space-4xs) 0;
     text-align: center;
     width: 100%;
 }
@@ -626,7 +632,7 @@ body {
     color: var(--color-accent);
     text-decoration: none;
     font-weight: 500;
-    padding: 0.15rem 0.6rem;
+    padding: var(--space-4xs) 0.6rem;
     border-radius: 4px;
     transition: all 0.2s ease;
     font-size: 0.8rem;
@@ -643,7 +649,7 @@ body {
     color: var(--color-text-muted);
     opacity: 0.3;
     font-size: 0.8rem;
-    padding: 0.15rem 0.4rem;
+    padding: var(--space-4xs) var(--space-2xs);
     width: auto;
     text-align: center;
 }
@@ -652,7 +658,7 @@ body {
 .series-meta {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: var(--space-3xs);
 }
 
 .series-badge {
@@ -671,7 +677,7 @@ body {
    Section Headers (Series / Standalone)
    ========================================================================== */
 .section-header-row td {
-    padding: 0.8rem 0.5rem 0.3rem 0.5rem !important;
+    padding: 0.8rem 0.5rem var(--space-3xs) 0.5rem !important;
     border-bottom: none !important;
     background: transparent;
 }
@@ -682,12 +688,12 @@ body {
     font-weight: 600;
     color: var(--color-text-muted);
     letter-spacing: 0.02em;
-    padding-bottom: 0.25rem !important;
+    padding-bottom: var(--space-3xs) !important;
     border-bottom: 1px solid var(--color-border) !important;
 }
 
 .section-header .section-icon {
-    margin-right: 0.4rem;
+    margin-right: var(--space-2xs);
     font-size: 0.9rem;
 }
 
@@ -700,7 +706,7 @@ body {
     font-weight: 400;
     font-size: 0.75rem;
     color: var(--color-text-muted);
-    margin-left: 0.3rem;
+    margin-left: var(--space-3xs);
 }
 
 /* ==========================================================================
@@ -802,7 +808,7 @@ body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 0.75rem;
     font-weight: 500;
-    padding: 0.35rem 0.9rem;
+    padding: var(--space-2xs) 0.9rem;
     border-radius: 100px;
     background-color: var(--color-bg);
     border: 1px solid var(--color-border);
@@ -851,7 +857,7 @@ body {
     letter-spacing: 0.05em;
     color: var(--color-text-muted);
     cursor: pointer;
-    padding: 0.25rem 0.5rem;
+    padding: var(--space-3xs) 0.5rem;
     transition: color 0.2s ease;
 }
 
@@ -897,7 +903,7 @@ body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 0.7rem;
     font-weight: 600;
-    padding: 0.2rem 0.8rem;
+    padding: var(--space-4xs) 0.8rem;
     background: var(--color-bg);
     border: 1px solid var(--color-border);
     border-radius: 100px;
@@ -1473,12 +1479,12 @@ div.wf-credit a:hover {
     }
     
     .filter-buttons {
-        gap: 0.4rem;
+        gap: var(--space-2xs);
     }
     
     .filter-chip {
         font-size: 0.7rem;
-        padding: 0.3rem 0.8rem;
+        padding: var(--space-3xs) 0.8rem;
     }
     
     .series-header-row .series-description {
@@ -1505,17 +1511,17 @@ div.wf-credit a:hover {
     }
     
     .filter-label {
-        margin-bottom: 0.4rem;
+        margin-bottom: var(--space-2xs);
         font-size: 0.65rem;
     }
     
     .filter-buttons {
-        gap: 0.35rem;
+        gap: var(--space-2xs);
     }
     
     .filter-chip {
         font-size: 0.68rem;
-        padding: 0.25rem 0.7rem;
+        padding: var(--space-3xs) 0.7rem;
     }
     
     .filter-status {
@@ -1544,7 +1550,7 @@ div.wf-credit a:hover {
     }
     
     .series-title-wrapper {
-        gap: 0.15rem 0.3rem;
+        gap: var(--space-4xs) var(--space-3xs);
     }
 
     .series-name {
@@ -1566,21 +1572,21 @@ div.wf-credit a:hover {
     .toggle-icon {
         font-size: 0.55rem;
         width: 0.8rem;
-        margin-right: 0.15rem;
+        margin-right: var(--space-4xs);
     }
     
     /* Table cell padding */
     .toc-table td {
-        padding: 0.5rem 0.2rem;
+        padding: 0.5rem var(--space-4xs);
     }
     
     .toc-date {
-        padding-right: 0.3rem !important;
+        padding-right: var(--space-3xs) !important;
         width: 15%;
     }
     
     .toc-title {
-        padding-right: 0.3rem !important;
+        padding-right: var(--space-3xs) !important;
         width: 60%;
         font-size: 1.1rem;
     }
@@ -1600,12 +1606,12 @@ div.wf-credit a:hover {
     }
     
     .filter-buttons {
-        gap: 0.3rem;
+        gap: var(--space-3xs);
     }
     
     .filter-chip {
         font-size: 0.65rem;
-        padding: 0.2rem 0.6rem;
+        padding: var(--space-4xs) 0.6rem;
     }
     
     /* Even smaller series text */
@@ -1618,7 +1624,7 @@ div.wf-credit a:hover {
     }
     
     .series-header-row td {
-        padding: 0.4rem 0.15rem !important;
+        padding: var(--space-2xs) var(--space-4xs) !important;
     }
 
     .series-name {
@@ -1629,7 +1635,7 @@ div.wf-credit a:hover {
     .toggle-icon {
         font-size: 0.5rem;
         width: 0.7rem;
-        margin-right: 0.1rem;
+        margin-right: var(--space-5xs);
     }
     
     .date-line {
@@ -1646,6 +1652,6 @@ div.wf-credit a:hover {
     
     .pill {
         font-size: 0.5rem;
-        padding: 0.1rem 0.35rem;
+        padding: var(--space-5xs) var(--space-2xs);
     }
 }
