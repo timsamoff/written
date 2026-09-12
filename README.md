@@ -52,15 +52,28 @@ A beautifully crafted digital publishing platform for writers. Browse stories, e
 ```
 written/
 ├── index.html              # Main reading portal & table of contents
-├── app/
-│   └── index.html          # Written & Formatted editor app
-├── filter.js               # Smart filtering system for genres & themes
+├── index.js                # Table-of-contents rendering, series grouping
+├── filter-system.js        # Smart filtering system for genres & themes
 ├── theme.js                # Dark/light theme toggle logic
 ├── style.css               # Design tokens, typography, and component styles
+├── data.js                 # Auto-generated from data/projects.json — do not edit directly
+├── save-server.js          # Local server the admin panel needs to save content
 ├── wbts_icon.png           # Logo and branding
 ├── favicon.ico
 ├── apple-touch-icon.png
-└── writing/                # Content directory (stories, articles, etc.)
+├── admin/                  # Content management admin panel
+│   ├── admin.html
+│   ├── admin.js
+│   └── admin.css
+├── app/                    # Written & Formatted editor app (standalone)
+│   ├── index.html
+│   ├── wf.js
+│   └── wf.css
+├── data/
+│   └── projects.json       # Central content data store
+├── templates/
+│   └── template.html       # Base template used to assemble article pages
+└── writing/                # Published content (articles, essays, shorts, etc.)
 ```
 
 ---
@@ -95,6 +108,21 @@ written/
    - **View Standalone** → Download a complete HTML page
    - **View Embed** → Copy the article block for your CMS
    - **View Base CSS** → Copy the structural stylesheet
+
+### For Publishing (Using the Admin Panel)
+
+The admin panel (`/admin/admin.html`) manages the site's content — adding, editing, and organizing published pieces. It needs a small local server running to save changes, since a browser can't write files to disk on its own.
+
+1. Start the local server from the project root:
+   ```
+   node save-server.js
+   ```
+2. Open `http://localhost:3000/admin/admin.html` in your browser. The admin panel will not load or save anything without this server running.
+3. Fill in the piece's details (title, path, slug, date, genres, themes) and paste in the HTML — either the embed output from the Written & Formatted editor above, or hand-written markup.
+4. Changes autosave as you type. Saving writes the piece's HTML file into `writing/<category>/` and updates the site's content index (`data/projects.json`) — no separate step is needed to add it to the table of contents.
+5. Stop the server (Ctrl+C in its terminal) when you're done editing.
+
+The reading portal and the Written & Formatted editor are both fully static and don't need this server — only the admin panel does.
 
 ---
 
@@ -224,9 +252,9 @@ Letter B item
 
    [end][/end]
    ```
-4. Click **View Standalone** → Save as `.html` file
-5. Add to the `writing/` directory and link from `index.html`
-6. Update the table of contents with your new piece
+4. Click **View Embed** → Copy the article block
+5. Paste it into the admin panel (`/admin/admin.html`, with `node save-server.js` running) along with the piece's title, path, slug, date, genres, and themes
+6. Save — the admin panel writes the HTML file into `writing/` and adds it to the table of contents automatically
 
 ---
 
