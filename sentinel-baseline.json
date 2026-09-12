@@ -230,18 +230,6 @@
       "message": "Hardcoded color value \"#ffffff\" added outside a :root token-definition block."
     },
     {
-      "rule": "LOG-001",
-      "file": "index.js",
-      "line": 590,
-      "message": "console.log call added in index.js."
-    },
-    {
-      "rule": "LOG-001",
-      "file": "index.js",
-      "line": 637,
-      "message": "console.log call added in index.js."
-    },
-    {
       "rule": "IMG-001",
       "file": "writing/articles/bts/bts_002.png",
       "line": null,

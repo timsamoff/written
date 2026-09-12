@@ -587,8 +587,6 @@ var WrittenApp = WrittenApp || {};
     // ==========================================================================
     
     function updateFilterButtons() {
-        console.log('updateFilterButtons called');
-        
         var genreContainer = document.getElementById('genre-filters');
         var themeContainer = document.getElementById('theme-filters');
         
@@ -633,8 +631,6 @@ var WrittenApp = WrittenApp || {};
                 themeContainer.appendChild(btn);
             });
         }
-        
-        console.log('Filter buttons updated:', genreContainer.children.length, 'genre buttons,', themeContainer.children.length, 'theme buttons');
     }
     
     // Expose functions that need to be called from elsewhere
