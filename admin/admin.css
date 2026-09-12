@@ -1026,6 +1026,12 @@
     to { transform: translateX(0%); opacity: 1; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .admin-notification {
+        animation: none;
+    }
+}
+
 /* ============================================
    MODAL FORM
    ============================================ */
