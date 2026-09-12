@@ -1233,9 +1233,7 @@ function buildAssembledHtml(project, content, context) {
         .then(template => {
             // Build pills
             const allTags = [...(project.genres || []), ...(project.themes || [])];
-            const allPills = allTags.length > 0 
-                ? allTags.map(t => `<span class="pill">${escapeHtml(t)}</span>`).join('\n                        ')
-                : '';
+            const allPills = renderPills(allTags);
             
             // Build series HTML
             let seriesHtml = '';

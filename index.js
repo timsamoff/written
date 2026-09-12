@@ -249,11 +249,7 @@ var WrittenApp = WrittenApp || {};
             var seriesTags = [];
             seriesGenres.forEach(function(g) { seriesTags.push(g); });
             seriesThemes.forEach(function(t) { seriesTags.push(t); });
-            var seriesPillsHtml = seriesTags.length > 0 
-                ? seriesTags.map(function(tag) {
-                    return `<span class="pill">${escapeHtml(tag)}</span>`;
-                }).join('\n                                ')
-                : '';
+            var seriesPillsHtml = renderPills(seriesTags);
 
             // Get date range for the series
             var dates = groupItems.map(function(p) { return p.date; }).filter(function(d) { return d; }).sort();
@@ -389,10 +385,8 @@ var WrittenApp = WrittenApp || {};
             var genres = project.genres || [];
             var themes = project.themes || [];
             var allTags = genres.concat(themes);
-            
-            var pills = allTags.map(function(tag) {
-                return `<span class="pill">${escapeHtml(tag)}</span>`;
-            }).join('\n                                ');
+
+            var pills = renderPills(allTags);
             
             return `
                 <tr data-genres='${JSON.stringify(genres)}' data-themes='${JSON.stringify(themes)}'>

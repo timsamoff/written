@@ -12,5 +12,12 @@
         "reason": "Intentionally-preserved pre-ragged-conversion original of threxil.html, kept for archival comparison. Not registered in data/projects.json and not a live published piece, so it predates and is exempt from the site-wide ragged-class convention (commit 93bc358).",
         "owner": "Tim Samoff",
         "reviewBy": "2027-03-01"
+    },
+    {
+        "rule": "RENDER-001",
+        "scope": "admin/admin.js",
+        "reason": "buildAssembledHtml's pill-rendering line was refactored to call the new shared renderPill()/renderPills() utility (pill.js), but produces byte-identical <span class=\"pill\">...</span> markup to before - no existing published piece needs regenerating since the rendered output hasn't changed, only how it's produced.",
+        "owner": "Tim Samoff",
+        "reviewBy": "2026-10-15"
     }
 ]
