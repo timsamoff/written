@@ -1,0 +1,50 @@
+#!/usr/bin/env node
+// ==========================================================================
+// Sentinel Gate-Check — pre-commit hook
+// ==========================================================================
+// Installed copy lives at .git/hooks/pre-commit (see
+// sentinel-gate/install-hooks.js for the tracked source -> installed copy).
+// Runs the diff-scoped content checks against the staged diff:
+//   REGISTRY-001, RENDER-001, PERSIST-001, REGISTRY-002, DOC-001,
+//   DOC-002 (non-blocking), COLOR-001, LOG-001, IMG-001, STRUCT-001
+//   (non-blocking reminder).
+// Blocks the commit (non-zero exit) on any blocking violation not covered
+// by a valid sentinel-exceptions.json entry.
+
+'use strict';
+
+const path = require('path');
+const gateDir = path.join(__dirname, '..', '..', 'sentinel-gate');
+const { runReport, formatViolation } = require(path.join(gateDir, 'run'));
+
+let report;
+try {
+    report = runReport('diff');
+} catch (err) {
+    console.error('Sentinel pre-commit hook crashed (treating as a failure, not a pass):', err.message);
+    console.error(err.stack);
+    process.exit(1);
+}
+
+if (report.fatalError) {
+    console.error('Sentinel pre-commit hook: FATAL —', report.fatalError);
+    process.exit(1);
+}
+
+if (report.exempted.length > 0) {
+    console.log(`Sentinel: ${report.exempted.length} violation(s) covered by sentinel-exceptions.json (not blocking).`);
+}
+
+if (report.nonBlocking.length > 0) {
+    console.log('\nSentinel non-blocking reminders:');
+    for (const v of report.nonBlocking) console.log(formatViolation(v));
+}
+
+if (report.blocking.length > 0) {
+    console.error(`\nSentinel gate-check: commit BLOCKED — ${report.blocking.length} violation(s)\n`);
+    for (const v of report.blocking) console.error(formatViolation(v) + '\n');
+    console.error('Run "node sentinel-check.js" for a re-check after fixing, or add a scoped entry to sentinel-exceptions.json if this is a deliberate, justified exception.');
+    process.exit(1);
+}
+
+process.exit(0);

@@ -1,0 +1,88 @@
+#!/usr/bin/env node
+// ==========================================================================
+// Sentinel Gate-Check — commit-msg hook
+// ==========================================================================
+// Installed copy lives at .git/hooks/commit-msg (git hooks are not
+// themselves tracked by git - this file is the tracked source; see
+// sentinel-gate/install-hooks.js). Enforces:
+//   - HYGIENE-001: no co-author/Claude-attribution/session-link trailers
+//     (hard block, no override).
+//   - Subject line <= 72 chars, single line.
+//   - Body: none, or every line a real "- " bullet, <= 5 bullets, each
+//     bullet <= 80 chars.
+//   - Multi-paragraph/narrative body (no bullet markers) is a hard block,
+//     no override possible.
+//   - Bullet-count-cap violations ARE override-able via a
+//     "Sentinel-Override: <reason>" trailer in the same commit.
+//
+// Git invokes commit-msg with the path to a temp file containing the
+// message as argv[2].
+
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+const gateDir = path.join(__dirname, '..', '..', 'sentinel-gate');
+const { checkHygiene001 } = require(path.join(gateDir, 'checks'));
+const { checkCommitMessageStructure, getOverrideReason } = require(path.join(gateDir, 'commit-msg-checks'));
+
+const msgFile = process.argv[2];
+if (!msgFile) {
+    console.error('Sentinel commit-msg hook: no message file path provided by git.');
+    process.exit(1);
+}
+
+let rawMessage;
+try {
+    rawMessage = fs.readFileSync(msgFile, 'utf8');
+} catch (err) {
+    console.error('Sentinel commit-msg hook: could not read commit message file:', err.message);
+    process.exit(1);
+}
+
+const hygieneViolations = checkHygiene001(rawMessage);
+if (hygieneViolations.length > 0) {
+    console.error('\nSentinel gate-check: commit BLOCKED (no override available)\n');
+    for (const v of hygieneViolations) {
+        console.error(`  [${v.rule}] ${v.message}`);
+        console.error(`    -> ${v.correction}`);
+    }
+    console.error('');
+    process.exit(1);
+}
+
+const structViolations = checkCommitMessageStructure(rawMessage);
+if (structViolations.length === 0) {
+    process.exit(0);
+}
+
+const overrideReason = getOverrideReason(rawMessage);
+const hardBlocks = structViolations.filter(v => !v.overrideEligible);
+const overrideEligible = structViolations.filter(v => v.overrideEligible);
+
+if (hardBlocks.length > 0) {
+    console.error('\nSentinel gate-check: commit BLOCKED (no override available for this violation)\n');
+    for (const v of hardBlocks) {
+        console.error(`  [${v.rule}] ${v.message}`);
+        console.error(`    -> ${v.correction}`);
+    }
+    console.error('');
+    process.exit(1);
+}
+
+if (overrideEligible.length > 0) {
+    if (overrideReason) {
+        console.error(`Sentinel gate-check: ${overrideEligible.length} violation(s) overridden via Sentinel-Override trailer ("${overrideReason}"). Proceeding.\n`);
+        process.exit(0);
+    }
+    console.error('\nSentinel gate-check: commit BLOCKED\n');
+    for (const v of overrideEligible) {
+        console.error(`  [${v.rule}] ${v.message}`);
+        console.error(`    -> ${v.correction}`);
+    }
+    console.error('');
+    process.exit(1);
+}
+
+process.exit(0);

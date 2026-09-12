@@ -1,0 +1,287 @@
+{
+  "generatedAt": "2026-09-12T02:20:06.722Z",
+  "entries": [
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 218,
+      "message": "Hardcoded color value \"rgba(139, 90, 74, 0.12)\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 274,
+      "message": "Hardcoded color value \"rgba(139, 90, 74, 0.12)\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 361,
+      "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 478,
+      "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 536,
+      "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 597,
+      "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 625,
+      "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 742,
+      "message": "Hardcoded color value \"rgba(139, 90, 74, 0.15)\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 817,
+      "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 888,
+      "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 901,
+      "message": "Hardcoded color value \"rgba(255,255,255,0.2)\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 902,
+      "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 929,
+      "message": "Hardcoded color value \"rgba(0,0,0,0.6)\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 944,
+      "message": "Hardcoded color value \"rgba(0,0,0,0.4)\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 992,
+      "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 1009,
+      "message": "Hardcoded color value \"rgba(0,0,0,0.25)\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 1015,
+      "message": "Hardcoded color value \"#10b981\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 1016,
+      "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 1020,
+      "message": "Hardcoded color value \"#ef4444\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 1021,
+      "message": "Hardcoded color value \"#fff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "admin/admin.css",
+      "line": 1065,
+      "message": "Hardcoded color value \"rgba(139, 90, 74, 0.12)\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1004,
+      "message": "Hardcoded color value \"#fff3cd\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1005,
+      "message": "Hardcoded color value \"#7a5c00\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1006,
+      "message": "Hardcoded color value \"#ffd966\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1016,
+      "message": "Hardcoded color value \"#3a2f00\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1017,
+      "message": "Hardcoded color value \"#ffd966\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1018,
+      "message": "Hardcoded color value \"#7a5c00\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1444,
+      "message": "Hardcoded color value \"#ccc\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1445,
+      "message": "Hardcoded color value \"#666\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1468,
+      "message": "Hardcoded color value \"rgba(255,255,255,0.04)\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1627,
+      "message": "Hardcoded color value \"rgba(0, 0, 0, 0.45)\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1778,
+      "message": "Hardcoded color value \"#c0392b\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1779,
+      "message": "Hardcoded color value \"#ffffff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1780,
+      "message": "Hardcoded color value \"#c0392b\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1783,
+      "message": "Hardcoded color value \"#e74c3c\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1784,
+      "message": "Hardcoded color value \"#e74c3c\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "app/wf.css",
+      "line": 1898,
+      "message": "Hardcoded color value \"rgba(0, 0, 0, 0.55)\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "COLOR-001",
+      "file": "style.css",
+      "line": 813,
+      "message": "Hardcoded color value \"#ffffff\" added outside a :root token-definition block."
+    },
+    {
+      "rule": "LOG-001",
+      "file": "index.js",
+      "line": 590,
+      "message": "console.log call added in index.js."
+    },
+    {
+      "rule": "LOG-001",
+      "file": "index.js",
+      "line": 637,
+      "message": "console.log call added in index.js."
+    },
+    {
+      "rule": "IMG-001",
+      "file": "writing/articles/bts/bts_002.png",
+      "line": null,
+      "message": "Image writing/articles/bts/bts_002.png is 1280KB, over the 400KB budget for writing/** assets."
+    },
+    {
+      "rule": "IMG-001",
+      "file": "writing/articles/cr/cr_001.png",
+      "line": null,
+      "message": "Image writing/articles/cr/cr_001.png is 1064KB, over the 400KB budget for writing/** assets."
+    },
+    {
+      "rule": "IMG-001",
+      "file": "writing/articles/ni/ni_001.png",
+      "line": null,
+      "message": "Image writing/articles/ni/ni_001.png is 864KB, over the 400KB budget for writing/** assets."
+    },
+    {
+      "rule": "IMG-001",
+      "file": "writing/articles/wf/wf_standalone.png",
+      "line": null,
+      "message": "Image writing/articles/wf/wf_standalone.png is 604KB, over the 400KB budget for writing/** assets."
+    },
+    {
+      "rule": "IMG-001",
+      "file": "writing/articles/wf/wf_ui.png",
+      "line": null,
+      "message": "Image writing/articles/wf/wf_ui.png is 732KB, over the 400KB budget for writing/** assets."
+    },
+    {
+      "rule": "IMG-001",
+      "file": "writing/essays/pink/ppn.png",
+      "line": null,
+      "message": "Image writing/essays/pink/ppn.png is 1121KB, over the 400KB budget for writing/** assets."
+    },
+    {
+      "rule": "CONVENTION-001",
+      "file": "writing/shorts/threxil_og.html",
+      "line": null,
+      "message": "writing/shorts/threxil_og.html's story-content wrapper is missing the site-wide \"ragged\" class convention (established in commit 93bc358)."
+    }
+  ]
+}

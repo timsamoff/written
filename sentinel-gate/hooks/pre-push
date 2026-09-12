@@ -1,0 +1,56 @@
+#!/usr/bin/env node
+// ==========================================================================
+// Sentinel Gate-Check — pre-push hook
+// ==========================================================================
+// Installed copy lives at .git/hooks/pre-push (see
+// sentinel-gate/install-hooks.js for the tracked source -> installed copy).
+// Runs the full-repo scan mode. Blocks the push (non-zero exit) on any
+// violation that is NOT already present in sentinel-baseline.json (the
+// Part-4 snapshot of pre-existing backlog). Baseline-tracked violations
+// are reported but never block - the backlog is meant to shrink via
+// deliberate cleanup or the exceptions mechanism, not via this hook
+// staying permanently toothless.
+
+'use strict';
+
+const path = require('path');
+const gateDir = path.join(__dirname, '..', '..', 'sentinel-gate');
+const { runReport, formatViolation } = require(path.join(gateDir, 'run'));
+
+let report;
+try {
+    report = runReport('full');
+} catch (err) {
+    console.error('Sentinel pre-push hook crashed (treating as a failure, not a pass):', err.message);
+    console.error(err.stack);
+    process.exit(1);
+}
+
+if (report.fatalError) {
+    console.error('Sentinel pre-push hook: FATAL —', report.fatalError);
+    process.exit(1);
+}
+
+console.log(`Sentinel full-repo scan: ${report.violations.length + report.exempted.length} total finding(s).`);
+
+if (report.exempted.length > 0) {
+    console.log(`  ${report.exempted.length} covered by sentinel-exceptions.json.`);
+}
+if (report.baselineViolations.length > 0) {
+    console.log(`  ${report.baselineViolations.length} already tracked in sentinel-baseline.json (known backlog, not blocking):`);
+    for (const v of report.baselineViolations) console.log(formatViolation(v));
+}
+if (report.nonBlocking.length > 0) {
+    console.log(`\n  ${report.nonBlocking.length} non-blocking reminder(s):`);
+    for (const v of report.nonBlocking) console.log(formatViolation(v));
+}
+
+if (report.blocking.length > 0) {
+    console.error(`\nSentinel gate-check: push BLOCKED — ${report.blocking.length} NEW violation(s) not in the known baseline\n`);
+    for (const v of report.blocking) console.error(formatViolation(v) + '\n');
+    console.error('These are new relative to sentinel-baseline.json. Fix them, or if genuinely pre-existing/acceptable, add a scoped sentinel-exceptions.json entry.');
+    process.exit(1);
+}
+
+console.log('\nNo new (non-baseline) violations. Push allowed.');
+process.exit(0);
