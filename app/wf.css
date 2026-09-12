@@ -39,10 +39,6 @@
   --shadow-sm:           0 2px 8px rgba(114,62,49,0.06);
   --shadow-md:           0 8px 24px rgba(114,62,49,0.10);
   --shadow-lg:           0 20px 48px rgba(114,62,49,0.14);
-
-  --pill-bg-universal:   #723e31;
-  --pill-text-universal: #f2f1ef;
-  --pill-border-universal: #723e31;
 }
 
 :root[data-theme="dark"] {
@@ -74,10 +70,6 @@
   --shadow-sm:           0 2px 8px rgba(0,0,0,0.35);
   --shadow-md:           0 8px 24px rgba(0,0,0,0.45);
   --shadow-lg:           0 20px 48px rgba(0,0,0,0.60);
-
-  --pill-bg-universal:   #d9b18e;
-  --pill-text-universal: #221714;
-  --pill-border-universal: #d9b18e;
 }
 
 /* Monospaced preview blocks */
