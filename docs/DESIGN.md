@@ -22,6 +22,8 @@ Written is a personal publishing site: a reading portal for stories, essays, poe
 
 Each surface's column count reflects a genuinely different job, not incidental drift: reading is one linear column, content management is a two-way split between adding and reviewing, and the editor is a three-way split between controls, input, and output. Their responsive breakpoints (where each stacks to a narrower layout) are tuned independently for the same reason — a three-column layout needs more width before it gets cramped than a two-column one does. See `CLAUDE.md`'s "Known structural issues" section for the specific values.
 
+The reading portal and admin panel share exactly one small script, `pill.js` — the genre/theme "pill" badge markup, which both surfaces render but previously implemented independently. This is a narrow, deliberate exception to the general rule that each surface's code is otherwise self-contained; `app/` is not part of it, since its markup and data model have no equivalent concept to share.
+
 ## Data flow: publishing a piece
 
 ```

@@ -17,7 +17,7 @@
 
     /* Genre Pills (Dark Gray Background / Light Text) */
     --pill-bg-universal: #4a2a20;  /* Darker for better contrast */
-    --pill-text-universal: #f2f1ef;
+    --pill-text-universal: #f2f1ef; /* Intentionally same value in both themes — pill-bg-universal swaps instead, so the near-white text stays readable against either background */
     --pill-border-universal: #4a2a20;
 
     /* Global Shadows */
@@ -40,7 +40,7 @@
 
     /* Genre Pills */
     --pill-bg-universal: #352824;
-    --pill-text-universal: #f2f1ef;
+    --pill-text-universal: #f2f1ef; /* Deliberately identical to the light-theme value — see that block's comment */
     --pill-border-universal: #4a3a35;
 
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
