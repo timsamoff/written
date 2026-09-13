@@ -23,6 +23,9 @@
     /* Global Shadows */
     --shadow-sm: 0 2px 8px rgba(44, 62, 80, 0.04);
     --shadow-md: 0 12px 32px rgba(44, 62, 80, 0.06);
+    --shadow-lg: 0 20px 40px rgba(44, 62, 80, 0.1);
+    --overlay-scrim: rgba(0, 0, 0, 0.4);
+    --overlay-lighten: rgba(255, 255, 255, 0.2); /* subtle white lightening overlay on an already-colored (e.g. accent) background */
 }
 
 :root[data-theme="dark"] {
@@ -45,6 +48,9 @@
 
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
     --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.5);
+    --overlay-scrim: rgba(0, 0, 0, 0.7);
+    --overlay-lighten: rgba(255, 255, 255, 0.2); /* same in both themes — a lightening technique, not a simulated color */
 }
 
 /* Monospaced Blocks */
@@ -915,7 +921,7 @@ body {
 .filter-chip.active {
     background-color: var(--color-accent);
     border-color: var(--color-accent);
-    color: #ffffff;
+    color: var(--color-text-inverted);
 }
 
 .filter-status {

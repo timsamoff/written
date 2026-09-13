@@ -360,7 +360,7 @@
 
 .publish-toggle input:checked + .custom-checkbox-box::after {
     content: "✓";
-    color: var(--color-text-inverted, #fff);
+    color: var(--color-text-inverted);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -477,7 +477,7 @@
 .tag-chip.active {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
+    color: var(--color-text-inverted);
 }
 
 .tag-chip .remove-tag {
@@ -535,7 +535,7 @@
 .tag-add .filter-btn:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
+    color: var(--color-text-inverted);
 }
 
 /* ============================================
@@ -596,7 +596,7 @@
 .form-actions .filter-btn.active {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
+    color: var(--color-text-inverted);
 }
 
 .form-actions .filter-btn.active:hover {
@@ -624,7 +624,7 @@
 .form-actions .filter-btn.download-btn:hover {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
+    color: var(--color-text-inverted);
 }
 
 /* ============================================
@@ -816,7 +816,7 @@
 
 .row-btn.delete-btn:hover {
     background: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
+    color: var(--color-text-inverted);
 }
 
 .sort-handle {
@@ -887,7 +887,7 @@
 .series-chip.active {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
+    color: var(--color-text-inverted);
 }
 
 .series-chip .series-chip-count {
@@ -900,8 +900,8 @@
 }
 
 .series-chip.active .series-chip-count {
-    background: rgba(255,255,255,0.2);
-    color: var(--color-text-inverted, #fff);
+    background: var(--overlay-lighten);
+    color: var(--color-text-inverted);
 }
 
 .series-chip .series-chip-delete {
@@ -928,7 +928,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.6);
+    background: var(--overlay-scrim);
     backdrop-filter: blur(4px);
     z-index: 20000;
     display: flex;
@@ -943,7 +943,7 @@
     padding: 1.5rem;
     max-width: 500px;
     width: 90%;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    box-shadow: var(--shadow-lg);
 }
 
 .modal-header {
@@ -991,7 +991,7 @@
 .modal-footer .filter-btn.active {
     background: var(--color-accent);
     border-color: var(--color-accent);
-    color: var(--color-text-inverted, #fff);
+    color: var(--color-text-inverted);
 }
 
 /* ============================================
@@ -1008,19 +1008,19 @@
     font-size: 0.8rem;
     font-weight: 500;
     z-index: 10001;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    box-shadow: var(--shadow-md);
     animation: slideInRight 0.3s ease;
     pointer-events: none;
 }
 
 .admin-notification.success {
-    background: var(--color-success, #10b981);
-    color: var(--color-text-inverted, #fff);
+    background: var(--color-success);
+    color: var(--color-text-inverted);
 }
 
 .admin-notification.error {
-    background: var(--color-error, #ef4444);
-    color: var(--color-text-inverted, #fff);
+    background: var(--color-error);
+    color: var(--color-text-inverted);
 }
 
 @keyframes slideInRight {
