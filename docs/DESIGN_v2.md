@@ -64,9 +64,7 @@ Where it currently undercuts its own philosophy — this is where v2 effort actu
 - Help content explains the mechanism ("every tag follows `[tag]content[/tag]`") rather than leading with outcome ("want a pull quote? click here").
 - Technical and non-technical users get an identical interface today. There's no actual lever for "some technical options" as a distinct tier from the default experience.
 
-On whether the site is worth maintaining publicly at all: yes, and for a reason unrelated to feature-competitiveness. It's a personal publishing site with a coherent, deliberate design, no material ongoing cost or dependency risk (no framework, no build step, no server cost beyond static hosting), doing the one job it needs to do — publish this specific person's writing in a format shaped by his own conventions — better than any general tool would, because it isn't shaped by a vendor's assumptions.
-
-**A sharper version of this same point (added 2026-09-14):** the app's real job was never "formatting text" — it's closer to a compiler. It takes messy external input (a Google Docs paste, ChatGPT-generated markdown, hand-typed prose) and transforms it into this project's exact, opinionated semantic HTML, matching this site's actual conventions (the `ragged` class, the specific document structure documented in `CLAUDE.md`), in this project's specific export shapes. No generic editor does that, because no generic editor knows what this project's conventions mean — even a very good WYSIWYG tool's output would still need exactly the cleanup pass this tool exists to make unnecessary. This is a different, sturdier justification than "the formatting vocabulary is narrow" (the original framing above): it's not that this tool does a narrower version of what a general editor does, it's that it does a fundamentally different job that no general editor is positioned to do at all. See Section 2.4 for how this reframes the core interaction-model question.
+On whether the site is worth maintaining publicly at all: yes, and for a reason unrelated to feature-competitiveness. It's a personal publishing site with a coherent, deliberate design, no material ongoing cost or dependency risk (no framework, no build step, no server cost beyond static hosting), doing the one job it needs to do — publish this specific person's writing in a format shaped by his own conventions — better than any general tool would, because it isn't shaped by a vendor's assumptions. A sharper version of this same point — the app's real job is closer to a compiler than a generic editor — is stated once, in full, in Section 2.4.
 
 ### 1.2 v2 mandate
 
@@ -80,13 +78,17 @@ Given the above, v2's mandate is narrow and specific: **make the simple path rad
 
 The default editing experience becomes **one pane**: a live-formatted view that a writer types directly into. No separate Live Preview panel is shown by default, and no visible bracket tags in the default state.
 
-### 2.2 Tags stay real, and reveal on focus (Typora model)
+### 2.2 Tags stay real, and reveal on focus (Typora model) — **Architecture decided, implementation approach open**
+
+Design brief: `sentinel-notes/wf-v2-single-pane-reveal-design-brief.md` — scoped as far as the brief can go without a prototype; the brief's open question 1 (`contentEditable` vs. an alternative technical approach) is a genuine unresolved decision, not just unstarted implementation.
 
 The document's actual source is still the plain-text bracket-tag language — nothing changes about what's stored or exported. Tags are hidden by rendering, not deleted or transformed: the tag markup around the block your cursor is currently in becomes visible in place, then re-hides when focus moves elsewhere. This is the same mechanism used by Typora and Obsidian's Live Preview mode.
 
 This was chosen over a whole-document mode switch (iA Writer/Gutenberg-style, toggle the entire view between raw and rendered) because the original constraint was never "hide tags from everyone" — it was "let a writer who doesn't want to see tags not have to, while hand-editing stays available, not demoted to a separate mode you have to deliberately switch into."
 
 ### 2.3 Dual-pane is an opt-in secondary view, with tags always visible — **Decided**
+
+Design brief: `sentinel-notes/wf-v2-dual-pane-opt-in-design-brief.md`
 
 Today's two-pane layout (tag-source input + separate Live Preview) is not removed. It becomes an **optional view** a writer can turn on — the "technical option" tier this doc's mandate calls for.
 
@@ -96,17 +98,19 @@ This resolves cleanly rather than as a compromise: the comparative research behi
 
 ### 2.4 Why this isn't "just another WYSIWYG editor" — and why that's an acceptable answer
 
-Mechanically, a single pane where you type and see (and edit against) formatted output *is* the core move of every WYSIWYG editor — Typora, Obsidian, iA Writer, and Ulysses are all arguably WYSIWYG in the loose sense, and that hasn't stopped them from being the right tool for exactly this kind of writer. This app's actual differentiator was never going to be the interaction mechanism; it's the same one true differentiator noted in 1.1 — a narrow, literary-specific formatting vocabulary — plus one architectural property most general WYSIWYG tools don't have: **the tag-based plain text remains the one real source of truth**, never reverse-derived from rendered DOM state. That property is what keeps hand-editing, the export pipeline, and this whole doc's plan honest and low-risk (see Section 7).
+Mechanically, a single pane where you type and see (and edit against) formatted output *is* the core move of every WYSIWYG editor — Typora, Obsidian, iA Writer, and Ulysses are all arguably WYSIWYG in the loose sense, and that hasn't stopped them from being the right tool for exactly this kind of writer. This app's actual differentiator was never going to be the interaction mechanism.
 
-**A more fundamental version of this same answer** (added 2026-09-14, from a separate conversation the site owner had about this same question): "formatting text" was never actually this app's job. Its real job is closer to a compiler — take messy external input (a Google Docs paste, ChatGPT-generated markdown, hand-typed prose) and transform it into this project's exact, opinionated semantic HTML, matching this site's real conventions (the `ragged` class, the specific `story-content`/heading/footnote structure documented in `CLAUDE.md`), in this project's specific export shapes (standalone page, embeddable page with external CSS, tagged plain text). No generic editor — WYSIWYG or otherwise — does that, because no generic editor knows what this project's conventions mean. Even a very good general WYSIWYG editor's output would still need exactly the cleanup pass this tool exists to make unnecessary. That's not a nice-to-have difference from a generic editor; it's a different category of tool that happens to share a UI shape with one.
+The real differentiator, stated at its sharpest (refined 2026-09-14 from a separate conversation the site owner had about this same question): **the app's job was never "formatting text" — it's closer to a compiler.** It takes messy external input (a Google Docs paste, ChatGPT-generated markdown, hand-typed prose) and transforms it into this project's exact, opinionated semantic HTML, matching this site's real conventions (the `ragged` class, the specific `story-content`/heading/footnote structure documented in `CLAUDE.md`), in this project's specific export shapes (standalone page, embeddable page with external CSS, tagged plain text). No generic editor — WYSIWYG or otherwise — does that, because none of them know what this project's conventions mean. Even a very good general WYSIWYG editor's output would still need exactly the cleanup pass this tool exists to make unnecessary — a different category of tool, not a narrower version of the same one.
 
-This reframes the real design question underneath Sections 2.1-2.3 more precisely than "one pane vs. two, and how do tags reveal." The actual question is: **how much precision-editing access to the raw semantic markup should be preserved once formatting happens automatically** — and given what this tool is actually for (a compiler to *this project's* exact markup, not a general writing surface), the honest answer is *more than zero access, probably rendered inline rather than tucked away in a separate pane.* This is precisely what Section 2.2's focus-scoped reveal already commits to (tags reappear inline, in place, when you focus a block) rather than, say, a whole-document raw/rendered toggle (Section 2.2's rejected alternative) or a permanently-hidden WYSIWYG surface with no markup access at all. In other words: this later reasoning independently arrives at the same architecture already decided in Section 2.2, but for a sturdier reason than "matches Typora's UX pattern" — it's a direct consequence of what the tool's job actually is, not just a well-precedented interaction choice.
+This reframes the real design question underneath Sections 2.1-2.3 more precisely than "one pane vs. two, and how do tags reveal." The actual question is: **how much precision-editing access to the raw semantic markup should be preserved once formatting happens automatically** — and given what this tool is actually for, the honest answer is *more than zero access, rendered inline rather than tucked away in a separate pane.* That's precisely what Section 2.2's focus-scoped reveal already commits to (tags reappear inline, in place, when you focus a block), and precisely what keeps hand-editing, the export pipeline, and this whole doc's plan honest and low-risk — **the tag-based plain text remains the one real source of truth, never reverse-derived from rendered DOM state** (see Section 7).
 
-**This is not an argument for a more capable or more competitive WYSIWYG editor — it's the opposite, stated explicitly so it isn't misread.** The compiler framing is the reason the tag vocabulary should stay narrow and opinionated (Section 3), not grow toward general-purpose rich-text capability, and the reason raw markup access must never fully disappear behind a rendered surface. It sharpens the reasoning behind the plan already on the table; it does not expand what the plan is trying to build.
+**This is not an argument for a more capable or more competitive WYSIWYG editor — the opposite.** It's the reason the tag vocabulary should stay narrow and opinionated (Section 3) rather than grow toward general-purpose rich-text capability, and the reason raw markup access must never fully disappear behind a rendered surface. Full history of how this conclusion was reached — including an earlier framing that turned out to be a misreading — is in the Decision Log appendix.
 
 ---
 
-## 3. Feature: tiered tag vocabulary and toolbar — **Open, needs scoping**
+## 3. Feature: tiered tag vocabulary and toolbar — **Scoped, one open question remains**
+
+Design brief: `sentinel-notes/wf-v2-tag-tiering-design-brief.md` — proposed tier split is written down; what's still genuinely open is the exact tier boundary (needs the site owner's own judgment, not something a brief alone can resolve).
 
 Direct response to the biggest gap found in Section 1.1: today's toolbar and syntax reference present all ~25 tags with equal visual weight, which is the actual intimidation point for a non-technical writer — not tags being visible in text.
 
@@ -121,7 +125,9 @@ This is explicitly a v2 feature the user asked to be included, not yet scoped in
 
 ---
 
-## 4. Feature: reworked Help section — **Open, needs scoping**
+## 4. Feature: reworked Help section — **Scoped, blocked on Section 3**
+
+Design brief: `sentinel-notes/wf-v2-help-rework-design-brief.md` — structural approach is decided; blocked on Section 3's tier boundaries being settled, not on any unresolved design question of its own.
 
 Direct response to the second gap in Section 1.1: current Help/syntax-guide content explains the *mechanism* (tag syntax pattern) before explaining *outcome* (what a writer actually wants to accomplish).
 
@@ -134,7 +140,9 @@ Not yet scoped: actual content rewrite, whether Help becomes contextual (e.g., a
 
 ---
 
-## 5. Feature: synced continuous scrolling (dual-pane mode) — **Open, needs scoping**
+## 5. Feature: synced continuous scrolling (dual-pane mode) — **Scoped, one open question remains**
+
+Design brief: `sentinel-notes/wf-v2-synced-scrolling-design-brief.md` — the requested behavior is clear; the actual sync algorithm (proportional vs. nearest-block matching) is a genuine unresolved design choice, not just unstarted work.
 
 Requested directly: replace today's click-to-jump sync behavior with continuous synced scrolling when dual-pane mode (2.3) is active.
 
@@ -150,7 +158,9 @@ Not yet scoped:
 
 ---
 
-## 6. Feature: keyboard shortcuts for formatting — **Open, needs scoping**
+## 6. Feature: keyboard shortcuts for formatting — **Scoped for Bold/Italic, rest blocked on Section 3**
+
+Design brief: `sentinel-notes/wf-v2-keyboard-shortcuts-design-brief.md` — Bold/Italic can ship as-is; the rest of the key mapping is blocked on Section 3's tier boundaries, not an unresolved design question of its own.
 
 Requested directly: hotkey support for as many formatting options as possible, so a writer isn't required to reach for the toolbar (or type tags by hand) for common formatting actions.
 
@@ -170,19 +180,25 @@ Not yet scoped:
 
 ---
 
-## 6a. Additional quality-of-life gaps found on review — **Open, needs scoping**
+## 6a. Additional quality-of-life gaps found on review — status varies per item, see each subsection
 
 A full re-read of this document (2026-09-13) surfaced several gaps that aren't addressed anywhere above, despite being the kind of thing a real "simple for writers" upgrade should cover. None of these were explicitly requested — they're proposed here as candidates, not commitments, and should be triaged against the phasing in Section 8 rather than assumed to all matter equally.
 
-### 6a.1 Visible word/character count
+### 6a.1 Visible word/character count — **Scoped, no open design question**
+
+Design brief: `sentinel-notes/wf-v2-word-count-design-brief.md`
 
 **Checked directly: there is no live word or character count visible anywhere in the editor UI today.** The only word-count logic that exists (`countBodyWords()`, referenced by `renderManuscript()`) computes a count solely for the manuscript-header block's own display — it isn't surfaced anywhere else, and a writer with no `[manuscript]` block in their piece never sees a count at all. For a tool explicitly aimed at writers (some literary submissions have hard word-count requirements), this is a real, surprising gap. Proposed: a small, unobtrusive live count (words and/or characters) in the pane header or status area, visible regardless of whether a manuscript header is present. Low risk, no architectural dependency on anything else in this doc — could ship independently, any time.
 
-### 6a.2 Find and replace
+### 6a.2 Find and replace — **Scoped as far as possible, blocked on Section 2.2**
+
+Design brief: `sentinel-notes/wf-v2-find-replace-design-brief.md`
 
 **Checked directly: no find/replace functionality exists anywhere in `app/`.** For anything beyond a short piece, a writer currently has to rely on the browser's own in-page find (which only searches rendered/visible text, not the tag-source pane reliably) or scroll manually. A basic find, and ideally find-and-replace, inside the editing pane is a standard expectation in any serious writing tool and is currently missing entirely. Worth scoping as its own item — not urgent relative to the core pane-model work, but a real, currently-totally-absent capability, not a refinement of something partial.
 
-### 6a.3 Autosave visibility and recovery confidence
+### 6a.3 Autosave visibility and recovery confidence — **Scoped, minor open questions remain**
+
+Design brief: `sentinel-notes/wf-v2-autosave-visibility-design-brief.md`
 
 Autosave to `localStorage` already exists (`autosaveToLocalStorage()`/`loadFromLocalStorage()`), but two things about it are worth reconsidering as part of this upgrade:
 - **No visible confirmation that autosave happened.** A writer has no in-the-moment signal ("Saved" indicator, timestamp) that their work is actually being preserved — they have to trust it silently. `wf.js`'s existing `showToast()` mechanism (see `CLAUDE.md`) is a ready-made way to surface this without new infrastructure — a subtle, infrequent "Saved" toast (or a persistent small status label, less intrusive than a toast for something this frequent) rather than nothing at all.
@@ -190,15 +206,21 @@ Autosave to `localStorage` already exists (`autosaveToLocalStorage()`/`loadFromL
 
 This becomes more relevant, not less, once the single-pane `contentEditable` model (Section 2.2) ships — a newer, less-tested editing surface is exactly where a writer benefits most from clear save confidence.
 
-### 6a.4 Undo/redo across the new pane model
+### 6a.4 Undo/redo across the new pane model — **Not fully scopable yet, blocked on Section 2.2**
+
+Design brief: `sentinel-notes/wf-v2-undo-redo-design-brief.md`
 
 Flagged already as an open implementation question in the single-pane-reveal design brief (`wf-v2-single-pane-reveal-design-brief.md`, open question 4), but worth stating plainly here as its own concern rather than a footnote: today's undo/redo is whatever the browser gives a real `<textarea>` for free. A `contentEditable`-based single pane does not automatically inherit equivalent undo behavior — browsers' native `contentEditable` undo stacks are notoriously inconsistent across browsers and easily broken by any JS that programmatically manipulates the DOM (which this feature inherently needs to do, to reveal/hide tags). **This needs explicit design, not an assumption that Ctrl/Cmd+Z will "just work"** the way it does today. Given `app/wf.js` already works around a deprecated `document.execCommand('insertText')` API elsewhere with a manual fallback (see the original design-quality audit's Part 1 findings), this project has direct prior experience with exactly this class of `contentEditable`/native-API fragility — worth consulting that experience directly when this is scoped.
 
-### 6a.5 Distraction-free / focus mode
+### 6a.5 Distraction-free / focus mode — **Scoped, undecided whether to build it at all**
+
+Design brief: `sentinel-notes/wf-v2-focus-mode-design-brief.md`
 
 Not previously discussed, but a natural complement to the single-pane default (Section 2.2): once the default view is a clean, single formatted pane rather than a three-column layout (controls + input + preview), a "hide the formatting-options sidebar and toolbar, show just the writing surface" focus mode becomes a small, cheap addition rather than a new concept — most of the visual decluttering it wants is already a side effect of Section 2.2 shipping. Worth considering as a near-free bonus once the single-pane work lands, rather than its own major effort. Not committing to it here — flagged as a candidate, not a requirement.
 
-### 6a.6 Session/tab-close warning
+### 6a.6 Session/tab-close warning — **Scoped, no open design question**
+
+Design brief: `sentinel-notes/wf-v2-tab-close-warning-design-brief.md`
 
 **Checked directly: no `beforeunload` warning exists today.** A writer who accidentally closes the tab or navigates away mid-edit currently loses anything not yet autosaved, with no browser-level warning. Given autosave already exists (6a.3) but isn't instantaneous on every keystroke, a standard "unsaved changes" browser warning on tab close/navigation is a small, well-understood addition that meaningfully reduces accidental data loss. Low risk, no dependency on anything else in this doc.
 
@@ -265,6 +287,4 @@ The one loose end this raised — whether dual-pane mode's source pane should st
 
 ### The "compiler, not editor" reframe (2026-09-14)
 
-The site owner had a separate conversation about this same question and brought its conclusions back here. The core argument: this app's real job was never "formatting text" generically — it's closer to a compiler, transforming messy external input into this project's exact, opinionated semantic HTML in this project's specific export shapes. No generic editor, WYSIWYG or otherwise, can do that, because none of them know this project's conventions. This reframes *why* Section 2.2's focus-scoped reveal is the right call (now stated in Section 2.4) more fundamentally than the original market-precedent research did — not "this UX pattern is well-precedented," but "preserving real, inline access to the raw semantic markup is a direct requirement of what this tool actually does."
-
-**Explicit boundary, stated directly when this was added, and worth preserving here:** this reframe is not an argument for building a more capable or more competitive WYSIWYG editor. It's the opposite — it's the reason the tag vocabulary should stay narrow and opinionated (Section 3's tiering work) rather than grow toward general-purpose rich-text capability, and the reason raw markup access must never fully disappear behind a rendered surface (which is exactly what Section 2.2 already committed to, and exactly what ruling out full WYSIWYG in the original research already established). The "compiler" framing sharpens the existing plan's reasoning; it does not expand its ambition.
+The site owner had a separate conversation about this same question and brought its conclusions back here, arriving independently at the same architecture Section 2.2 had already settled on, but for a more fundamental reason than market precedent. Full argument now lives in Section 2.4 (not restated here to avoid duplicating it) — including the explicit boundary that this is not license to build a more capable or competitive WYSIWYG editor, but the opposite: a reason the tag vocabulary should stay narrow and raw markup access should stay inline and real.
