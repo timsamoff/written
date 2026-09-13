@@ -589,7 +589,7 @@
     background: var(--color-bg);
     color: var(--color-text);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     text-align: center;
 }
 
@@ -934,6 +934,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    animation: modalFadeIn 0.18s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }
 
 .modal-content {
@@ -944,6 +950,12 @@
     max-width: 500px;
     width: 90%;
     box-shadow: var(--shadow-lg);
+    animation: modalSlideIn 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes modalSlideIn {
+    from { transform: translateY(12px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
 }
 
 .modal-header {
@@ -1029,7 +1041,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .admin-notification {
+    .admin-notification,
+    .modal-overlay,
+    .modal-content {
         animation: none;
     }
 }

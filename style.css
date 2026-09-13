@@ -89,6 +89,31 @@
     --color-success: #10b981;
     --color-error: #ef4444;
     --color-text-inverted: #fff;
+
+    /* Type scale — covers the UI/meta text sizes that repeat across the
+       file (pills, labels, nav, captions, etc). Values were reverse-engineered
+       from ~29 existing one-off sizes, snapped to the nearest rung (up to
+       ~0.05rem drift accepted, same tolerance used for the micro-spacing
+       scale). Display/hero sizes used exactly once (story-title, dropcap,
+       site-logo, body base size) are intentionally left as literals — they
+       aren't a reusable rung, just a single deliberately-tuned size. */
+    --font-size-4xs: 0.5rem;
+    --font-size-3xs: 0.55rem;
+    --font-size-2xs: 0.6rem;
+    --font-size-xs: 0.65rem;
+    --font-size-sm: 0.7rem;
+    --font-size-ms: 0.75rem;
+    --font-size-base-sm: 0.8rem;
+    --font-size-md: 0.85rem;
+    --font-size-lg: 0.9rem;
+    --font-size-ml: 0.95rem;
+    --font-size-xl: 1rem;
+    --font-size-2xl: 1.05rem;
+    --font-size-3xl: 1.1rem;
+    --font-size-4xl: 1.2rem;
+    --font-size-5xl: 1.25rem;
+    --font-size-prose: 1.35rem;
+    --font-size-6xl: 1.5rem;
 }
 
 /* ==========================================================================
@@ -110,7 +135,7 @@ body {
     background-color: var(--color-bg);
     color: var(--color-text);
     font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.35rem;
+    font-size: var(--font-size-prose);
     line-height: 1.65;
     transition: background-color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
                 color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -183,7 +208,7 @@ body {
 
 .site-tagline {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.8rem;
+    font-size: var(--font-size-base-sm);
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -207,7 +232,7 @@ body {
     color: var(--color-text);
     display: grid;
     place-items: center;
-    font-size: 1rem;
+    font-size: var(--font-size-xl);
     flex-shrink: 0;
     text-decoration: none;
     transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.3s;
@@ -279,7 +304,7 @@ body {
     }
 
     .site-tagline {
-        font-size: 0.6rem;
+        font-size: var(--font-size-2xs);
     }
 
     .header-btn-group {
@@ -356,7 +381,7 @@ body {
     justify-content: center;
     text-align: center;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.85rem;
+    font-size: var(--font-size-md);
     color: var(--color-text-muted);
 }
 
@@ -376,7 +401,7 @@ body {
 }
 
 .toc-table th {
-    font-size: 0.8rem;
+    font-size: var(--font-size-base-sm);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--color-text-muted);
@@ -391,7 +416,7 @@ body {
 }
 
 .toc-date {
-    font-size: 0.75rem;
+    font-size: var(--font-size-ms);
     color: var(--color-text-muted);
     white-space: nowrap;
     padding-right: var(--space-sm) !important;
@@ -437,7 +462,7 @@ body {
     align-items: center;
     justify-content: center;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.58rem;
+    font-size: var(--font-size-2xs);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -476,7 +501,7 @@ body {
 
 .series-count {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.65rem;
+    font-size: var(--font-size-xs);
     font-weight: 400;
     color: var(--color-text-muted);
     letter-spacing: 0.02em;
@@ -484,7 +509,7 @@ body {
 
 .series-description {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.7rem;
+    font-size: var(--font-size-sm);
     font-weight: 400;
     color: var(--color-text-muted);
     letter-spacing: 0.02em;
@@ -508,7 +533,7 @@ body {
 /* Toggle icon - using Unicode with font styling to prevent emoji rendering */
 .toggle-icon {
     display: inline-block;
-    font-size: 0.65rem;
+    font-size: var(--font-size-xs);
     color: var(--color-text-muted);
     margin-right: var(--space-3xs);
     width: 1rem;
@@ -548,7 +573,7 @@ body {
 .part-badge {
     display: inline-block;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.6rem;
+    font-size: var(--font-size-2xs);
     font-weight: 600;
     color: var(--color-accent);
     background: var(--color-bg-card);
@@ -569,14 +594,14 @@ body {
 
 .series-subtitle {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 1rem;
+    font-size: var(--font-size-xl);
     color: var(--color-text-muted);
     margin-bottom: var(--space-3xs);
     text-align: left !important;
 }
 
 .series-subtitle .series-label {
-    font-size: 0.75rem;
+    font-size: var(--font-size-ms);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     opacity: 0.7;
@@ -585,13 +610,13 @@ body {
 
 .series-subtitle .series-name {
     font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.2rem;
+    font-size: var(--font-size-4xl);
     font-weight: 600;
     color: var(--color-text);
 }
 
 .series-subtitle .series-desc {
-    font-size: 0.9rem;
+    font-size: var(--font-size-lg);
     opacity: 0.7;
     margin-left: var(--space-3xs);
 }
@@ -641,7 +666,7 @@ body {
     white-space: nowrap !important;
     color: var(--color-text-muted);
     opacity: 0.3;
-    font-size: 0.8rem;
+    font-size: var(--font-size-base-sm);
     padding: var(--space-4xs) var(--space-2xs);
     width: auto;
     text-align: center;
@@ -666,7 +691,7 @@ body {
 }
 
 .series-nav-label {
-    font-size: 0.65rem;
+    font-size: var(--font-size-xs);
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--color-text-muted);
@@ -698,7 +723,7 @@ body {
 .series-nav-current {
     color: var(--color-text);
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: var(--font-size-md);
     padding: var(--space-4xs) 0;
     text-align: center;
     width: 100%;
@@ -711,7 +736,7 @@ body {
     padding: var(--space-4xs) 0.6rem;
     border-radius: 4px;
     transition: all 0.2s ease;
-    font-size: 0.8rem;
+    font-size: var(--font-size-base-sm);
     width: auto;
     text-align: center;
 }
@@ -733,7 +758,7 @@ body {
 .series-nav-disabled {
     color: var(--color-text-muted);
     opacity: 0.3;
-    font-size: 0.8rem;
+    font-size: var(--font-size-base-sm);
     padding: var(--space-4xs) var(--space-2xs);
     width: auto;
     text-align: center;
@@ -748,13 +773,13 @@ body {
 
 .series-badge {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.75rem;
+    font-size: var(--font-size-ms);
     color: var(--color-accent);
 }
 
 .series-part {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.7rem;
+    font-size: var(--font-size-sm);
     color: var(--color-text-muted);
 }
 
@@ -769,7 +794,7 @@ body {
 
 .section-header {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.85rem;
+    font-size: var(--font-size-md);
     font-weight: 600;
     color: var(--color-text-muted);
     letter-spacing: 0.02em;
@@ -779,7 +804,7 @@ body {
 
 .section-header .section-icon {
     margin-right: var(--space-2xs);
-    font-size: 0.9rem;
+    font-size: var(--font-size-lg);
 }
 
 .section-header .section-name {
@@ -789,7 +814,7 @@ body {
 
 .section-header .section-count {
     font-weight: 400;
-    font-size: 0.75rem;
+    font-size: var(--font-size-ms);
     color: var(--color-text-muted);
     margin-left: var(--space-3xs);
 }
@@ -807,7 +832,7 @@ body {
     border: 1px solid var(--color-border);
     border-radius: 16px;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.85rem;
+    font-size: var(--font-size-md);
     font-weight: 600;
     color: var(--color-text);
     cursor: pointer;
@@ -822,7 +847,7 @@ body {
 
 .filter-toggle-btn i:first-child {
     color: var(--color-accent);
-    font-size: 0.9rem;
+    font-size: var(--font-size-lg);
 }
 
 .filter-toggle-btn span {
@@ -875,7 +900,7 @@ body {
 .filter-label {
     display: block;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.7rem;
+    font-size: var(--font-size-sm);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -891,7 +916,7 @@ body {
 
 .filter-chip {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.75rem;
+    font-size: var(--font-size-ms);
     font-weight: 500;
     padding: var(--space-2xs) 0.9rem;
     border-radius: 100px;
@@ -932,7 +957,7 @@ body {
     padding-top: 0.6rem;
     border-top: 1px solid var(--color-border);
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.75rem;
+    font-size: var(--font-size-ms);
     color: var(--color-text-muted);
 }
 
@@ -945,7 +970,7 @@ body {
     background: none;
     border: none;
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.7rem;
+    font-size: var(--font-size-sm);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -987,7 +1012,7 @@ body {
 
 .no-results p {
     font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.2rem;
+    font-size: var(--font-size-4xl);
     color: var(--color-text-muted);
     font-style: italic;
     margin: 0;
@@ -1004,7 +1029,7 @@ body {
 
 .expand-btn {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.7rem;
+    font-size: var(--font-size-sm);
     font-weight: 600;
     padding: var(--space-4xs) 0.8rem;
     background: var(--color-bg);
@@ -1039,7 +1064,7 @@ body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     color: var(--color-accent);
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: var(--font-size-lg);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -1079,7 +1104,7 @@ hr.fleuron-end + p {
     align-items: center;
     gap: var(--space-xs);
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.85rem;
+    font-size: var(--font-size-md);
     font-weight: 500;
     color: var(--color-text-muted);
     margin-bottom: var(--space-xs);
@@ -1095,7 +1120,7 @@ hr.fleuron-end + p {
    ========================================================================== */
 .story-content {
     font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.35rem;
+    font-size: var(--font-size-prose);
     line-height: inherit;
 }
 
@@ -1173,7 +1198,7 @@ article.story-content.ls-2 p {
 }
 
 .story-content h3.subsection-heading {
-    font-size: 1.5rem;
+    font-size: var(--font-size-6xl);
     font-style: italic;
 }
 
@@ -1228,7 +1253,7 @@ hr.fleuron-break {
 
 hr.fleuron-break::after {
     content: "✦";
-    font-size: 0.65rem;
+    font-size: var(--font-size-xs);
     color: var(--color-accent);
     background-color: var(--color-bg);
     position: absolute;
@@ -1251,7 +1276,7 @@ hr.fleuron-end {
 
 hr.fleuron-end::after {
     content: "✦ ✦ ✦";
-    font-size: 0.65rem;
+    font-size: var(--font-size-xs);
     letter-spacing: 0.5em;
     color: var(--color-accent);
     background-color: var(--color-bg);
@@ -1280,7 +1305,7 @@ blockquote.pull-quote {
 /* Monospaced Blocks */
 .story-content pre {
     font-family: 'Source Code Pro', Consolas, Monaco, monospace !important;
-    font-size: 1.05rem !important;
+    font-size: var(--font-size-2xl) !important;
     line-height: 1.5 !important;
     background-color: var(--reversed-code-bg) !important;
     border: 1px solid var(--reversed-code-border) !important;
@@ -1301,7 +1326,7 @@ blockquote.pull-quote {
 
 .story-content .literary-mono p.mono-line {
     font-family: 'Source Code Pro', Consolas, Monaco, monospace !important;
-    font-size: 1.1rem !important;
+    font-size: var(--font-size-3xl) !important;
     line-height: 1.6 !important;
     color: var(--color-text) !important;
     margin: 0 !important;
@@ -1331,7 +1356,7 @@ blockquote.pull-quote {
 
 .story-content hr.fleuron-end::after {
     content: "✦ ✦ ✦";
-    font-size: 0.6rem;
+    font-size: var(--font-size-2xs);
     letter-spacing: 0.5em;
     color: var(--color-accent);
     background-color: var(--color-bg);
@@ -1348,7 +1373,7 @@ blockquote.pull-quote {
    ========================================================================== */
 .story-content .story-subtitle {
     font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
-    font-size: 1.25rem;
+    font-size: var(--font-size-5xl);
     color: var(--color-text-muted);
     text-align: center;
     margin-top: calc(var(--space-xs) * -1);
@@ -1357,7 +1382,7 @@ blockquote.pull-quote {
 
 .story-content .story-byline {
     font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
-    font-size: 0.85rem;
+    font-size: var(--font-size-md);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -1368,7 +1393,7 @@ blockquote.pull-quote {
 
 .story-content .epigraph {
     font-style: italic;
-    font-size: 1.05rem;
+    font-size: var(--font-size-2xl);
     color: var(--color-text-muted);
     max-width: 80%;
     margin: var(--space-xl) auto;
@@ -1383,7 +1408,7 @@ blockquote.pull-quote {
 
 .story-content .pullquote {
     font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.5rem;
+    font-size: var(--font-size-6xl);
     font-style: italic;
     line-height: 1.4;
     color: var(--color-accent);
@@ -1401,7 +1426,7 @@ blockquote.pull-quote {
 
 .story-content .editorial-aside {
     font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
-    font-size: 0.9rem;
+    font-size: var(--font-size-lg);
     line-height: 1.5;
     background-color: var(--color-bg-card);
     border: 1px solid var(--color-border);
@@ -1426,7 +1451,7 @@ blockquote.pull-quote {
 
 .callout-title {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.85rem;
+    font-size: var(--font-size-md);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -1436,7 +1461,7 @@ blockquote.pull-quote {
 
 .callout-content {
     font-family: 'EB Garamond', Georgia, serif;
-    font-size: 1.25rem;
+    font-size: var(--font-size-5xl);
     line-height: 1.5;
     color: var(--color-text);
 }
@@ -1459,7 +1484,7 @@ blockquote.pull-quote {
 
 .editorial-caption {
     font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.85rem;
+    font-size: var(--font-size-md);
     line-height: 1.5;
     color: var(--color-text-muted);
     padding: 0 var(--space-xs);
@@ -1467,7 +1492,7 @@ blockquote.pull-quote {
 
 .caption-credit {
     text-transform: uppercase;
-    font-size: 0.725rem;
+    font-size: var(--font-size-ms);
     letter-spacing: 0.02em;
     font-weight: 600;
     color: var(--color-accent);
@@ -1501,7 +1526,7 @@ blockquote.pull-quote {
 
 .story-content .citations-title {
     font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
-    font-size: 0.8rem;
+    font-size: var(--font-size-base-sm);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -1515,14 +1540,14 @@ blockquote.pull-quote {
 }
 
 .story-content .citation-entry {
-    font-size: 0.95rem;
+    font-size: var(--font-size-ml);
     color: var(--color-text);
     margin-bottom: 0.5em;
     line-height: 1.5;
 }
 
 .story-content .fn-return {
-    font-size: 0.8rem;
+    font-size: var(--font-size-base-sm);
     color: var(--color-accent);
     text-decoration: none;
     margin-left: 6px;
@@ -1540,7 +1565,7 @@ div.wf-credit {
     padding: 1rem 20px 2rem 20px;
     border-top: 1px solid var(--color-border);
     font-family: 'EB Garamond', Georgia, serif;
-    font-size: 0.78rem;
+    font-size: var(--font-size-ms);
     color: var(--color-text-muted);
     text-align: left;
 }
@@ -1595,22 +1620,22 @@ div.wf-credit a:hover {
     }
     
     .filter-chip {
-        font-size: 0.7rem;
+        font-size: var(--font-size-sm);
         padding: var(--space-3xs) 0.8rem;
     }
     
     .series-header-row .series-description {
-        font-size: 0.7rem;
+        font-size: var(--font-size-sm);
     }
     
     .section-header {
-        font-size: 0.75rem;
+        font-size: var(--font-size-ms);
     }
 }
 
 @media (max-width: 640px) {
     .filter-toggle-btn {
-        font-size: 0.75rem;
+        font-size: var(--font-size-ms);
         padding: 0.5rem var(--space-sm);
     }
     
@@ -1624,7 +1649,7 @@ div.wf-credit a:hover {
     
     .filter-label {
         margin-bottom: var(--space-2xs);
-        font-size: 0.65rem;
+        font-size: var(--font-size-xs);
     }
     
     .filter-buttons {
@@ -1632,18 +1657,18 @@ div.wf-credit a:hover {
     }
     
     .filter-chip {
-        font-size: 0.68rem;
+        font-size: var(--font-size-xs);
         padding: var(--space-3xs) 0.7rem;
     }
     
     .filter-status {
         margin-top: 0.8rem;
         padding-top: 0.5rem;
-        font-size: 0.7rem;
+        font-size: var(--font-size-sm);
     }
     
     .clear-btn {
-        font-size: 0.65rem;
+        font-size: var(--font-size-xs);
     }
     
     /* Series styles for mobile */
@@ -1653,11 +1678,11 @@ div.wf-credit a:hover {
     }
     
     .series-header-row .series-description {
-        font-size: 0.65rem;
+        font-size: var(--font-size-xs);
     }
     
     .series-header-row .series-count {
-        font-size: 0.55rem;
+        font-size: var(--font-size-3xs);
         white-space: nowrap;
     }
     
@@ -1682,7 +1707,7 @@ div.wf-credit a:hover {
     
     /* Toggle icon sizing */
     .toggle-icon {
-        font-size: 0.55rem;
+        font-size: var(--font-size-3xs);
         width: 0.8rem;
         margin-right: var(--space-4xs);
     }
@@ -1700,7 +1725,7 @@ div.wf-credit a:hover {
     .toc-title {
         padding-right: var(--space-3xs) !important;
         width: 60%;
-        font-size: 1.1rem;
+        font-size: var(--font-size-3xl);
     }
     
     .toc-tags {
@@ -1722,17 +1747,17 @@ div.wf-credit a:hover {
     }
     
     .filter-chip {
-        font-size: 0.65rem;
+        font-size: var(--font-size-xs);
         padding: var(--space-4xs) 0.6rem;
     }
     
     /* Even smaller series text */
     .series-header-row .series-description {
-        font-size: 0.6rem;
+        font-size: var(--font-size-2xs);
     }
     
     .series-header-row .series-count {
-        font-size: 0.5rem;
+        font-size: var(--font-size-4xs);
     }
     
     .series-header-row td {
@@ -1745,25 +1770,25 @@ div.wf-credit a:hover {
     }
     
     .toggle-icon {
-        font-size: 0.5rem;
+        font-size: var(--font-size-4xs);
         width: 0.7rem;
         margin-right: var(--space-5xs);
     }
     
     .date-line {
-        font-size: 0.5rem;
+        font-size: var(--font-size-4xs);
     }
     
     .toc-title {
-        font-size: 0.95rem;
+        font-size: var(--font-size-ml);
     }
     
     .toc-date {
-        font-size: 0.55rem;
+        font-size: var(--font-size-3xs);
     }
     
     .pill {
-        font-size: 0.5rem;
+        font-size: var(--font-size-4xs);
         padding: var(--space-5xs) var(--space-2xs);
     }
 }

@@ -11,11 +11,11 @@ const WRITING_DIR = path.join(__dirname, 'writing');
 const BASE_DIR = __dirname;
 
 console.log('========================================');
-console.log('📁 Written Admin Server');
+console.log('Written Admin Server');
 console.log('========================================');
-console.log('📍 Data file:', DATA_FILE);
-console.log('📍 Data JS file:', DATA_JS_FILE);
-console.log('📍 Writing directory:', WRITING_DIR);
+console.log('Data file:', DATA_FILE);
+console.log('Data JS file:', DATA_JS_FILE);
+console.log('Writing directory:', WRITING_DIR);
 console.log('');
 
 // Ensure directories exist
@@ -37,7 +37,7 @@ if (!fs.existsSync(DATA_FILE)) {
         series: []
     };
     fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
-    console.log('✅ Created default projects.json');
+    console.log('Created default projects.json');
 }
 
 // Function to generate data.js from projects.json
@@ -46,10 +46,10 @@ function generateDataJs() {
         const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
         const jsContent = `// Auto-generated from projects.json\n// Do not edit directly - changes will be overwritten\nwindow.__WRITTEN_DATA__ = ${JSON.stringify(data, null, 2)};`;
         fs.writeFileSync(DATA_JS_FILE, jsContent, 'utf8');
-        console.log('✅ Generated data.js');
+        console.log('Generated data.js');
         return true;
     } catch (err) {
-        console.log('⚠️ Could not generate data.js:', err.message);
+        console.log('Warning: could not generate data.js:', err.message);
         return false;
     }
 }
@@ -62,7 +62,7 @@ const server = http.createServer((req, res) => {
     const url = req.url;
     const method = req.method;
 
-    console.log('📥', method, url);
+    console.log(method, url);
 
     // ========== CORS ==========
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -81,9 +81,8 @@ const server = http.createServer((req, res) => {
             const data = fs.readFileSync(DATA_FILE, 'utf8');
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(data);
-            console.log('✅ GET /api/projects');
         } catch (err) {
-            console.log('❌ Error:', err.message);
+            console.log('Error:', err.message);
             res.writeHead(500);
             res.end(JSON.stringify({ error: err.message }));
         }
@@ -96,9 +95,8 @@ const server = http.createServer((req, res) => {
             const data = fs.readFileSync(DATA_JS_FILE, 'utf8');
             res.writeHead(200, { 'Content-Type': 'application/javascript' });
             res.end(data);
-            console.log('✅ GET /api/data-js');
         } catch (err) {
-            console.log('❌ Error:', err.message);
+            console.log('Error:', err.message);
             res.writeHead(500);
             res.end('// Error loading data');
         }
@@ -118,9 +116,8 @@ const server = http.createServer((req, res) => {
                 generateDataJs();
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: true }));
-                console.log('✅ POST /api/save-projects');
             } catch (err) {
-                console.log('❌ Error:', err.message);
+                console.log('Error:', err.message);
                 res.writeHead(500);
                 res.end(JSON.stringify({ error: err.message }));
             }
@@ -154,11 +151,11 @@ const server = http.createServer((req, res) => {
                 
                 // Write the file
                 fs.writeFileSync(fullPath, content, 'utf8');
-                console.log('✅ Saved HTML:', filePath);
+                console.log('Saved HTML:', filePath);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ success: true }));
             } catch (err) {
-                console.log('❌ Error saving HTML:', err.message);
+                console.log('Error saving HTML:', err.message);
                 res.writeHead(500);
                 res.end(JSON.stringify({ error: err.message }));
             }
@@ -191,7 +188,7 @@ const server = http.createServer((req, res) => {
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {
-        console.log('❌ 404:', url, '->', filePath);
+        console.log('404:', url, '->', filePath);
         res.writeHead(404);
         res.end('File not found: ' + url);
         return;
@@ -215,26 +212,25 @@ const server = http.createServer((req, res) => {
 
     fs.readFile(filePath, (err, data) => {
         if (err) {
-            console.log('❌ Error reading:', filePath);
+            console.log('Error reading:', filePath);
             res.writeHead(500);
             res.end('Server error');
             return;
         }
         res.writeHead(200, { 'Content-Type': types[ext] || 'text/plain' });
         res.end(data);
-        console.log('✅', url, '->', path.basename(filePath));
     });
 });
 
 server.listen(PORT, () => {
     console.log('');
     console.log('========================================');
-    console.log('✅ SERVER RUNNING!');
+    console.log('Server running');
     console.log('========================================');
-    console.log('🌐 Admin: http://localhost:' + PORT + '/admin/admin.html');
-    console.log('📝 API: http://localhost:' + PORT + '/api/projects');
-    console.log('📄 Data JS: http://localhost:' + PORT + '/data.js');
-    console.log('💾 Save HTML: POST /api/save-html');
+    console.log('Admin:    http://localhost:' + PORT + '/admin/admin.html');
+    console.log('API:      http://localhost:' + PORT + '/api/projects');
+    console.log('Data JS:  http://localhost:' + PORT + '/data.js');
+    console.log('Save HTML: POST /api/save-html');
     console.log('========================================');
     console.log('');
 });

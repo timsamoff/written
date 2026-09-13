@@ -1498,6 +1498,10 @@ form.addEventListener('submit', async (e) => {
         order: projects.length
     };
 
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving…';
+
     try {
         const saved = await saveHtmlContent(data, html);
         if (!saved) {
@@ -1533,6 +1537,9 @@ form.addEventListener('submit', async (e) => {
     } catch (err) {
         console.error('Error saving piece:', err);
         showNotification('Error: ' + err.message, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
     }
 });
 
