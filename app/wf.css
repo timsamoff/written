@@ -39,6 +39,12 @@
   --shadow-sm:           0 2px 8px rgba(114,62,49,0.06);
   --shadow-md:           0 8px 24px rgba(114,62,49,0.10);
   --shadow-lg:           0 20px 48px rgba(114,62,49,0.14);
+
+  /* Warning/caution status (e.g. missing alt text) — distinct from
+     --color-toast-error, which is danger/red, not caution/yellow. */
+  --color-warning-bg:     #fff3cd;
+  --color-warning-text:   #7a5c00;
+  --color-warning-border: #ffd966;
 }
 
 :root[data-theme="dark"] {
@@ -70,6 +76,10 @@
   --shadow-sm:           0 2px 8px rgba(0,0,0,0.35);
   --shadow-md:           0 8px 24px rgba(0,0,0,0.45);
   --shadow-lg:           0 20px 48px rgba(0,0,0,0.60);
+
+  --color-warning-bg:     #3a2f00;
+  --color-warning-text:   #ffd966;
+  --color-warning-border: #7a5c00;
 }
 
 /* Monospaced preview blocks */
@@ -85,6 +95,18 @@
 }
 
 :root {
+  /* Reversed-code surface hover state — same in both themes since the
+     surface itself doesn't follow the page's light/dark split. */
+  --reversed-code-text-hover:   #ccc;
+  --reversed-code-border-hover: #666;
+  --reversed-code-row-hover:    rgba(255,255,255,0.04);
+
+  /* Modal overlay scrims — same in both themes, a lighting effect rather
+     than a simulated page color. The preview-expand overlay is deliberately
+     darker (0.55 vs 0.45) since that modal goes fullscreen. */
+  --overlay-scrim:          rgba(0, 0, 0, 0.45);
+  --overlay-scrim-strong:   rgba(0, 0, 0, 0.55);
+
   --rhythm-unit:    0.5rem;
   --space-xs:       calc(var(--rhythm-unit) * 1);   /* 8px  */
   --space-sm:       calc(var(--rhythm-unit) * 2);   /* 16px */
@@ -104,6 +126,7 @@
      shouldn't change hue between light/dark mode. */
   --color-toast-success: #4a7c59;
   --color-toast-error:   #a4423a;
+  --color-toast-error-hover: #8a382f;
   --color-text-inverted: #ffffff;
 }
 
@@ -1020,9 +1043,9 @@ body {
 
 /* Image alt text warning (rendered inside preview) */
 .alt-warning {
-  background-color: #fff3cd;
-  color: #7a5c00;
-  border: 1px solid #ffd966;
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  border: 1px solid var(--color-warning-border);
   border-radius: var(--radius-sm);
   font-size: 0.8rem;
   padding: 6px var(--space-sm);
@@ -1030,11 +1053,6 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-[data-theme="dark"] .alt-warning {
-  background-color: #3a2f00;
-  color: #ffd966;
-  border-color: #7a5c00;
 }
 
 .story-content p.continues {
@@ -1468,8 +1486,8 @@ body {
   line-height: 1.6;
 }
 .story-content .code-copy-btn:hover {
-  color: #ccc;
-  border-color: #666;
+  color: var(--reversed-code-text-hover);
+  border-color: var(--reversed-code-border-hover);
 }
 
 .story-content pre.line-numbered-code {
@@ -1492,7 +1510,7 @@ body {
   padding: 0;
 }
 .story-content .code-row:hover {
-  background-color: rgba(255,255,255,0.04);
+  background-color: var(--reversed-code-row-hover);
 }
 .story-content .line-number {
   flex-shrink: 0;
@@ -1651,7 +1669,7 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.45);
+  background-color: var(--overlay-scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1802,13 +1820,13 @@ body {
 }
 
 .btn-danger {
-  background-color: #c0392b;
-  color: #ffffff;
-  border-color: #c0392b;
+  background-color: var(--color-toast-error);
+  color: var(--color-text-inverted);
+  border-color: var(--color-toast-error);
 }
 .btn-danger:hover {
-  background-color: #e74c3c;
-  border-color: #e74c3c;
+  background-color: var(--color-toast-error-hover);
+  border-color: var(--color-toast-error-hover);
 }
 
 /* ==========================================================================
@@ -1922,7 +1940,7 @@ body {
 .preview-modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.55);
+  background-color: var(--overlay-scrim-strong);
   z-index: 4000;
   display: flex;
   align-items: stretch;
