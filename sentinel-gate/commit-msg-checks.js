@@ -3,8 +3,12 @@
 // ==========================================================================
 // Caps (confirmed with the user, not to be re-asked):
 //   - Subject line: single line, no wrapping, max 72 chars.
-//   - Body: optional. If present, EVERY line must start with a real bullet
-//     marker ("- "). Max 5 bullet lines. Each bullet capped at 80 chars.
+//   - Body: optional. If present, every logical bullet must start with a
+//     real bullet marker ("- "). Max 5 bullets. A bullet may wrap onto ONE
+//     indented continuation line (2 spaces, no "- " of its own) if the
+//     first line alone isn't enough - combined bullet content (both lines,
+//     marker excluded) is capped at 160 chars so wrapping still can't turn
+//     into a paragraph.
 //   - A commit with nothing more to say has NO body at all.
 //   - A multi-paragraph/narrative body (no bullet markers) is a HARD BLOCK
 //     with NO override available - this is a structural violation, not a
@@ -16,17 +20,22 @@
 //
 // Structural-proxy note (per source material's blind-spot list): a length
 // cap alone is satisfiable by wrapping a narrative so no single line
-// exceeds 80 chars, or by writing several short unmarked declarative
+// exceeds the cap, or by writing several short unmarked declarative
 // sentences with no blank-line separation. Both are still "prose," not
-// "bullets," and must be caught by requiring an actual bullet marker on
-// EVERY body line - not by line length or blank-line counting alone.
+// "bullets." The continuation-line allowance below is narrower than that
+// loophole: only ONE continuation line per bullet, it must be indented
+// (distinguishing it from a fresh, unmarked sentence), and the combined
+// length is still capped - so this closes the loophole while letting a
+// single bullet's idea wrap once instead of being forced into an
+// artificially terse one-liner or truncated mid-thought.
 
 'use strict';
 
 const SUBJECT_MAX = 72;
-const BULLET_MAX = 80;
+const BULLET_MAX = 160; // combined length of a bullet's marker line + continuation line
 const BULLET_COUNT_MAX = 5;
 const BULLET_RE = /^- (?!\s*$)/; // "- " followed by non-whitespace content
+const CONTINUATION_RE = /^ {2}(?!\s*$)/; // exactly 2-space indent, non-whitespace content, no "- "
 
 function parseTrailers(lines) {
     // Trailers are trailing "Key: value" lines - scan from the bottom.
@@ -102,34 +111,52 @@ function checkCommitMessageStructure(rawMessage) {
         return violations; // only trailers, no real body content
     }
 
-    const allBulleted = bodyLines.every(l => BULLET_RE.test(l));
-    if (!allBulleted) {
+    // Group physical lines into logical bullets: a "- " line optionally
+    // followed by exactly one indented (2-space) continuation line with no
+    // "- " of its own. Anything else - a line that's neither a bullet
+    // marker nor a valid continuation of the immediately preceding bullet -
+    // is narrative shape and hard-blocks below.
+    const bulletGroups = [];
+    let narrativeLine = null;
+    for (let i = 0; i < bodyLines.length; i++) {
+        const line = bodyLines[i];
+        if (BULLET_RE.test(line)) {
+            bulletGroups.push({ lines: [line] });
+        } else if (CONTINUATION_RE.test(line) && bulletGroups.length > 0 && bulletGroups[bulletGroups.length - 1].lines.length === 1) {
+            bulletGroups[bulletGroups.length - 1].lines.push(line);
+        } else {
+            narrativeLine = line;
+            break;
+        }
+    }
+
+    if (narrativeLine !== null) {
         violations.push({
             rule: 'MSG-BODY-NARRATIVE',
             overrideEligible: false,
-            message: 'Commit body contains lines that are not bullet points (every body line must start with "- "). This includes wrapped prose that stays under the character cap, and unmarked short sentences with no blank-line separation - both are narrative shape, not a bullet list.',
-            correction: 'Rewrite the body as bullet points, each starting with "- ", or remove the body entirely if there is nothing more to say. This is a hard block with no override.'
+            message: `Commit body contains a line that isn't a bullet or a valid continuation: "${narrativeLine}". Every bullet must start with "- "; a bullet may wrap onto at most one continuation line, which must be indented exactly 2 spaces and not itself start with "- ". This includes narrative prose broken into short unmarked lines - that's still prose, not a bullet list.`,
+            correction: 'Rewrite the body as bullet points, each starting with "- " (with at most one 2-space-indented continuation line per bullet), or remove the body entirely if there is nothing more to say. This is a hard block with no override.'
         });
         return violations; // structural violation supersedes count/length checks
     }
 
-    if (bodyLines.length > BULLET_COUNT_MAX) {
+    if (bulletGroups.length > BULLET_COUNT_MAX) {
         violations.push({
             rule: 'MSG-BODY-BULLET-COUNT',
             overrideEligible: true,
-            message: `does this commit bundle together several separate things? consider splitting it into multiple commits. (Body has ${bodyLines.length} bullets, over the ${BULLET_COUNT_MAX}-bullet cap.)`,
+            message: `does this commit bundle together several separate things? consider splitting it into multiple commits. (Body has ${bulletGroups.length} bullets, over the ${BULLET_COUNT_MAX}-bullet cap.)`,
             correction: `If this genuinely is one coherent unit of work, describe it with fewer, broader bullets rather than listing every touched file. If it truly can't be reduced, add a "Sentinel-Override: <reason>" trailer to this commit to proceed anyway.`
         });
     }
 
-    for (const l of bodyLines) {
-        const content = l.replace(/^- /, '');
-        if (content.length > BULLET_MAX) {
+    for (const group of bulletGroups) {
+        const combined = group.lines.join(' ').replace(/^- /, '').replace(/ {2}/, ' ');
+        if (combined.length > BULLET_MAX) {
             violations.push({
                 rule: 'MSG-BODY-BULLET-LENGTH',
                 overrideEligible: false,
-                message: `Bullet line exceeds ${BULLET_MAX} chars: "${l}"`,
-                correction: `Shorten this bullet to ${BULLET_MAX} characters or fewer (including the "- " marker).`
+                message: `Bullet exceeds ${BULLET_MAX} combined chars: "${group.lines.join(' / ')}"`,
+                correction: `Shorten this bullet (including its continuation line, if any) to ${BULLET_MAX} combined characters or fewer.`
             });
         }
     }
