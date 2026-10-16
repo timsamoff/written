@@ -19,12 +19,5 @@
         "reason": "buildAssembledHtml's pill-rendering line was refactored to call the new shared renderPill()/renderPills() utility (pill.js), but produces byte-identical <span class=\"pill\">...</span> markup to before - no existing published piece needs regenerating since the rendered output hasn't changed, only how it's produced.",
         "owner": "Tim Samoff",
         "reviewBy": "2026-10-15"
-    },
-    {
-        "rule": "DOC-001",
-        "scope": "templates/template.html",
-        "reason": "SEO pass added only a <meta name=\"robots\" content=\"noindex\"> tag to the template file, which is a non-published authoring template. No content data model or recurring unit of work changed, so CLAUDE.md needs no update.",
-        "owner": "Tim Samoff",
-        "reviewBy": "2026-12-31"
     }
 ]
