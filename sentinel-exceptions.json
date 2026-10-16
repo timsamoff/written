@@ -5,5 +5,12 @@
         "reason": "Intentionally-preserved pre-ragged-conversion original of threxil.html, kept for archival comparison. Not registered in data/projects.json and not a live published piece, so it predates and is exempt from the site-wide ragged-class convention (commit 93bc358).",
         "owner": "Tim Samoff",
         "reviewBy": "2027-03-01"
+    },
+    {
+        "rule": "IMG-001",
+        "scope": "writing/essays/pink/ppn.png",
+        "reason": "Kept at full size as the og:image/twitter:image social-preview fallback for pink.html (crawlers handle PNG more reliably than WebP). The page itself loads the 163KB ppn.webp, so the size does not affect readers.",
+        "owner": "Tim Samoff",
+        "reviewBy": "2027-10-16"
     }
 ]
