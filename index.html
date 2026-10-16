@@ -1,9 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JM2CZ1DLQ4"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-JM2CZ1DLQ4');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Written by Tim Samoff</title>
+    <link rel="canonical" href="https://samoff.com/written/">
     <meta name="description" content="A collection of stories, essays, poetry, articles, and how-tos.">
 
     <!-- Open Graph -->
@@ -37,6 +47,16 @@
     <script src="pill.js" defer></script>
     <script src="index.js" defer></script>
     <script src="filter-system.js" defer></script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://samoff.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Written", "item": "https://samoff.com/written/" }
+      ]
+    }
+    </script>
 </head>
 <body>
 
@@ -112,6 +132,7 @@
     <footer class="site-footer">
         <div class="container footer-container">
             <p>&copy; <span id="current-year-index"></span> Written by Tim Samoff.</p>
+            <p><a href="https://samoff.com">samoff.com</a></p>
             <script>
                 document.getElementById('current-year-index').textContent = new Date().getFullYear();
             </script>

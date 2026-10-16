@@ -1,9 +1,19 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JM2CZ1DLQ4"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-JM2CZ1DLQ4');
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Written &amp; Formatted</title>
+  <link rel="canonical" href="https://samoff.com/written/app/">
   <meta name="description" content="Plain Text → Semantic and Accessible HTML">
 
   <!-- Open Graph -->
@@ -28,6 +38,17 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
   <link rel="stylesheet" href="wf.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://samoff.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Written", "item": "https://samoff.com/written/" },
+      { "@type": "ListItem", "position": 3, "name": "Written & Formatted", "item": "https://samoff.com/written/app/" }
+    ]
+  }
+  </script>
 </head>
 <body>
 
@@ -226,7 +247,7 @@
 
   <footer class="site-footer" role="contentinfo">
     <div class="container footer-container">
-      <span>Written <em>&amp;</em> Formatted &copy; <span id="current-year-index"></span> Tim Samoff.</span>
+      <span>Written <em>&amp;</em> Formatted &copy; <span id="current-year-index"></span> Tim Samoff.</span> <a href="https://samoff.com">samoff.com</a>
             <script>
                 document.getElementById('current-year-index').textContent = new Date().getFullYear();
             </script>
