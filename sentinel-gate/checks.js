@@ -40,11 +40,12 @@ function violation(rule, file, line, message, correction) {
 
 // --------------------------------------------------------------------------
 // REGISTRY-001
-// writing/**.html added/changed but data/projects.json not touched.
-// Applies to additions AND modifications (not pure deletions — a delete
-// should probably also drop the registry entry, but that's PERSIST/registry
-// territory the audit didn't scope this rule to cover; scoped exactly as
-// proposed: added/changed).
+// writing/**.html added but data/projects.json not touched.
+// Additions only. Modifications are exempt: a prose or typo fix to an
+// already-registered piece changes no registry metadata, so blocking it
+// only forced fake projects.json edits or throwaway exceptions. The cost
+// is that a retitle/re-tag in the HTML is no longer caught here. Pure
+// deletions are also not covered (that's PERSIST/registry territory).
 //
 // Batch-edit carve-out: this rule can't distinguish "forgot to register a
 // new piece" (the case it exists to catch) from "a structural/template
@@ -72,7 +73,7 @@ function checkRegistry001(ctx) {
     if (ctx.mode === 'full') return [];
     const violations = [];
     const touchedWriting = ctx.changedFiles.filter(
-        f => isWritingHtml(f.path) && (f.status === 'A' || f.status === 'M')
+        f => isWritingHtml(f.path) && f.status === 'A'
     );
     if (touchedWriting.length === 0) return violations;
 
